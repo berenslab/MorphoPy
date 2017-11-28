@@ -8,7 +8,7 @@ __all__ = ['Morph']
 
 class Morph(object):
 
-    def __init__(self, data, voxelsize=None, imagesize=None, threshold=20, loglevel='INFO'):
+    def __init__(self, data, unit='um', voxelsize=None, imagesize=None, threshold=30, loglevel='INFO'):
 
         self._logger = logging.getLogger()
         
@@ -29,7 +29,13 @@ class Morph(object):
             logging.info('  Please enter a valid logging mode (DEBUG, INFO, WARNING, ERROR, CRITICAL).')
             self._logger.setLevel(logging.ERROR)
 
-        df_swc = read_swc(data)
+
+        self.voxelsize = voxelsize
+        self.imagesize = imagesize
+        self.unit_swc = unit
+        # df_paths | real length
+
+        df_swc, unit_df = read_swc(data, unit, voxelsize)
         soma, neurites = get_soma(df_swc)
         df_paths = get_df_paths(df_swc) 
         df_paths = update_df_paths(df_paths, soma) # find which paths connnect to which
@@ -42,44 +48,16 @@ class Morph(object):
         df_paths = get_sorder(df_paths) # get schaler order
 
         self.df_paths = df_paths
+        self.unit_df = unit_df
         self.soma = soma
-
-
-    def topviews(self, highlight=[], order_type='c'):
         
-        import matplotlib.pyplot as plt
-        # %matplotlib inline    
-        
-        df_paths = self.df_paths
-        soma = self.soma
 
-        if order_type == 'c':
-            colors = plt.cm.viridis.colors
-            colors_idx = np.linspace(0, 255, max(df_paths.corder)+1).astype(int)
-        elif order_type == 's':
-            colors = plt.cm.viridis_r.colors
-            colors_idx = np.linspace(0, 255, max(df_paths.sorder)+1).astype(int)
-        
-        plt.figure(figsize=(12,12))
-        plt.scatter(soma[0][1], soma[0][0], s=280, color='grey')
-        for row in df_paths.iterrows():
-            
-            path_id = row[0]
-            
-            path = row[1]['path']
-            bpt = path[0]
-            if order_type == 'c':
-                order = row[1]['corder']
-                plt.plot(path[:, 1], path[:, 0], color=colors[colors_idx[order]])
-                plt.scatter(bpt[1], bpt[0], color=colors[colors_idx[order]], zorder=1)
+        # linestack | pixel
 
-            elif order_type == 's':
-                order = row[1]['sorder']
-                plt.plot(path[:, 1], path[:, 0], color=colors[colors_idx[order-1]])
-                plt.scatter(bpt[1], bpt[0], color=colors[colors_idx[order-1]], zorder=1)
+        self.linestack = swc2linestack(data, self.unit_swc, imagesize, voxelsize)
 
-            if path_id in highlight:
-                plt.plot(path[:, 1], path[:, 0], color='red')
+        if self.linestack is not None:
+            self.densitystack, self.dendritic_center = calculate_density(self.linestack, voxelsize)
 
 
     def to_swc(self, filename='morph.swc', save_to='./'):
@@ -115,3 +93,145 @@ class Morph(object):
         df_swc[['ID', 'Type', 'PID']] = df_swc[['ID', 'Type', 'PID']].astype(int)
 
         df_swc.to_csv(save_to + '/' + filename, sep=' ', index=None, header=None)
+
+
+    def cell_statistics(self):
+
+        # branch order / number of branch points
+
+        branchpoints = np.vstack(self.df_paths.connect_to_at)
+        branchpoints = unique_row(branchpoints)
+        num_branchpoints = len(branchpoints)
+
+        max_branch_order = max(self.df_paths.corder)
+        max_strahler_order = max(self.df_paths.sorder)
+
+        terminalpaths = self.df_paths.path[self.df_paths.connected_by.apply(len) == 0].as_matrix()
+        terminalpoints = np.vstack([p[-1] for p in terminalpaths])
+        num_terminalpoints = len(terminalpoints)
+
+        outerterminals = get_outer_terminals(terminalpoints)
+
+        num_irreducible_nodes = num_branchpoints + num_terminalpoints
+
+        num_dendritic_segments = len(self.df_paths)
+
+        # path length
+        
+        dendritic = self.df_paths['dendritic_length']
+        dendritic_sum = dendritic.sum()
+        dendritic_mean = dendritic.mean()
+        dendritic_median = dendritic.median()
+        dendritic_min = dendritic.min()
+        dendritic_max = dendritic.max()
+        
+        euclidean = self.df_paths['euclidean_length']
+        euclidean_sum = euclidean.sum()
+        euclidean_mean = euclidean.mean()
+        euclidean_median = euclidean.median()
+        euclidean_min = euclidean.min()
+        euclidean_max = euclidean.max()
+        
+        tortuosity = dendritic / euclidean
+        average_tortuosity = np.mean(tortuosity)      
+
+        # node angles
+        average_nodal_angle_deg, average_nodal_angle_rad, average_local_angle_deg, average_local_angle_rad = get_average_angles(self.df_paths)
+
+        # Summary
+        logging.info('  Statistics of the cell')
+        logging.info('  ======================\n')
+
+        logging.info('  # Meta Infomation\n')
+        logging.info('    Number of dendritic arbor segment: {}'.format(num_dendritic_segments))
+        logging.info('    Number of branch points: {}'.format(num_branchpoints))
+        logging.info('    Number of irreducible nodes: {}\n'.format(num_irreducible_nodes))
+
+        logging.info('    Max branching order: {}'.format(max_branch_order))
+        logging.info('    Max Strahler order: {}\n\n'.format(max_strahler_order))
+        
+        logging.info('  # Angle \n')
+        logging.info('    Average nodal angle in degree: {:.3f}'.format(average_nodal_angle_deg))
+        logging.info('    Average nodal angle in radian: {:.3f} \n'.format(average_nodal_angle_rad))
+        logging.info('    Average local angle in degree: {:.3f}'.format(average_local_angle_deg))
+        logging.info('    Average local angle in radian: {:.3f} \n'.format(average_local_angle_rad))
+        
+        logging.info('  ## Average tortuosity: {:.3f}\n'.format(average_tortuosity))
+        
+        logging.info('  ## Dendritic length ({})\n'.format(self.unit_df))
+        # logging.info('  ## Dendritic length\n')
+        logging.info('     Sum: {:.3f}'.format(dendritic_sum))
+        logging.info('     Mean: {:.3f}'.format(dendritic_mean))
+        logging.info('     Median: {:.3f}'.format(dendritic_median))
+        logging.info('     Min: {:.3f}'.format(dendritic_min))
+        logging.info('     Max: {:.3f}\n'.format(dendritic_max))
+        
+        logging.info('  ## Euclidean length ({})\n'.format(self.unit_df))
+        # logging.info('  ## Euclidean length\n')
+
+        logging.info('     Sum: {:.3f}'.format(euclidean_sum))
+        logging.info('     Mean: {:.3f}'.format(euclidean_mean))
+        logging.info('     Median: {:.3f}'.format(euclidean_median))
+        logging.info('     Min: {:.3f}'.format(euclidean_min))
+        logging.info('     Max: {:.3f}\n'.format(euclidean_max))
+
+        # density related 
+
+        if self.linestack is not None:
+
+            if self.voxelsize is None:
+                voxelsize = [1,1,1]
+            else:
+                voxelsize = self.voxelsize
+
+            dendritic_center = self.dendritic_center
+
+            if self.unit_swc == 'um':
+                soma_coordinates = self.soma / self.voxelsize
+            else:
+                soma_coordinates = self.soma
+
+            asymmetry = np.sqrt(((soma_coordinates[0][:2] - dendritic_center)**2).sum())
+
+            all_termianls_to_dendritic_center = np.sqrt(np.sum((terminalpoints[:,:2] - dendritic_center) ** 2,  1)) * voxelsize[0]
+            out_terminals_to_dendritic_center = np.sqrt(np.sum((outerterminals[:, :2]- dendritic_center) **2, 1)) * voxelsize[0]
+
+            typical_radius = np.mean(all_termianls_to_dendritic_center)
+            outer_radius = np.mean(out_terminals_to_dendritic_center)
+
+            import cv2
+            dendritic_area = cv2.contourArea(outerterminals[:, :2].astype(np.float32)) * voxelsize[0]**2/1000
+
+            logging.info('  # Density related ({})\n'.format(self.unit_df))
+            logging.info('    Asymmetry: {:.3f}'.format(asymmetry))
+            logging.info('    Outer Radius: {:.3f}'.format(outer_radius))
+            logging.info('    Typical Radius : {:.3f}\n'.format(typical_radius))
+            logging.info('    Dendritic Area: {:.3f} ×10\u00b3 um\u00b2\n\n'.format(dendritic_area))
+
+    def threeviews(self, order_type='c'):
+
+        import matplotlib.pyplot as plt
+        from matplotlib_scalebar.scalebar import ScaleBar
+        
+        plt.figure(figsize=(16,16))
+        ax1 = plt.subplot2grid((4,4), (0,1), rowspan=3, colspan=3)
+        ax2 = plt.subplot2grid((4,4), (0,0), rowspan=3, colspan=1)
+        ax3 = plt.subplot2grid((4,4), (3,1), rowspan=1, colspan=3)
+        ax4 = plt.subplot2grid((4,4), (3,0), rowspan=1, colspan=1)  
+
+        df_paths = self.df_paths
+        soma = self.soma
+
+        xylims, zlims = find_lims(df_paths)
+
+        # maxlims = (np.max(np.vstack(df_paths.path), 0)[1:]).astype(int) 
+        # maxlims = np.hstack([maxlims[0], maxlims]) + 30
+        # minlims = (np.min(np.vstack(df_paths.path), 0)[1:]).astype(int)
+
+        plot_skeleten(ax2, df_paths, soma, 2, 0, order_type, lims)
+        plot_skeleten(ax3, df_paths, soma, 1, 2, order_type, lims)
+        plot_skeleten(ax1, df_paths, soma, 1, 0, order_type, lims)
+        scalebar = ScaleBar(1, units=self.unit_df, location='lower left', box_alpha=0)
+        ax1.add_artist(scalebar)    
+        ax4.axis('off')
+    

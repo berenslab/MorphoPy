@@ -2,8 +2,9 @@ import numpy as np
 import pandas as pd
 from copy import deepcopy
 import logging
+import matplotlib.pyplot as plt
 
-def read_swc(filepath):
+def read_swc(filepath, unit, voxelsize):
     
     logging.info('  Start: Reading `.swc` file from \n\t\t{}\n\t\tinto Pandas DataFrame.'.format(filepath))
     df = pd.read_csv(filepath, comment='#', sep=' ', header=None)
@@ -11,8 +12,59 @@ def read_swc(filepath):
     df.columns = ['ID', 'Type', 'x', 'y', 'z', 'Radius', 'PID']
     df.index = df.ID.as_matrix()
 
+    if unit=='pixel' and voxelsize is not None:
+        df[['x', 'y', 'z']] = df[['x', 'y', 'z']] * voxelsize
+        unit_of_df = 'um'
+    else:
+        unit_of_df = unit
+
     logging.info('  Finished.\n')
-    return df
+    return df, unit_of_df
+
+# def swc2linestack(filepath, unit, imagesize, voxelsize=None):
+    
+#     if unit == 'pixel':
+#         logging.info('  Start: Creating linestack...')
+#         coords = pd.read_csv(filepath, comment='#', sep=' ', header=None)[[2,3,4]].astype(int).as_matrix()
+#         linestack = np.zeros(imagesize)
+#         for c in coords:
+#             linestack[tuple(c)] = 1
+#         logging.info('  Finished.\n')
+#         return linestack
+#     else:
+#         logging.info('  Not able to build linestack from float coordinates.')
+#         return None
+
+def swc2linestack(filepath, unit, imagesize, voxelsize=None):
+
+    coords = pd.read_csv(filepath, comment='#', sep=' ', header=None)[[2,3,4]].as_matrix()
+    
+    if unit == 'pixel':
+        if imagesize is None:
+            logging.info('  No `imagesize` is provided.')
+            return None
+        else:
+            coords = coords.astype(int)
+
+    else: # unit == 'um'
+        if imagesize is None:
+            logging.info('  No `imagesize` is provided.')
+            return None
+        else:
+            if voxelsize is None:
+                logging.info('  Not able to build linestack from float coordinates.')
+                return None
+            else:
+                coords = (coords / voxelsize).astype(int)
+
+    logging.info('  Start: Creating linestack...')
+    linestack = np.zeros(imagesize)
+    for c in coords:
+        linestack[tuple(c)] = 1
+    logging.info('  Finished.\n')
+    
+    return linestack   
+
 
 def get_soma(df_swc):
     
@@ -425,6 +477,49 @@ def get_path_dendritic_length(path):
 def get_path_euclidean_length(path):
     return np.sqrt(np.sum((path[0] - path[-1]) ** 2))
 
+def unique_row(a):
+    
+    b = np.ascontiguousarray(a).view(np.dtype((np.void, a.dtype.itemsize * a.shape[1])))
+    _, idx = np.unique(b, return_index=True)
+    
+    unique_a = a[idx]
+    
+    return unique_a
+
+def get_outer_terminals(all_terminals):
+    
+    from scipy.spatial import ConvexHull
+    hull = ConvexHull(all_terminals[:,:2])
+    outer_terminals_3d = all_terminals[hull.vertices]
+#     outer_terminals_2d = all_terminals[:, :2][hull.vertices]
+    outer_terminals_3d = np.vstack([outer_terminals_3d, outer_terminals_3d[0]])
+    
+    return outer_terminals_3d
+
+def get_angle(v0, v1):
+    c = np.dot(v0, v1) / np.linalg.norm(v0) / np.linalg.norm(v1)
+    return np.arccos(np.clip(c, -1, 1)), np.degrees(np.arccos(np.clip(c, -1, 1)))
+
+def get_node_vector(df_paths, path_id):
+    s = df_paths.loc[path_id].path[0]
+    # e = df_paths.loc[path_id].connected_by_at
+    # if np.isnan(e).any():
+    e = df_paths.loc[path_id].path[-1]
+    v= e-s
+    return v/np.linalg.norm(v)
+
+def get_nearest_recorded_point_vector(df_paths, path_id):
+
+    v = np.array([0,0,0])
+    s = df_paths.loc[path_id].path[0]
+    i = 0
+    while (v == 0).all():
+        i+=1
+        e = df_paths.loc[path_id].path[i]
+        v = e-s
+        if i>5:break
+    
+    return v/np.linalg.norm(v)
 
 def get_path_statistics(df_paths):
     
@@ -455,4 +550,111 @@ def get_path_statistics(df_paths):
     
     return df_paths
 
-   
+def calculate_density(linestack, voxelsize):
+    '''
+    reference: A. Stepanyantsa & D.B. Chklovskiib (2005). Neurogeometry and potential synaptic connectivity. Trends in Neuroscience.
+    '''
+    import scipy.ndimage as ndimage
+
+    logging.info('  Start: Calculating dendritic density...')
+
+    smoothed_layer_stack = []
+    for i in range(linestack.shape[2]):
+
+        layer = linestack[:,:,i]
+        smoothed_layer_stack.append(ndimage.gaussian_filter(layer, sigma=25/voxelsize[0], order=0))
+
+    density_stack = np.dstack(smoothed_layer_stack)
+    center_of_mass = np.array(ndimage.measurements.center_of_mass(density_stack.sum(2)))
+
+    logging.info('  Finished. \n')
+
+    return density_stack, center_of_mass
+
+def get_average_angles(df_paths):
+
+    nodal_angles_deg = {}
+    nodal_angles_rad = {}
+    
+    local_angles_deg = {}
+    local_angles_rad = {}
+    
+    n = 0
+    for i in np.unique(df_paths.connect_to):
+
+        if i == -1:
+            continue
+
+        path_ids = df_paths[df_paths.connect_to == i].index.tolist()
+        
+        # print(i, len(path_ids))
+        if len(path_ids) == 2:
+            v00 = get_node_vector(df_paths, path_ids[0])
+            v01 = get_node_vector(df_paths, path_ids[1])
+            nodal_angles_rad[n], nodal_angles_deg[n] = get_angle(v00,v01)
+
+            v10 = get_nearest_recorded_point_vector(df_paths, path_ids[0])
+            v11 = get_nearest_recorded_point_vector(df_paths, path_ids[1])
+            local_angles_rad[n], local_angles_deg[n] = get_angle(v10,v11)
+
+            n+=1
+        else:
+            continue
+
+    average_nodal_angle_deg = np.mean(list(nodal_angles_deg.values()))
+    average_nodal_angle_rad = np.mean(list(nodal_angles_rad.values()))
+
+    average_local_angle_deg = np.mean(list(local_angles_deg.values()))
+    average_local_angle_rad = np.mean(list(local_angles_rad.values()))
+
+    return average_nodal_angle_deg, average_nodal_angle_rad, average_local_angle_deg, average_local_angle_rad
+
+
+def plot_skeleten(ax, df_paths, soma, axis0, axis1, order_type, lims):
+
+    if order_type == 'c':
+        colors = plt.cm.viridis.colors
+        colors_idx = np.linspace(0, 255, max(df_paths.corder)+1).astype(int)
+    elif order_type == 's':
+        colors = plt.cm.viridis_r.colors
+        colors_idx = np.linspace(0, 255, max(df_paths.sorder)+1).astype(int)
+        
+    ax.scatter(soma[0][axis0], soma[0][axis1], s=280, color='grey')
+    for row in df_paths.iterrows():
+
+        path_id = row[0]
+
+        path = row[1]['path']
+        bpt = path[0]
+        if order_type == 'c':
+            order = row[1]['corder']
+            ax.plot(path[:, axis0], path[:, axis1], color=colors[colors_idx[order]])
+            ax.scatter(bpt[axis0], bpt[axis1], color=colors[colors_idx[order]], zorder=1)
+
+        elif order_type == 's':
+            order = row[1]['sorder']
+            ax.plot(path[:, axis0], path[:, axis1], color=colors[colors_idx[order-1]])
+            ax.scatter(bpt[axis0], bpt[axis1], color=colors[colors_idx[order-1]], zorder=1)
+    
+    maxlims, minlims = lims
+    ax.set_xlim(0, lims[axis0])
+    ax.set_ylim(0, lims[axis1])
+    ax.axis('off')
+
+def find_lims(df_paths):
+    points = np.vstack(df_paths.path)
+    maxlims = np.max(points, 0)
+    minlims = np.min(points, 0)
+    xylims = np.hstack([maxlims[:2], minlims[:2]])
+    zlims = np.hstack([maxlims[2], minlims[2]])
+    if (xylims >= 0).all():
+        xylims = np.array([0, max(xylims).astype(int) + 30])
+    else:
+        xylims = np.array([-max(abs(xylims)).astype(int) - 30, max(abs(xylims)).astype(int) + 30])
+
+    if (zlims >= 0).all():
+        zlims = np.array([0, max(zlims).astype(int) + 30])
+    else:
+        zlims = np.array([-max(abs(zlims)).astype(int) - 30, max(abs(zlims)).astype(int) + 30])
+        
+    return xylims, zlims
