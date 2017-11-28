@@ -1,8 +1,0 @@
-morphopy/__init__.py
-morphopy/_morph.py
-morphopy/_utils.py
-morphopy.egg-info/PKG-INFO
-morphopy.egg-info/SOURCES.txt
-morphopy.egg-info/dependency_links.txt
-morphopy.egg-info/requires.txt
-morphopy.egg-info/top_level.txt

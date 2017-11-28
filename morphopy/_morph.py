@@ -223,7 +223,7 @@ class Morph(object):
         soma = self.soma
 
         xylims, zlims = find_lims(df_paths)
-
+        lims = (xylims, zlims)
         # maxlims = (np.max(np.vstack(df_paths.path), 0)[1:]).astype(int) 
         # maxlims = np.hstack([maxlims[0], maxlims]) + 30
         # minlims = (np.min(np.vstack(df_paths.path), 0)[1:]).astype(int)

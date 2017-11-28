@@ -636,9 +636,23 @@ def plot_skeleten(ax, df_paths, soma, axis0, axis1, order_type, lims):
             ax.plot(path[:, axis0], path[:, axis1], color=colors[colors_idx[order-1]])
             ax.scatter(bpt[axis0], bpt[axis1], color=colors[colors_idx[order-1]], zorder=1)
     
-    maxlims, minlims = lims
-    ax.set_xlim(0, lims[axis0])
-    ax.set_ylim(0, lims[axis1])
+    # maxlims, minlims = lims
+    # ax.set_xlim(0, lims[axis0])
+    # ax.set_ylim(0, lims[axis1])
+    xylims, zlim = lims
+
+    if axis0 == 2 and axis1 == 0: # ax2
+        ax.set_xlim(xylims)
+        ax.set_ylim()
+    
+    elif axis0 == 1 and axis1 == 2: # ax3
+        ax.set_xlim()
+        ax.set_ylim()    
+
+    elif axis0 == 1 and axis1 == 0: # ax1
+        ax.set_xlim(xylims[0], xylims[1])
+        ax.set_ylim(xylims[0], xylims[1])
+
     ax.axis('off')
 
 def find_lims(df_paths):
@@ -653,7 +667,7 @@ def find_lims(df_paths):
         xylims = np.array([-max(abs(xylims)).astype(int) - 30, max(abs(xylims)).astype(int) + 30])
 
     if (zlims >= 0).all():
-        zlims = np.array([0, max(zlims).astype(int) + 30])
+        zlims = np.array([-10, max(zlims).astype(int) + 30])
     else:
         zlims = np.array([-max(abs(zlims)).astype(int) - 30, max(abs(zlims)).astype(int) + 30])
         
