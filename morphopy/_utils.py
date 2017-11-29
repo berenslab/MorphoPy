@@ -41,7 +41,12 @@ def swc2linestack(filepath, unit, imagesize, voxelsize=None):
                 logging.info('  Not able to build linestack from float coordinates.')
                 return None
             else:
-                coords = np.round(coords / voxelsize).astype(int)
+                # coords = np.round(coords / voxelsize).astype(int) # not able to handle the soma-centered swc.
+                logging.info('  coords in um are converted back to pixel.')
+                coords = np.round(coords / voxelsize)
+                coords = coords - coords.min(0) + 10
+                coords = coords.astype(int)
+                logging.info('{}'.format(coords.max(0)))
 
     logging.info('  Start: Creating linestack...')
     linestack = np.zeros(imagesize)
