@@ -21,20 +21,6 @@ def read_swc(filepath, unit, voxelsize):
     logging.info('  Finished.\n')
     return df, unit_of_df
 
-# def swc2linestack(filepath, unit, imagesize, voxelsize=None):
-    
-#     if unit == 'pixel':
-#         logging.info('  Start: Creating linestack...')
-#         coords = pd.read_csv(filepath, comment='#', sep=' ', header=None)[[2,3,4]].astype(int).as_matrix()
-#         linestack = np.zeros(imagesize)
-#         for c in coords:
-#             linestack[tuple(c)] = 1
-#         logging.info('  Finished.\n')
-#         return linestack
-#     else:
-#         logging.info('  Not able to build linestack from float coordinates.')
-#         return None
-
 def swc2linestack(filepath, unit, imagesize, voxelsize=None):
 
     coords = pd.read_csv(filepath, comment='#', sep=' ', header=None)[[2,3,4]].as_matrix()
@@ -44,7 +30,7 @@ def swc2linestack(filepath, unit, imagesize, voxelsize=None):
             logging.info('  No `imagesize` is provided.')
             return None
         else:
-            coords = coords.astype(int)
+            coords = np.round(coords).astype(int)
 
     else: # unit == 'um'
         if imagesize is None:
@@ -55,7 +41,7 @@ def swc2linestack(filepath, unit, imagesize, voxelsize=None):
                 logging.info('  Not able to build linestack from float coordinates.')
                 return None
             else:
-                coords = (coords / voxelsize).astype(int)
+                coords = np.round(coords / voxelsize).astype(int)
 
     logging.info('  Start: Creating linestack...')
     linestack = np.zeros(imagesize)
@@ -642,12 +628,13 @@ def plot_skeleten(ax, df_paths, soma, axis0, axis1, order_type, lims):
     xylims, zlim = lims
 
     if axis0 == 2 and axis1 == 0: # ax2
-        ax.set_xlim(xylims)
-        ax.set_ylim()
-    
+        ax.set_xlim(zlim[0], zlim[1])
+        ax.set_ylim(xylims[0], xylims[1])   
+
     elif axis0 == 1 and axis1 == 2: # ax3
-        ax.set_xlim()
-        ax.set_ylim()    
+        ax.set_xlim(xylims[0], xylims[1])
+        ax.set_ylim(zlim[0], zlim[1])
+     
 
     elif axis0 == 1 and axis1 == 0: # ax1
         ax.set_xlim(xylims[0], xylims[1])

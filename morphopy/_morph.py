@@ -95,7 +95,7 @@ class Morph(object):
         df_swc.to_csv(save_to + '/' + filename, sep=' ', index=None, header=None)
 
 
-    def cell_statistics(self):
+    def summary(self):
 
         # branch order / number of branch points
 
@@ -212,7 +212,7 @@ class Morph(object):
 
         import matplotlib.pyplot as plt
         from matplotlib_scalebar.scalebar import ScaleBar
-        
+
         plt.figure(figsize=(16,16))
         ax1 = plt.subplot2grid((4,4), (0,1), rowspan=3, colspan=3)
         ax2 = plt.subplot2grid((4,4), (0,0), rowspan=3, colspan=1)
