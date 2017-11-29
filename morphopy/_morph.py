@@ -8,7 +8,7 @@ __all__ = ['Morph']
 
 class Morph(object):
 
-    def __init__(self, data, unit='um', voxelsize=None, imagesize=None, threshold=30, loglevel='INFO'):
+    def __init__(self, data, unit='um', voxelsize=None, threshold=30, loglevel='INFO'):
 
         self._logger = logging.getLogger()
         
@@ -31,13 +31,13 @@ class Morph(object):
 
 
         self.voxelsize = voxelsize
-        self.imagesize = imagesize
+        # self.imagesize = imagesize
         self.unit_swc = unit
         # df_paths | real length
 
         df_swc, unit_df = read_swc(data, unit, voxelsize)
         soma, neurites = get_soma(df_swc)
-        df_paths = get_df_paths(df_swc) 
+        df_paths = get_df_paths(df_swc)
         df_paths = update_df_paths(df_paths, soma) # find which paths connnect to which
         paths_to_fix = detect_messiness(df_paths, threshold) # fix some rare irregularities.
         df_paths = clean_messiness(df_paths, paths_to_fix)
@@ -54,10 +54,13 @@ class Morph(object):
 
         # linestack | pixel
 
-        self.linestack = swc2linestack(data, self.unit_swc, imagesize, voxelsize)
+        # self.linestack, self.soma_on_stack = swc2linestack(data, self.unit_swc, imagesize, voxelsize)
+        self.linestack, self.soma_on_stack, self.coordindate_padding = swc2linestack(data, self.unit_swc, voxelsize)
+
+        self.df_paths = get_path_on_stack(self.df_paths, self.voxelsize, self.coordindate_padding)
 
         if self.linestack is not None:
-            self.densitystack, self.dendritic_center = calculate_density(self.linestack, voxelsize)
+            self.density_stack, self.dendritic_center = calculate_density(self.linestack, voxelsize)
 
 
     def to_swc(self, filename='morph.swc', save_to='./'):
@@ -75,8 +78,6 @@ class Morph(object):
 
             connect_to = row[1]['connect_to']
             connect_to_at = row[1]['connect_to_at']
-
-
 
             swc_path = np.column_stack([np.ones(len(path)) * 3, path])
             swc_path = np.column_stack([np.arange(len(swc_arr)+1, len(path)+len(swc_arr)+1), swc_path])
@@ -186,12 +187,14 @@ class Morph(object):
 
             dendritic_center = self.dendritic_center
 
-            if self.unit_swc == 'um':
-                soma_coordinates = self.soma / self.voxelsize
-            else:
-                soma_coordinates = self.soma
+            # if self.unit_swc == 'um':
+            #     soma_coordinates = self.soma / self.voxelsize
+            # else:
+            #     soma_coordinates = self.soma
 
-            asymmetry = np.sqrt(((soma_coordinates[0][:2] - dendritic_center)**2).sum())
+            soma_coordinates = self.soma_on_stack
+
+            asymmetry = np.sqrt(((soma_coordinates[:2] - dendritic_center)**2).sum())
 
             all_termianls_to_dendritic_center = np.sqrt(np.sum((terminalpoints[:,:2] - dendritic_center) ** 2,  1)) * voxelsize[0]
             out_terminals_to_dendritic_center = np.sqrt(np.sum((outerterminals[:, :2]- dendritic_center) **2, 1)) * voxelsize[0]

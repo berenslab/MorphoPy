@@ -21,41 +21,55 @@ def read_swc(filepath, unit, voxelsize):
     logging.info('  Finished.\n')
     return df, unit_of_df
 
-def swc2linestack(filepath, unit, imagesize, voxelsize=None):
+def swc2linestack(filepath, unit, voxelsize=None):
 
     coords = pd.read_csv(filepath, comment='#', sep=' ', header=None)[[2,3,4]].as_matrix()
     
     if unit == 'pixel':
-        if imagesize is None:
-            logging.info('  No `imagesize` is provided.')
-            return None
-        else:
-            coords = np.round(coords).astype(int)
+        coords = np.round(coords).astype(int)
 
     else: # unit == 'um'
-        if imagesize is None:
-            logging.info('  No `imagesize` is provided.')
+
+        if voxelsize is None:
+            logging.info('  Not able to build linestack from float coordinates.')
             return None
         else:
-            if voxelsize is None:
-                logging.info('  Not able to build linestack from float coordinates.')
-                return None
-            else:
-                # coords = np.round(coords / voxelsize).astype(int) # not able to handle the soma-centered swc.
-                logging.info('  coords in um are converted back to pixel.')
-                coords = np.round(coords / voxelsize)
-                coords = coords - coords.min(0) + 10
-                coords = coords.astype(int)
-                logging.info('{}'.format(coords.max(0)))
+            # coords = np.round(coords / voxelsize).astype(int) # not able to handle the soma-centered swc.
+            logging.info('  coords in um are converted back to pixel.')
+            coords = coords - coords.min(0)
+            coords = np.round(coords / voxelsize).astype(int)   
+            # coords = np.round(coords / voxelsize)
+            # coords = coords - coords.min(0)
+            # coords = coords.astype(int)
+            # logging.info('{}'.format(coords.max(0)))
 
+    imagesize = coords.max(0) + 1
     logging.info('  Start: Creating linestack...')
     linestack = np.zeros(imagesize)
     for c in coords:
         linestack[tuple(c)] = 1
+    
+    xyz = (coords - coords.min(0)).max(0)
+    xy = max(xyz[:2])
+    xy = np.ceil(xy/100) * 100
+    z = xyz[2]
+    z = np.ceil(z / 10) * 10
+    padding_cp = np.ceil((np.array([xy, xy, z]) - linestack.shape) / 2).astype(int)
+    padding_x = padding_cp.copy()
+    padding_y = padding_cp.copy()
+    
+    odd = np.array(linestack.shape) % 2 == 1
+    padding_y[odd] = padding_y[odd] - 1
+    
+    padding = np.vstack([padding_x, padding_y]).T
+
+    npad = ((padding[0]), (padding[1]), (padding[2]))
+    linestack = np.pad(linestack, pad_width=npad, mode='constant')
+    soma_on_stack = coords[0] + padding_x
+
     logging.info('  Finished.\n')
     
-    return linestack   
-
+    return linestack, soma_on_stack, padding_x
 
 def get_soma(df_swc):
     
@@ -664,3 +678,35 @@ def find_lims(df_paths):
         zlims = np.array([-max(abs(zlims)).astype(int) - 30, max(abs(zlims)).astype(int) + 30])
         
     return xylims, zlims
+
+def get_path_on_stack(df_paths, voxelsize, coordinate_padding):
+
+    if voxelsize is None:
+        voxelsize = np.array([1,1,1])
+
+    path_dict = df_paths.path.to_dict()
+    path_stack_dict = {}
+
+    all_keys = path_dict.keys()
+
+    coords = np.vstack(df_paths.path)
+ 
+    for path_id in all_keys:
+
+        path = path_dict[path_id]
+        path = path - coords.min(0)
+        path = np.round(path / voxelsize).astype(int)    
+
+
+
+        path_stack_dict[path_id] = path + coordinate_padding
+
+    df_paths['path_stack'] = pd.Series(path_stack_dict)
+
+    cols = list(df_paths.columns)
+    cols.remove('path_stack')
+    cols.insert(1, 'path_stack')
+    
+    return df_paths[cols]
+
+
