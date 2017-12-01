@@ -31,13 +31,13 @@ class Morph(object):
 
 
         self.voxelsize = voxelsize
-        # self.imagesize = imagesize
         self.unit_swc = unit
-        # df_paths | real length
+        filetype = data.split('/')[-1].split('.')[-1]
+        if filetype == 'swc':
+            df_paths, soma, unit_df = read_swc(data, unit, voxelsize)
+        elif filetype == 'imx':
+            df_paths, soma, unit_df = read_imx(data, unit, voxelsize)
 
-        df_swc, unit_df = read_swc(data, unit, voxelsize)
-        soma, neurites = get_soma(df_swc)
-        df_paths = get_df_paths(df_swc)
         df_paths = update_df_paths(df_paths, soma) # find which paths connnect to which
         paths_to_fix = detect_messiness(df_paths, threshold) # fix some rare irregularities.
         df_paths = clean_messiness(df_paths, paths_to_fix)
@@ -55,11 +55,11 @@ class Morph(object):
         # linestack | pixel
 
         # self.linestack, self.soma_on_stack = swc2linestack(data, self.unit_swc, imagesize, voxelsize)
-        self.linestack, self.soma_on_stack, self.coordindate_padding = swc2linestack(data, self.unit_swc, voxelsize)
+        linestack_output = swc2linestack(data, self.unit_swc, voxelsize)
 
-        self.df_paths = get_path_on_stack(self.df_paths, self.voxelsize, self.coordindate_padding)
-
-        if self.linestack is not None:
+        if linestack_output is not None:
+            self.linestack, self.soma_on_stack, self.coordindate_padding = linestack_output
+            self.df_paths = get_path_on_stack(self.df_paths, self.voxelsize, self.coordindate_padding)
             self.density_stack, self.dendritic_center = calculate_density(self.linestack, voxelsize)
 
 
@@ -187,11 +187,6 @@ class Morph(object):
 
             dendritic_center = self.dendritic_center
 
-            # if self.unit_swc == 'um':
-            #     soma_coordinates = self.soma / self.voxelsize
-            # else:
-            #     soma_coordinates = self.soma
-
             soma_coordinates = self.soma_on_stack
 
             asymmetry = np.sqrt(((soma_coordinates[:2] - dendritic_center)**2).sum())
@@ -211,7 +206,7 @@ class Morph(object):
             logging.info('    Typical Radius : {:.3f}\n'.format(typical_radius))
             logging.info('    Dendritic Area: {:.3f} ×10\u00b3 um\u00b2\n\n'.format(dendritic_area))
 
-    def threeviews(self, order_type='c'):
+    def threeviews(self, order='c'):
 
         import matplotlib.pyplot as plt
         from matplotlib_scalebar.scalebar import ScaleBar
@@ -231,9 +226,9 @@ class Morph(object):
         # maxlims = np.hstack([maxlims[0], maxlims]) + 30
         # minlims = (np.min(np.vstack(df_paths.path), 0)[1:]).astype(int)
 
-        plot_skeleten(ax2, df_paths, soma, 2, 0, order_type, lims)
-        plot_skeleten(ax3, df_paths, soma, 1, 2, order_type, lims)
-        plot_skeleten(ax1, df_paths, soma, 1, 0, order_type, lims)
+        plot_skeleten(ax2, df_paths, soma, 2, 0, order, lims)
+        plot_skeleten(ax3, df_paths, soma, 1, 2, order, lims)
+        plot_skeleten(ax1, df_paths, soma, 1, 0, order, lims)
         scalebar = ScaleBar(1, units=self.unit_df, location='lower left', box_alpha=0)
         ax1.add_artist(scalebar)    
         ax4.axis('off')

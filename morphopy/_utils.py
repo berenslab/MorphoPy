@@ -4,6 +4,8 @@ from copy import deepcopy
 import logging
 import matplotlib.pyplot as plt
 
+## read data
+
 def read_swc(filepath, unit, voxelsize):
     
     logging.info('  Start: Reading `.swc` file from \n\t\t{}\n\t\tinto Pandas DataFrame.'.format(filepath))
@@ -18,8 +20,93 @@ def read_swc(filepath, unit, voxelsize):
     else:
         unit_of_df = unit
 
+    soma, neurites = get_soma(df)
+    df_paths = get_df_paths(df)
+
     logging.info('  Finished.\n')
-    return df, unit_of_df
+    return df_paths, soma, unit_of_df
+
+def read_imx(filepath, unit, voxelsize):
+
+    logging.info('  Start: Reading `.imx` file from \n\t\t{}\n\t\tinto Pandas DataFrame.'.format(filepath))
+    
+    import numpy as np
+    import xml.etree.ElementTree as ET
+    
+    from bs4 import BeautifulSoup
+    
+    def find_locale(loc):
+        return np.where(e[:, 0] == loc)[0]
+    
+    with open(filepath, 'rb') as f:
+        xml_binary = f.read().decode('utf-8')
+    
+    soup = BeautifulSoup(xml_binary, 'lxml')
+    
+    vertex = soup.find('mfilamentgraphvertex').text
+    vertex = vertex.replace(')', '')
+    vertex = vertex.split('(')
+    vertex = [i.strip() for i in vertex]
+    vertex = [i for i in vertex if i != '']
+    
+    edges = soup.find('mfilamentgraphedge').text
+    edges = edges.replace(')', '')
+    edges = edges.split('(')
+    edges = [i.strip() for i in edges]
+    edges = [i for i in edges if i != '']
+    
+    n = np.array([list(map(float, sub.split(','))) for sub in vertex])[:, :3]
+    e = np.array([list(map(int, sub.split(','))) for sub in edges])
+    
+    # get all paths
+    bp_loc = []
+    tm_loc = []
+    for i in range(len(e)):
+        locale = find_locale(i)
+        if len(locale) >= 2:
+            bp_loc.append(i)
+        elif len(locale) == 0:
+            tm_loc.append(i)
+            
+    edge_dict = {}
+    path_id = 0
+
+    for bpt in bp_loc:
+        loc_on_e = find_locale(bpt)
+        for edge in e[loc_on_e]:
+
+            next_point = edge[1]
+            next_loc = find_locale(next_point)
+            e_loc = []
+            e_loc.append(edge)
+            e_loc.append(next_point)
+            while len(next_loc) == 1:
+
+                next_point = e[next_loc[0]][1]
+                e_loc.append(next_point) 
+                next_loc = find_locale(next_point)
+
+            edge_dict[path_id] = np.hstack(e_loc)
+            path_id += 1
+    
+    path_dict = {}
+    all_keys = edge_dict.keys()
+    for key in all_keys:
+    #     if key > 10:continue
+        current_path = n[edge_dict[key]]
+        path_dict[key] = current_path
+    
+    df_paths = pd.DataFrame()
+    df_paths['path'] = pd.Series(path_dict)
+    
+    # get soma
+    soma_loc = int(soup.find('mfilamentgraph').attrs['mrootvertex'])
+    soma = n[soma_loc]
+    
+    logging.info('  Finished.\n')
+    return df_paths, soma, unit
+
+
 
 def swc2linestack(filepath, unit, voxelsize=None):
 
@@ -49,11 +136,15 @@ def swc2linestack(filepath, unit, voxelsize=None):
     for c in coords:
         linestack[tuple(c)] = 1
     
-    xyz = (coords - coords.min(0)).max(0)
+    reset_neg = coords.min(0)
+    reset_neg[reset_neg > 0] = 0
+    
+    xyz = (coords - reset_neg).max(0) + 1
     xy = max(xyz[:2])
     xy = np.ceil(xy/100) * 100
     z = xyz[2]
     z = np.ceil(z / 10) * 10
+    logging.info("{}, {}".format([xy, xy, z], linestack.shape))
     padding_cp = np.ceil((np.array([xy, xy, z]) - linestack.shape) / 2).astype(int)
     padding_x = padding_cp.copy()
     padding_y = padding_cp.copy()
@@ -80,7 +171,8 @@ def get_soma(df_swc):
     return soma_pos, neurites
 
 def connect_to_soma(current_path, soma):
-    return (current_path[0] == soma).all(1).any()
+    # return (current_path[0] == soma).all(1).any()
+    return (current_path == soma).all(1).any()
 
 
 def get_df_paths(df_swc):
@@ -179,7 +271,7 @@ def back2soma(df_paths, path_id):
 
         if path_id == -99:
             break
-    
+
     paths_to_soma.append(path_id)  
 
     return paths_to_soma
@@ -211,7 +303,7 @@ def update_df_paths(df_paths, soma):
     df_paths['connected_by'] = pd.Series(connected_by_dict)
     df_paths['connected_by_at'] = pd.Series(connected_by_at_dict)
 
-    df_paths = add_soma_to_some_paths(df_paths)
+    df_paths = add_soma_to_some_paths(df_paths, soma)
     
     logging.info('  Finished.\n')
 
@@ -248,8 +340,11 @@ def get_distance_tip_to_path(point, path):
     
     return [closest_point, closest_distance]
 
-def find_closest_paths(all_paths, current_path, path_id):
+# def find_closest_paths(all_paths, current_path, path_id):
+def find_closest_paths(all_paths, path_id):
     
+    current_path = all_paths[path_id][1:]
+
     closest_paths = []
     
     sub_paths = deepcopy(all_paths)
@@ -283,10 +378,10 @@ def clean_messiness(df_paths, paths_to_fix):
         
         for path_id in paths_to_fix:
             
-            current_path = all_paths[path_id][1:]
+            # current_path = all_paths[path_id][1:]
                 
-            connect_to, connect_to_at = find_closest_paths(all_paths, current_path, path_id)
-         
+            # connect_to, connect_to_at = find_closest_paths(all_paths, current_path, path_id)
+            connect_to, connect_to_at = find_closest_paths(all_paths, path_id)
             current_path = np.vstack([connect_to_at, current_path])
 
             df_paths_fixed.set_value(path_id, 'path', current_path)
@@ -309,10 +404,10 @@ def get_bpt_loc_pairs(bpt_loc):
         bpt_loc_pairs = [[bpt_loc[i-1], bpt_loc[i]] for i in range(1,len(bpt_loc))]
         return np.vstack(bpt_loc_pairs)
 
-def add_soma_to_some_paths(df_paths):
+def add_soma_to_some_paths(df_paths, soma):
     
     paths_connect_to_soma = df_paths[df_paths.connect_to == -1]
-    soma = paths_connect_to_soma.iloc[0].connect_to_at    
+    # soma = paths_connect_to_soma.iloc[0].connect_to_at    
     for row in paths_connect_to_soma.iterrows():
 
         path_id = row[0]
@@ -321,6 +416,7 @@ def add_soma_to_some_paths(df_paths):
         if (soma == path).all(1).any():
             continue
         else:
+            print(soma.shape, path.shape)
             path = np.vstack([soma, path])
 
         df_paths = df_paths.set_value(path_id, 'path', path)
@@ -418,7 +514,7 @@ def cleanup_better_paths(df_paths):
         path_id_head = path_id
         path_id_tail = df.loc[path_id].connected_by[0]
         
-        logging.info("Connecting Path {} and {}".format(path_id_head, path_id_tail))
+        logging.info("  Connecting Path {} and {}".format(path_id_head, path_id_tail))
 
         path_head = df.loc[path_id].path
         path_tail = df.loc[path_id_tail].path
@@ -690,11 +786,13 @@ def get_path_on_stack(df_paths, voxelsize, coordinate_padding):
     all_keys = path_dict.keys()
 
     coords = np.vstack(df_paths.path)
- 
+    reset_neg = coords.min(0)
+    reset_neg[reset_neg > 0] = 0 
+    
     for path_id in all_keys:
 
         path = path_dict[path_id]
-        path = path - coords.min(0)
+        path = path - reset_neg
         path = np.round(path / voxelsize).astype(int)    
 
 
@@ -710,3 +808,7 @@ def get_path_on_stack(df_paths, voxelsize, coordinate_padding):
     return df_paths[cols]
 
 
+def remove_1d_duplicate(arr):
+    
+    from itertools import groupby
+    return [x[0] for x in groupby(arr)]
