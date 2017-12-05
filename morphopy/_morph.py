@@ -10,6 +10,8 @@ class Morph(object):
 
     def __init__(self, data, unit='um', voxelsize=None, threshold=30, loglevel='INFO'):
 
+        # logging
+
         self._logger = logging.getLogger()
         
         if loglevel == 'INFO':
@@ -29,19 +31,21 @@ class Morph(object):
             logging.info('  Please enter a valid logging mode (DEBUG, INFO, WARNING, ERROR, CRITICAL).')
             self._logger.setLevel(logging.ERROR)
 
+        # meta data
 
         self.voxelsize = voxelsize
         self.unit_swc = unit
         filetype = data.split('/')[-1].split('.')[-1]
+        
+        # load data
         if filetype == 'swc':
             df_paths, soma, unit_df = read_swc(data, unit, voxelsize)
-        elif filetype == 'imx':
-            df_paths, soma, unit_df = read_imx(data, unit, voxelsize)
+        else:
+            logging.info('For loading other formats other than `.swc`, please first use `morphopy.converter` ')
 
         df_paths = update_df_paths(df_paths, soma) # find which paths connnect to which
         paths_to_fix = detect_messiness(df_paths, threshold) # fix some rare irregularities.
         df_paths = clean_messiness(df_paths, paths_to_fix)
-        
         df_paths = get_better_paths(df_paths, soma) 
         df_paths = cleanup_better_paths(df_paths)
         df_paths = get_path_statistics(df_paths)
@@ -61,6 +65,8 @@ class Morph(object):
             self.linestack, self.soma_on_stack, self.coordindate_padding = linestack_output
             self.df_paths = get_path_on_stack(self.df_paths, self.voxelsize, self.coordindate_padding)
             self.density_stack, self.dendritic_center = calculate_density(self.linestack, voxelsize)
+        else:
+            self.linestack = None
 
 
     def to_swc(self, filename='morph.swc', save_to='./'):
@@ -140,10 +146,10 @@ class Morph(object):
         average_nodal_angle_deg, average_nodal_angle_rad, average_local_angle_deg, average_local_angle_rad = get_average_angles(self.df_paths)
 
         # Summary
-        logging.info('  Statistics of the cell')
+        logging.info('  Summary of the cell')
         logging.info('  ======================\n')
 
-        logging.info('  # Meta Infomation\n')
+        logging.info('  # General Infomation\n')
         logging.info('    Number of dendritic arbor segment: {}'.format(num_dendritic_segments))
         logging.info('    Number of branch points: {}'.format(num_branchpoints))
         logging.info('    Number of irreducible nodes: {}\n'.format(num_irreducible_nodes))
@@ -157,24 +163,24 @@ class Morph(object):
         logging.info('    Average local angle in degree: {:.3f}'.format(average_local_angle_deg))
         logging.info('    Average local angle in radian: {:.3f} \n'.format(average_local_angle_rad))
         
-        logging.info('  ## Average tortuosity: {:.3f}\n'.format(average_tortuosity))
+        logging.info('  # Average tortuosity: {:.3f}\n'.format(average_tortuosity))
         
-        logging.info('  ## Dendritic length ({})\n'.format(self.unit_df))
+        logging.info('  # Dendritic length ({})\n'.format(self.unit_df))
         # logging.info('  ## Dendritic length\n')
-        logging.info('     Sum: {:.3f}'.format(dendritic_sum))
-        logging.info('     Mean: {:.3f}'.format(dendritic_mean))
-        logging.info('     Median: {:.3f}'.format(dendritic_median))
-        logging.info('     Min: {:.3f}'.format(dendritic_min))
-        logging.info('     Max: {:.3f}\n'.format(dendritic_max))
+        logging.info('    Sum: {:.3f}'.format(dendritic_sum))
+        logging.info('    Mean: {:.3f}'.format(dendritic_mean))
+        logging.info('    Median: {:.3f}'.format(dendritic_median))
+        logging.info('    Min: {:.3f}'.format(dendritic_min))
+        logging.info('    Max: {:.3f}\n'.format(dendritic_max))
         
-        logging.info('  ## Euclidean length ({})\n'.format(self.unit_df))
+        logging.info('  # Euclidean length ({})\n'.format(self.unit_df))
         # logging.info('  ## Euclidean length\n')
 
-        logging.info('     Sum: {:.3f}'.format(euclidean_sum))
-        logging.info('     Mean: {:.3f}'.format(euclidean_mean))
-        logging.info('     Median: {:.3f}'.format(euclidean_median))
-        logging.info('     Min: {:.3f}'.format(euclidean_min))
-        logging.info('     Max: {:.3f}\n'.format(euclidean_max))
+        logging.info('    Sum: {:.3f}'.format(euclidean_sum))
+        logging.info('    Mean: {:.3f}'.format(euclidean_mean))
+        logging.info('    Median: {:.3f}'.format(euclidean_median))
+        logging.info('    Min: {:.3f}'.format(euclidean_min))
+        logging.info('    Max: {:.3f}\n'.format(euclidean_max))
 
         # density related 
 
@@ -206,7 +212,7 @@ class Morph(object):
             logging.info('    Typical Radius : {:.3f}\n'.format(typical_radius))
             logging.info('    Dendritic Area: {:.3f} ×10\u00b3 um\u00b2\n\n'.format(dendritic_area))
 
-    def threeviews(self, order='c'):
+    def show_threeviews(self, order='c'):
 
         import matplotlib.pyplot as plt
         from matplotlib_scalebar.scalebar import ScaleBar
@@ -220,11 +226,13 @@ class Morph(object):
         df_paths = self.df_paths
         soma = self.soma
 
-        xylims, zlims = find_lims(df_paths)
-        lims = (xylims, zlims)
+        # xylims, zlims = find_lims(df_paths)
+        # lims = (xylims, zlims)
         # maxlims = (np.max(np.vstack(df_paths.path), 0)[1:]).astype(int) 
         # maxlims = np.hstack([maxlims[0], maxlims]) + 30
         # minlims = (np.min(np.vstack(df_paths.path), 0)[1:]).astype(int)
+
+        lims = find_lims(df_paths)
 
         plot_skeleten(ax2, df_paths, soma, 2, 0, order, lims)
         plot_skeleten(ax3, df_paths, soma, 1, 2, order, lims)
@@ -232,4 +240,38 @@ class Morph(object):
         scalebar = ScaleBar(1, units=self.unit_df, location='lower left', box_alpha=0)
         ax1.add_artist(scalebar)    
         ax4.axis('off')
+
+        plt.show()
     
+    def show_density(self):
+
+        try:
+            density_stack = self.density_stack
+            voxelsize = self.voxelsize
+        except:
+            logging.info('No density stack. Please provide the voxel sizes of the `.swc` file.')
+            return None
+        
+        import matplotlib.pyplot as plt
+        from matplotlib_scalebar.scalebar import ScaleBar
+
+        linestack = self.linestack
+        dendritic_center = self.dendritic_center
+        soma_on_stack = self.soma_on_stack
+        
+        plt.figure(figsize=(16, 16))
+        plt.imshow(density_stack.sum(2), cmap=plt.cm.gnuplot2_r, origin='lower')
+        plt.scatter(dendritic_center[1], dendritic_center[0], color='g', marker='*', s=180, label='Dendritic Center')
+        plt.scatter(soma_on_stack[1], soma_on_stack[0], color='r',  marker='*', s=180, label='Soma')
+        
+        linestack_xy = linestack.sum(2)
+        linestack_xy[linestack_xy !=0] = 1
+        linestack_xy = np.ma.masked_array(linestack_xy, ~linestack.any(2))
+        plt.imshow(linestack_xy, origin='lower', cmap=plt.cm.binary)
+        
+        plt.legend(frameon=False)
+
+        scalebar = ScaleBar(voxelsize[0], units=self.unit_df, location='lower left', box_alpha=0)
+        plt.gca().add_artist(scalebar)   
+        
+        plt.axis('off')

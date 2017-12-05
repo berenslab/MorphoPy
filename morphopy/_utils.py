@@ -23,12 +23,12 @@ def read_swc(filepath, unit, voxelsize):
     soma, neurites = get_soma(df)
     df_paths = get_df_paths(df)
 
-    logging.info('  Finished.\n')
+    logging.debug('  Finished.\n')
     return df_paths, soma, unit_of_df
 
 def read_imx(filepath, unit, voxelsize):
 
-    logging.info('  Start: Reading `.imx` file from \n\t\t{}\n\t\tinto Pandas DataFrame.'.format(filepath))
+    logging.debug('  Start: Reading `.imx` file from \n\t\t{}\n\t\tinto Pandas DataFrame.'.format(filepath))
     
     import numpy as np
     import xml.etree.ElementTree as ET
@@ -103,7 +103,7 @@ def read_imx(filepath, unit, voxelsize):
     soma_loc = int(soup.find('mfilamentgraph').attrs['mrootvertex'])
     soma = n[soma_loc]
     
-    logging.info('  Finished.\n')
+    logging.debug('  Finished.\n')
     return df_paths, soma, unit
 
 
@@ -118,20 +118,20 @@ def swc2linestack(filepath, unit, voxelsize=None):
     else: # unit == 'um'
 
         if voxelsize is None:
-            logging.info('  Not able to build linestack from float coordinates.')
+            logging.debug('  Not able to build linestack from float coordinates.')
             return None
         else:
             # coords = np.round(coords / voxelsize).astype(int) # not able to handle the soma-centered swc.
-            logging.info('  coords in um are converted back to pixel.')
+            logging.debug('  coords in um are converted back to pixel.')
             coords = coords - coords.min(0)
             coords = np.round(coords / voxelsize).astype(int)   
             # coords = np.round(coords / voxelsize)
             # coords = coords - coords.min(0)
             # coords = coords.astype(int)
-            # logging.info('{}'.format(coords.max(0)))
+            # logging.debug('{}'.format(coords.max(0)))
 
     imagesize = coords.max(0) + 1
-    logging.info('  Start: Creating linestack...')
+    logging.debug('  Start: Creating linestack...')
     linestack = np.zeros(imagesize)
     for c in coords:
         linestack[tuple(c)] = 1
@@ -144,7 +144,7 @@ def swc2linestack(filepath, unit, voxelsize=None):
     xy = np.ceil(xy/100) * 100
     z = xyz[2]
     z = np.ceil(z / 10) * 10
-    logging.info("{}, {}".format([xy, xy, z], linestack.shape))
+    logging.debug("{}, {}".format([xy, xy, z], linestack.shape))
     padding_cp = np.ceil((np.array([xy, xy, z]) - linestack.shape) / 2).astype(int)
     padding_x = padding_cp.copy()
     padding_y = padding_cp.copy()
@@ -158,7 +158,7 @@ def swc2linestack(filepath, unit, voxelsize=None):
     linestack = np.pad(linestack, pad_width=npad, mode='constant')
     soma_on_stack = coords[0] + padding_x
 
-    logging.info('  Finished.\n')
+    logging.debug('  Finished.\n')
     
     return linestack, soma_on_stack, padding_x
 
@@ -177,7 +177,7 @@ def connect_to_soma(current_path, soma):
 
 def get_df_paths(df_swc):
 
-    logging.info('  Start: Creating `df_paths` from `df_swc`.')
+    logging.debug('  Start: Creating `df_paths` from `df_swc`.')
     
     dict_path = {}
     path_id = 0
@@ -209,7 +209,7 @@ def get_df_paths(df_swc):
     df_paths = pd.DataFrame()
     df_paths['path'] = pd.Series(dict_path)
     
-    logging.info('  Finished.\n')
+    logging.debug('  Finished.\n')
 
     return df_paths
 
@@ -241,7 +241,7 @@ def find_connection(all_paths, soma, path_id, paths_to_ignore=[]):
             connect_to_at = target_path[connect_to_at_loc[0]]
             return connect_to, connect_to_at
     
-    logging.info("Path {} connects to no other path. Try fix it.".format(path_id))
+    logging.debug("Path {} connects to no other path. Try fix it.".format(path_id))
     connect_to = -99 
     connect_to_at = np.nan
     
@@ -263,7 +263,7 @@ def back2soma(df_paths, path_id):
     while df_paths.loc[path_id].connect_to != -1:
 
         if path_id in paths_to_soma:
-            logging.info("\tPath {} cannot trace back to soma: {}".format(path_id_original, paths_to_soma))
+            logging.debug("\tPath {} cannot trace back to soma: {}".format(path_id_original, paths_to_soma))
             break
         else:
             paths_to_soma.append(path_id)
@@ -278,7 +278,7 @@ def back2soma(df_paths, path_id):
 
 def update_df_paths(df_paths, soma):
     
-    logging.info('  Start: Updating `df_paths` with connectivity info.')
+    logging.debug('  Start: Updating `df_paths` with connectivity debug.')
 
     all_paths = df_paths.path.to_dict()
     all_keys = list(all_paths.keys())
@@ -305,13 +305,13 @@ def update_df_paths(df_paths, soma):
 
     df_paths = add_soma_to_some_paths(df_paths, soma)
     
-    logging.info('  Finished.\n')
+    logging.debug('  Finished.\n')
 
     return df_paths
 
 def detect_messiness(df_paths, threshold):
     
-    logging.info('  Start: Finding if there are disconnected paths. ')
+    logging.debug('  Start: Finding if there are disconnected paths. ')
 
     paths_to_fix = []
     
@@ -323,11 +323,11 @@ def detect_messiness(df_paths, threshold):
             paths_to_fix.append(i+1)
     
     if len(paths_to_fix) > 0:
-        logging.info('  Paths {} needs to be fixed'.format(paths_to_fix))
+        logging.debug('  Paths {} needs to be fixed'.format(paths_to_fix))
     else:
-        logging.info('  All paths are fine. ')
+        logging.debug('  All paths are fine. ')
 
-    logging.info('  Finished.\n')
+    logging.debug('  Finished.\n')
     
     return paths_to_fix
 
@@ -367,7 +367,7 @@ def find_closest_paths(all_paths, path_id):
 def clean_messiness(df_paths, paths_to_fix):
     
     if len(paths_to_fix)>0:
-        logging.info('  Start: Fixing disconnected paths...')
+        logging.debug('  Start: Fixing disconnected paths...')
 
         df_paths_fixed = deepcopy(df_paths)
         
@@ -388,9 +388,9 @@ def clean_messiness(df_paths, paths_to_fix):
             df_paths_fixed.set_value(path_id, 'connect_to', connect_to)
             df_paths_fixed.set_value(path_id, 'connect_to_at', connect_to_at)
             
-            logging.info("Fixed Path {} connections.".format(path_id))
+            logging.debug("Fixed Path {} connections.".format(path_id))
 
-        logging.info('  Finished.\n')
+        logging.debug('  Finished.\n')
         
         return df_paths_fixed
     else:
@@ -425,7 +425,7 @@ def add_soma_to_some_paths(df_paths, soma):
 
 def get_better_paths(df_paths, soma):
 
-    logging.info('  Start: breaking up paths at branch points...')
+    logging.debug('  Start: breaking up paths at branch points...')
         
     new_paths_dict = {}
     path_id_old = {}
@@ -495,13 +495,13 @@ def get_better_paths(df_paths, soma):
     df_paths_updated['path'] = pd.Series(new_paths_dict)
     df_paths_updated = update_df_paths(df_paths_updated, soma)
 
-    logging.info('  Finished. \t')
+    logging.debug('  Finished. \t')
     
     return df_paths_updated
 
 def cleanup_better_paths(df_paths):
 
-    logging.info('  Start: Checking and cleaning up messy paths (e.g. connecting the nonbifucated paths.)..')
+    logging.debug('  Start: Checking and cleaning up messy paths (e.g. connecting the nonbifucated paths.)..')
 
     df = deepcopy(df_paths)
     
@@ -514,7 +514,7 @@ def cleanup_better_paths(df_paths):
         path_id_head = path_id
         path_id_tail = df.loc[path_id].connected_by[0]
         
-        logging.info("  Connecting Path {} and {}".format(path_id_head, path_id_tail))
+        logging.debug("  Connecting Path {} and {}".format(path_id_head, path_id_tail))
 
         path_head = df.loc[path_id].path
         path_tail = df.loc[path_id_tail].path
@@ -535,10 +535,10 @@ def cleanup_better_paths(df_paths):
             connected_by[np.where(connected_by == path_id_head)[0]] = path_id_tail
             df.set_value(path_id_connect_to, 'connected_by', connected_by)
 
-        logging.info('  Path {} is removed.'.format(path_id_head))
+        logging.debug('  Path {} is removed.'.format(path_id_head))
         df.drop(path_id_head, inplace=True)
 
-    logging.info('  Finished. \n')
+    logging.debug('  Finished. \n')
 
     return df
 
@@ -624,7 +624,7 @@ def get_nearest_recorded_point_vector(df_paths, path_id):
 
 def get_path_statistics(df_paths):
     
-    logging.info('  Start: Calculating path statistics (e.g. dendritic length, branch order...)')
+    logging.debug('  Start: Calculating path statistics (e.g. dendritic length, branch order...)')
 
     all_keys = df_paths.index
     
@@ -647,7 +647,7 @@ def get_path_statistics(df_paths):
     df_paths['back_to_soma'] = pd.Series(back_to_soma_dict)
     df_paths['corder'] = pd.Series(corder_dict)
 
-    logging.info('  Finished. \n')
+    logging.debug('  Finished. \n')
     
     return df_paths
 
@@ -657,7 +657,7 @@ def calculate_density(linestack, voxelsize):
     '''
     import scipy.ndimage as ndimage
 
-    logging.info('  Start: Calculating dendritic density...')
+    logging.debug('  Start: Calculating dendritic density...')
 
     smoothed_layer_stack = []
     for i in range(linestack.shape[2]):
@@ -668,7 +668,7 @@ def calculate_density(linestack, voxelsize):
     density_stack = np.dstack(smoothed_layer_stack)
     center_of_mass = np.array(ndimage.measurements.center_of_mass(density_stack.sum(2)))
 
-    logging.info('  Finished. \n')
+    logging.debug('  Finished. \n')
 
     return density_stack, center_of_mass
 
@@ -737,9 +737,6 @@ def plot_skeleten(ax, df_paths, soma, axis0, axis1, order_type, lims):
             ax.plot(path[:, axis0], path[:, axis1], color=colors[colors_idx[order-1]])
             ax.scatter(bpt[axis0], bpt[axis1], color=colors[colors_idx[order-1]], zorder=1)
     
-    # maxlims, minlims = lims
-    # ax.set_xlim(0, lims[axis0])
-    # ax.set_ylim(0, lims[axis1])
     xylims, zlim = lims
 
     if axis0 == 2 and axis1 == 0: # ax2
@@ -787,7 +784,7 @@ def get_path_on_stack(df_paths, voxelsize, coordinate_padding):
 
     coords = np.vstack(df_paths.path)
     reset_neg = coords.min(0)
-    reset_neg[reset_neg > 0] = 0 
+    reset_neg[reset_neg > 0] = 3 
     
     for path_id in all_keys:
 
