@@ -41,7 +41,8 @@ class Morph(object):
         if filetype == 'swc':
             df_paths, soma, unit_df = read_swc(data, unit, voxelsize)
         else:
-            logging.info('For loading other formats other than `.swc`, please first use `morphopy.converter` ')
+            logging.info('`.{}` is not supported yet.'.format(filetype))
+            return None
 
         df_paths = update_df_paths(df_paths, soma) # find which paths connnect to which
         paths_to_fix = detect_messiness(df_paths, threshold) # fix some rare irregularities.
@@ -58,8 +59,7 @@ class Morph(object):
 
         # linestack | pixel
 
-        # self.linestack, self.soma_on_stack = swc2linestack(data, self.unit_swc, imagesize, voxelsize)
-        linestack_output = swc2linestack(data, self.unit_swc, voxelsize)
+        linestack_output = swc_to_linestack(data, self.unit_swc, voxelsize)
 
         if linestack_output is not None:
             self.linestack, self.soma_on_stack, self.coordindate_padding = linestack_output
@@ -216,7 +216,7 @@ class Morph(object):
             with open(save_to, 'w') as f:
                 json.dump(summary, f)
 
-        return summary
+        # return summary
 
 
     def show_threeviews(self, order='c'):

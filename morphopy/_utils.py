@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 def read_swc(filepath, unit, voxelsize):
     
-    logging.info('  Start: Reading `.swc` file from \n\t\t{}\n\t\tinto Pandas DataFrame.'.format(filepath))
+    logging.info('  Reading `.swc` file from \n\t\t{}\n\t    into Pandas DataFrame.'.format(filepath))
     df = pd.read_csv(filepath, comment='#', sep=' ', header=None)
     df = df.dropna(axis=1)
     df.columns = ['ID', 'Type', 'x', 'y', 'z', 'Radius', 'PID']
@@ -108,7 +108,7 @@ def read_imx(filepath, unit, voxelsize):
 
 
 
-def swc2linestack(filepath, unit, voxelsize=None):
+def swc_to_linestack(filepath, unit, voxelsize=None):
 
     coords = pd.read_csv(filepath, comment='#', sep=' ', header=None)[[2,3,4]].as_matrix()
     
