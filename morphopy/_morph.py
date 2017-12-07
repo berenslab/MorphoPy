@@ -35,27 +35,27 @@ class Morph(object):
 
         self.voxelsize = voxelsize
         self.unit_swc = unit
+        if unit == 'pixel' and voxelsize is None:
+            self.unit_df = 'pixel'
+        else:
+            self.unit_df = unit
+
         filetype = data.split('/')[-1].split('.')[-1]
         
         # load data
         if filetype == 'swc':
-            df_paths, soma, unit_df = read_swc(data, unit, voxelsize)
+            df_swc = read_swc(data, unit, voxelsize)
         else:
             logging.info('`.{}` is not supported yet.'.format(filetype))
             return None
 
-        df_paths = update_df_paths(df_paths, soma) # find which paths connnect to which
-        paths_to_fix = detect_messiness(df_paths, threshold) # fix some rare irregularities.
-        df_paths = clean_messiness(df_paths, paths_to_fix)
-        df_paths = get_better_paths(df_paths, soma) 
-        df_paths = cleanup_better_paths(df_paths)
+        df_paths = get_df_paths(df_swc)
+        df_paths = update_df_paths(df_paths) # find which paths connnect to which
         df_paths = get_path_statistics(df_paths)
         df_paths = get_sorder(df_paths) # get schaler order
 
+        self.df_swc = df_swc
         self.df_paths = df_paths
-        self.unit_df = unit_df
-        self.soma = soma
-        
 
         # linestack | pixel
 
@@ -219,7 +219,7 @@ class Morph(object):
         # return summary
 
 
-    def show_threeviews(self, order='c'):
+    def show_threeviews(self, order='c', save_to=None):
 
         import matplotlib.pyplot as plt
         from matplotlib_scalebar.scalebar import ScaleBar
@@ -231,7 +231,8 @@ class Morph(object):
         ax4 = plt.subplot2grid((4,4), (3,0), rowspan=1, colspan=1)  
 
         df_paths = self.df_paths
-        soma = self.soma
+        dendrites = df_paths[df_paths.type == 3]
+        soma = df_paths.loc[0].path[0]
 
         # xylims, zlims = find_lims(df_paths)
         # lims = (xylims, zlims)
@@ -239,16 +240,17 @@ class Morph(object):
         # maxlims = np.hstack([maxlims[0], maxlims]) + 30
         # minlims = (np.min(np.vstack(df_paths.path), 0)[1:]).astype(int)
 
-        lims = find_lims(df_paths)
+        lims = find_lims(dendrites)
 
-        plot_skeleten(ax2, df_paths, soma, 2, 0, order, lims)
-        plot_skeleten(ax3, df_paths, soma, 1, 2, order, lims)
-        plot_skeleten(ax1, df_paths, soma, 1, 0, order, lims)
+        plot_skeleten(ax2, dendrites, soma, 2, 0, order, lims)
+        plot_skeleten(ax3, dendrites, soma, 1, 2, order, lims)
+        plot_skeleten(ax1, dendrites, soma, 1, 0, order, lims)
         scalebar = ScaleBar(1, units=self.unit_df, location='lower left', box_alpha=0)
         ax1.add_artist(scalebar)    
         ax4.axis('off')
 
-        plt.show()
+        if save_to is not None:
+            plt.savefig(save_to)
     
     def show_density(self):
 
