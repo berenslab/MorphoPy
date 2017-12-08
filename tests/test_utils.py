@@ -42,7 +42,7 @@ def test_get_angle_with_unnormalized_vector():
     assert (d == 90), "returned angle should be 90 degree"
 
 
-def test_angle_btw_zero_and_v1():
+def test_get_angle_btw_zero_and_v1():
     v0 = np.array([0, 0, 0])
     v1 = np.array([0, 1, 0])
 
@@ -50,6 +50,14 @@ def test_angle_btw_zero_and_v1():
     assert (r == 0), "returned angle should be 0"
     assert (d == 0), "returned angle should be 0"
 
+
+def test_get_angle_returns_float():
+    v0 = np.array([0, 0, 1])
+    v1 = np.array([0, 1, 1])
+
+    r, d = get_angle(v0, v1)
+    assert (isinstance(r, np.float)), "get_angle() should return float"
+    assert (isinstance(d, np.float)), "get_angle() should return float"
 
 
 ### TEST READING METHODS ####
