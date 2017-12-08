@@ -73,40 +73,6 @@ class Morph(object):
         else:
             self.linestack = None
 
-
-    def to_swc(self, filename='morph.swc', save_to='./'):
-    
-        logging.info('  Writing to {}'.format(save_to + '/' + filename))
-
-        soma_xyz = self.df_paths.loc[0].path[0]
-        soma = np.array([1, 1, soma_xyz[0], soma_xyz[1], soma_xyz[2], 0, -1])
-
-        swc_arr = soma.reshape(1,len(soma))
-
-        for row in self.df_paths.iterrows():    
-            path_id = row[0]
-            path = row[1]['path'][1:]
-
-            connect_to = row[1]['connect_to']
-            connect_to_at = row[1]['connect_to_at']
-
-            swc_path = np.column_stack([np.ones(len(path)) * 3, path])
-            swc_path = np.column_stack([np.arange(len(swc_arr)+1, len(path)+len(swc_arr)+1), swc_path])
-            swc_path = np.column_stack([swc_path, np.zeros(len(path))])
-            swc_path = np.column_stack([swc_path, swc_path[:, 0]-1])
-
-            swc_path[0][-1] = np.where((swc_arr[:, 2:5] == np.array(connect_to_at)).all(1))[0]+1
-
-            swc_arr = np.vstack([swc_arr, swc_path])
-
-        df_swc = pd.DataFrame(swc_arr)
-        df_swc.index = np.arange(1, len(df_swc)+1)
-        df_swc.columns = [['ID', 'Type', 'x', 'y', 'z', 'Raidus', 'PID']]
-        df_swc[['ID', 'Type', 'PID']] = df_swc[['ID', 'Type', 'PID']].astype(int)
-
-        df_swc.to_csv(save_to + '/' + filename, sep=' ', index=None, header=None)
-
-
     def summary(self, save_to=None,  print_results=True):
 
         """
