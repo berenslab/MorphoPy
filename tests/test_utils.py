@@ -51,6 +51,7 @@ def test_angle_btw_zero_and_v1():
     assert (d == 0), "returned angle should be 0"
 
 
+
 ### TEST READING METHODS ####
 
 from morphopy._utils import read_swc
@@ -127,4 +128,18 @@ def test_get_consecutive_pairs_of_elements_from_list_with_start_and_end_node():
     result = get_consecutive_pairs_of_elements_from_list(l, s=0, e=5)
 
     assert result == [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5)]
+
+
+from morphopy._utils import get_df_paths
+
+
+def test_get_df_paths_creates_dataFrame():
+    import pandas as pd
+    filepath = './data/Image001-005-01.CNG.swc'
+    df = read_swc(filepath)
+
+    paths = get_df_paths(df)
+    assert (isinstance(paths, pd.DataFrame)), "get_df_paths() should return a pandas.DataFrame"
+
+
 
