@@ -162,6 +162,7 @@ class Morph(object):
 
         }
 
+        # dendritic tree density
         if self.linestack is not None:
 
             if self.voxelsize is None:
@@ -191,6 +192,7 @@ class Morph(object):
                 "dendritic_area": dendritic_area
             }})
 
+        # print and save
         if print_results:
             print_summary(summary, self.unit_df)
 
