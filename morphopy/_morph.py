@@ -8,26 +8,17 @@ class Morph(object):
 
     def __init__(self, data, unit='um', voxelsize=None, loglevel='INFO'):
 
-        # logging
+        """
+        Initialize Morph object. Load swc as Pandas DataFrame (df_swc).
+        Split all paths on branch point and save as df_paths, related information (connection, path lengh, branch order etc.) are calculated. 
+        Other meta data are also save into Morph Object.
 
-        self._logger = logging.getLogger()
+        If voxelszie is provided, linestack is constructed and dendritic tree density is computed.
         
-        if loglevel == 'INFO':
-            self._logger.setLevel(logging.INFO)
-            self._logger.info('  Logging: ON')
-        elif loglevel == 'DEBUG':
-            self._logger.setLevel(logging.DEBUG)
-            self._logger.info('  Logging: ON')
-        elif loglevel == 'WARNING':
-            self._logger.setLevel(logging.WARNING)
-        elif loglevel == 'ERROR':
-            self._logger.setLevel(logging.ERROR)
-        elif loglevel == 'CRITICAL':
-            self._logger.setLevel(logging.CRITICAL)
-        else:
-            self._logger.setLevel(logging.INFO)
-            logging.info('  Please enter a valid logging mode (DEBUG, INFO, WARNING, ERROR, CRITICAL).')
-            self._logger.setLevel(logging.ERROR)
+        """
+
+        # logging
+        self._logger = get_logger(loglevel)
 
         # meta data
 
@@ -66,41 +57,19 @@ class Morph(object):
         else:
             self.linestack = None
 
-
-    def to_swc(self, filename='morph.swc', save_to='./'):
-    
-        logging.info('  Writing to {}'.format(save_to + '/' + filename))
-
-        soma_xyz = self.df_paths.loc[0].path[0]
-        soma = np.array([1, 1, soma_xyz[0], soma_xyz[1], soma_xyz[2], 0, -1])
-
-        swc_arr = soma.reshape(1,len(soma))
-
-        for row in self.df_paths.iterrows():    
-            path_id = row[0]
-            path = row[1]['path'][1:]
-
-            connect_to = row[1]['connect_to']
-            connect_to_at = row[1]['connect_to_at']
-
-            swc_path = np.column_stack([np.ones(len(path)) * 3, path])
-            swc_path = np.column_stack([np.arange(len(swc_arr)+1, len(path)+len(swc_arr)+1), swc_path])
-            swc_path = np.column_stack([swc_path, np.zeros(len(path))])
-            swc_path = np.column_stack([swc_path, swc_path[:, 0]-1])
-
-            swc_path[0][-1] = np.where((swc_arr[:, 2:5] == np.array(connect_to_at)).all(1))[0]+1
-
-            swc_arr = np.vstack([swc_arr, swc_path])
-
-        df_swc = pd.DataFrame(swc_arr)
-        df_swc.index = np.arange(1, len(df_swc)+1)
-        df_swc.columns = [['ID', 'Type', 'x', 'y', 'z', 'Raidus', 'PID']]
-        df_swc[['ID', 'Type', 'PID']] = df_swc[['ID', 'Type', 'PID']].astype(int)
-
-        df_swc.to_csv(save_to + '/' + filename, sep=' ', index=None, header=None)
-
-
     def summary(self, save_to=None,  print_results=True):
+
+        """
+        Print out summary of the cell morphology. 
+
+        Parameters
+        ----------
+        save_to: str
+            path and filename of the output json file. 
+
+        print_results: bool
+            if True, print out summary using logging.
+        """
 
         # branch order / number of branch points
 
@@ -177,6 +146,7 @@ class Morph(object):
 
         }
 
+        # dendritic tree density
         if self.linestack is not None:
 
             if self.voxelsize is None:
@@ -206,6 +176,7 @@ class Morph(object):
                 "dendritic_area": dendritic_area
             }})
 
+        # print and save
         if print_results:
             print_summary(summary, self.unit_df)
 
@@ -265,6 +236,10 @@ class Morph(object):
             plt.savefig(save_to)
     
     def show_density(self):
+
+        """
+        Plot cell morphology on dendritic density map.
+        """
 
         try:
             density_stack = self.density_stack

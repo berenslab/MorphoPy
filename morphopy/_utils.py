@@ -5,6 +5,36 @@ import logging
 import matplotlib.pyplot as plt
 
 
+def get_logger(loglevel):
+
+    """
+    Log out useful or debug infos.
+
+    Paramters
+    ---------
+    loglevel: str
+        'debug', 'info', 'warning', 'error', 'critical'. 
+    """
+    
+    logger = logging.getLogger()
+    
+    LEVELS = {'debug': logging.DEBUG,
+              'info': logging.INFO,
+              'warning': logging.WARNING,
+              'error': logging.ERROR,
+              'critical': logging.CRITICAL}
+    
+    try:
+        LEVEL = LEVELS[loglevel]
+        logger.setLevel(LEVEL)
+    except:
+        logger.setLevel(logging.INFO)
+        logging.info('  Please enter a valid logging mode (DEBUG, INFO, WARNING, ERROR, CRITICAL).')
+        logger.setLevel(logging.ERROR)
+        
+    return logger
+
+
 def read_swc(filepath, unit, voxelsize):
     
     """
@@ -41,14 +71,26 @@ def read_swc(filepath, unit, voxelsize):
 def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
     
     """
-    Get pair of items in a list
+    Get pair of items in a list. 
+    
+    Argument `e=
+    e.g. [4:None] is equivalent to [4:].    
+
+    Argument
     
     Parameters
     ----------
     l : list
         e.g. [1,2,3,4]
-    e : int
-        A integer appended to the list.
+
+    s : int
+        An integer inserted to the front of a list.
+
+
+    e : int or None
+        An integer or None appended to the list.
+        `None` is always added unless other value is specified. 
+        This is for slicing the last part of the list. e.g. [4:None] is equivalent to [4:] 
     
     Returns
     -------
@@ -308,16 +350,6 @@ def update_df_paths(df_paths):
     logging.debug('  Finished.\n')
 
     return df_paths
-
-def get_distance_tip_to_path(point, path):
-    
-    distance_tip_to_all_points_in_path = np.sqrt(((point - path)**2).sum(1))
-    
-    closest_point = np.argmin(distance_tip_to_all_points_in_path)
-    closest_distance = distance_tip_to_all_points_in_path[closest_point]
-    
-    return [closest_point, closest_distance]
-
 
 def get_sorder(df_paths):
     
@@ -585,6 +617,18 @@ def get_path_on_stack(df_paths, voxelsize, coordinate_padding):
 
 def print_summary(summary, unit):
     
+    """
+    Print out summary statistics of the cell.
+
+    Parameters
+    ----------
+    summary: dict
+        a nested dict contains summary of the cell.
+
+    unit: str
+        the unit of swc file. Either 'um' or 'pixel'.
+    """
+
     import logging
     
     num_dendritic_segments = summary['general']['number_of_dendritic_segments']
