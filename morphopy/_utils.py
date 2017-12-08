@@ -523,7 +523,7 @@ def get_average_angles(df_paths):
     return average_nodal_angle_deg, average_nodal_angle_rad, average_local_angle_deg, average_local_angle_rad
 
 
-def plot_skeleten(ax, df_paths, soma, axis0, axis1, order_type, lims):
+def plot_skeleton(ax, df_paths, soma, axis0, axis1, order_type, lims):
 
     if order_type == 'c':
         colors = plt.cm.viridis.colors
