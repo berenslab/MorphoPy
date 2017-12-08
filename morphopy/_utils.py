@@ -397,9 +397,37 @@ def get_sorder(df_paths):
     return df_paths
 
 def get_path_dendritic_length(path):
+
+    """
+    Get the dendritic length of a path, which is the sum of the distance between each consecutive points.
+
+    Parameters
+    ----------
+    path: array 
+        a coordinate array with dim=(n, 3)
+    
+    Returns
+    -------
+    the dendritic lengh of this path: float
+
+    """
+
     return np.sum(np.sqrt(np.sum((path[1:] - path[:-1])**2, 1)))
 
 def get_path_euclidean_length(path):
+    """
+    get the euclidean length of a path, which is the distance between the first and last points.
+
+    Parameters
+    ----------
+    path: array 
+        a coordinate array with dim=(n, 3)
+    
+    Returns
+    -------
+    the euclidean lengh of this path: float
+
+    """
     return np.sqrt(np.sum((path[0] - path[-1]) ** 2))
 
 def unique_row(a):
@@ -513,7 +541,6 @@ def get_local_vector(df_paths, path_id):
 def get_path_statistics(df_paths):
     
     logging.debug('  Start: Calculating path statistics (e.g. dendritic length, branch order...)')
-
 
     all_keys = df_paths.index
     
