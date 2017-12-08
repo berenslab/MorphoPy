@@ -465,23 +465,48 @@ def get_angle(v0, v1):
     c = np.dot(v0, v1) / np.linalg.norm(v0) / np.linalg.norm(v1)
     return np.arccos(np.clip(c, -1, 1)), np.degrees(np.arccos(np.clip(c, -1, 1)))
 
-def get_node_vector(df_paths, path_id):
+def get_remote_vector(df_paths, path_id):
+
+    """
+    Get vector of certain path between the first and the last point.
+    
+    Parameters
+    ----------
+    df_paths: pandas.DataFrame
+
+    path_id: int
+
+    Returns
+    -------
+    normalized v: array
+        returned a normalized vector.
+    """
 
     s = df_paths.loc[path_id].path[0]
     e = df_paths.loc[path_id].path[-1]
     v= e-s
     return v/np.linalg.norm(v)
 
-def get_nearest_recorded_point_vector(df_paths, path_id):
+def get_local_vector(df_paths, path_id):
+    
+    """
+    Get vector of certain path between the first and the last point.
+    
+    Parameters
+    ----------
+    df_paths: pandas.DataFrame
 
-    v = np.array([0,0,0])
+    path_id: int
+
+    Returns
+    -------
+    normalized v: array
+        returned a normalized vector.
+    """
+
     s = df_paths.loc[path_id].path[0]
-    i = 0
-    while (v == 0).all():
-        i+=1
-        e = df_paths.loc[path_id].path[i]
-        v = e-s
-        if i>5:break
+    e = df_paths.loc[path_id].path[1]
+    v= e-s
     
     return v/np.linalg.norm(v)
 
