@@ -49,10 +49,6 @@ def read_swc(filepath):
     ----------
     filepath: str
         path to swc file
-    unit: str
-        unit of the swc
-    voxelsize: numpy.array, shape = (3,)
-        the voxel separation (x,y,z)
     
     Returns
     -------
@@ -108,7 +104,7 @@ def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
 def get_soma(df_swc):    
 
     """
-    Get rows of soma from df_swc
+    Get rows of soma from df_swc. Soma format will be logged out.
 
     Parameters
     ----------
