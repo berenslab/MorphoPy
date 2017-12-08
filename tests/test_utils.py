@@ -64,3 +64,17 @@ def test_read_swc_returned_fileformat():
 
     assert(isinstance(df, pd.DataFrame))
 
+
+def test_read_swc_all_variables_are_in():
+
+    filepath = './data/Image001-005-01.CNG.swc'
+    swc = read_swc(filepath)
+
+    assert 'n' in swc.keys()
+    assert 'x' in swc.keys()
+    assert 'y' in swc.keys()
+    assert 'z' in swc.keys()
+    assert 'type' in swc.keys()
+    assert 'parent' in swc.keys()
+
+
