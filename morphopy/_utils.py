@@ -39,7 +39,12 @@ def read_swc(filepath, unit, voxelsize):
 def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
     
     """
-    Get pair of items in a list
+    Get pair of items in a list. 
+    
+    Argument `e=
+    e.g. [4:None] is equivalent to [4:].    
+
+    Argument
     
     Parameters
     ----------
@@ -48,9 +53,12 @@ def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
 
     s : int
         An integer inserted to the front of a list.
+        
 
     e : int or None
         An integer or None appended to the list.
+        `None` is always added unless other value is specified. 
+        This is for slicing the last part of the list. e.g. [4:None] is equivalent to [4:] 
     
     Returns
     -------
