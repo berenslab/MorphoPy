@@ -4,6 +4,7 @@ from copy import deepcopy
 import logging
 import matplotlib.pyplot as plt
 
+
 def read_swc(filepath, unit, voxelsize):
     
     """
@@ -35,6 +36,7 @@ def read_swc(filepath, unit, voxelsize):
         unit = 'um'
     
     return df_swc
+
 
 def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
     

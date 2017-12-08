@@ -49,3 +49,18 @@ def test_angle_btw_zero_and_v1():
     r, d = get_angle(v0, v1)
     assert (r == 0)
     assert (d == 0)
+
+
+### TEST READING METHODS ####
+
+from morphopy._utils import read_swc
+
+
+def test_read_swc_returned_fileformat():
+
+    import pandas as pd
+    filepath = './data/Image001-005-01.CNG.swc'
+    df = read_swc(filepath)
+
+    assert(isinstance(df, pd.DataFrame))
+
