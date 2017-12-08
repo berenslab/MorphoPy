@@ -463,11 +463,25 @@ def unique_row(a):
     return unique_a
 
 def get_outer_terminals(all_terminals):
+
+    """
+    Get terminal points which found the convex hull of the cell.
+
+    Parameters
+    ----------
+    all_terminals: array
+        The array contains all terminal points from terminal paths (no other paths connected to them) 
+    
+    Returns
+    -------
+    outer_terminals_3d: array
+        The array contains all terminal points which found the convex hull of the cell.
+
+    """
     
     from scipy.spatial import ConvexHull
     hull = ConvexHull(all_terminals[:,:2])
     outer_terminals_3d = all_terminals[hull.vertices]
-#     outer_terminals_2d = all_terminals[:, :2][hull.vertices]
     outer_terminals_3d = np.vstack([outer_terminals_3d, outer_terminals_3d[0]])
     
     return outer_terminals_3d
