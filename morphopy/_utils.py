@@ -4,6 +4,36 @@ from copy import deepcopy
 import logging
 import matplotlib.pyplot as plt
 
+
+def get_logger(loglevel):
+
+    """
+    Log out useful or debug infos.
+
+    Paramters
+    ---------
+    loglevel: str
+        'debug', 'info', 'warning', 'error', 'critical'. 
+    """
+    
+    logger = logging.getLogger()
+    
+    LEVELS = {'debug': logging.DEBUG,
+              'info': logging.INFO,
+              'warning': logging.WARNING,
+              'error': logging.ERROR,
+              'critical': logging.CRITICAL}
+    
+    try:
+        LEVEL = LEVELS[loglevel]
+        logger.setLevel(LEVEL)
+    except:
+        logger.setLevel(logging.INFO)
+        logging.info('  Please enter a valid logging mode (DEBUG, INFO, WARNING, ERROR, CRITICAL).')
+        logger.setLevel(logging.ERROR)
+        
+    return logger
+
 def read_swc(filepath, unit, voxelsize):
     
     """

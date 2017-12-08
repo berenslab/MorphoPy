@@ -17,24 +17,8 @@ class Morph(object):
         
         """
 
-        self._logger = logging.getLogger()
-        
-        if loglevel == 'INFO':
-            self._logger.setLevel(logging.INFO)
-            self._logger.info('  Logging: ON')
-        elif loglevel == 'DEBUG':
-            self._logger.setLevel(logging.DEBUG)
-            self._logger.info('  Logging: ON')
-        elif loglevel == 'WARNING':
-            self._logger.setLevel(logging.WARNING)
-        elif loglevel == 'ERROR':
-            self._logger.setLevel(logging.ERROR)
-        elif loglevel == 'CRITICAL':
-            self._logger.setLevel(logging.CRITICAL)
-        else:
-            self._logger.setLevel(logging.INFO)
-            logging.info('  Please enter a valid logging mode (DEBUG, INFO, WARNING, ERROR, CRITICAL).')
-            self._logger.setLevel(logging.ERROR)
+        # logging
+        self._logger = get_logger(loglevel)
 
         # meta data
 
