@@ -251,6 +251,10 @@ class Morph(object):
     
     def show_density(self):
 
+        """
+        Plot cell morphology on dendritic density map.
+        """
+
         try:
             density_stack = self.density_stack
             voxelsize = self.voxelsize
