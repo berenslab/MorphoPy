@@ -77,4 +77,44 @@ def test_read_swc_all_variables_are_in():
     assert 'type' in swc.keys()
     assert 'parent' in swc.keys()
 
+### TEST FUNCTIONAL METHODS ###
+
+from morphopy._utils import get_consecutive_pairs_of_elements_from_list
+
+
+def test_get_consecutive_pairs_of_elements_from_list_default():
+
+
+    l = [1, 2, 3, 4]
+
+    result = get_consecutive_pairs_of_elements_from_list(l, s=None, e=None)
+
+    assert result == [(1, 2), (2, 3), (3, 4)]
+
+
+def test_get_consecutive_pairs_of_elements_from_list_with_start_node():
+
+    l = [1, 2, 3, 4]
+
+    result = get_consecutive_pairs_of_elements_from_list(l, s=0, e=None)
+
+    assert result == [(0, 1), (1, 2), (2, 3), (3, 4)]
+
+
+def test_get_consecutive_pairs_of_elements_from_list_with_end_node():
+
+    l = [1, 2, 3, 4]
+
+    result = get_consecutive_pairs_of_elements_from_list(l, s=None, e=5)
+
+    assert result == [(1, 2), (2, 3), (3, 4), (4, 5)]
+
+
+def test_get_consecutive_pairs_of_elements_from_list_with_start_and_end_node():
+
+    l = [1, 2, 3, 4]
+
+    result = get_consecutive_pairs_of_elements_from_list(l, s=0, e=5)
+
+    assert result == [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5)]
 
