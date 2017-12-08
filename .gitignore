@@ -1,0 +1,6 @@
+# caching data
+
+.cache
+.cache/*
+
+*__pychache__*
