@@ -45,8 +45,12 @@ def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
     ----------
     l : list
         e.g. [1,2,3,4]
-    e : int
-        A integer appended to the list.
+
+    s : int
+        An integer inserted to the front of a list.
+
+    e : int or None
+        An integer or None appended to the list.
     
     Returns
     -------
