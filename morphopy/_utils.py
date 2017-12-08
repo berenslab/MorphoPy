@@ -53,7 +53,7 @@ def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
 
     s : int
         An integer inserted to the front of a list.
-        
+
 
     e : int or None
         An integer or None appended to the list.
@@ -584,6 +584,18 @@ def get_path_on_stack(df_paths, voxelsize, coordinate_padding):
 
 def print_summary(summary, unit):
     
+    """
+    Print out summary statistics of the cell.
+
+    Parameters
+    ----------
+    summary: dict
+        a nested dict contains summary of the cell.
+
+    unit: str
+        the unit of swc file. Either 'um' or 'pixel'.
+    """
+
     import logging
     
     num_dendritic_segments = summary['general']['number_of_dendritic_segments']
