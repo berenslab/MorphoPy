@@ -14,6 +14,12 @@ def get_logger(loglevel):
     ---------
     loglevel: str
         'debug', 'info', 'warning', 'error', 'critical'. 
+
+    Returns
+    -------
+    logger: logging.RootLogger
+        a logging object for turning on and off the log.    
+    
     """
     
     logger = logging.getLogger()
