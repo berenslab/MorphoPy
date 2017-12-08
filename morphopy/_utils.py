@@ -62,6 +62,7 @@ def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
     
     return pair
 
+
 def get_df_paths(df_swc):
     
     """
