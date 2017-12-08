@@ -4,3 +4,8 @@
 .cache/*
 
 *__pycache__*
+
+
+# others
+
+*.egg-info/
