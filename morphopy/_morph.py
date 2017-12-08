@@ -10,7 +10,14 @@ class Morph(object):
 
     def __init__(self, data, unit='um', voxelsize=None, threshold=30, loglevel='INFO'):
 
-        # logging
+        """
+        Initialize Morph object. Load swc as Pandas DataFrame (df_swc).
+        Split all paths on branch point and save as df_paths, related information (connection, path lengh, branch order etc.) are calculated. 
+        Other meta data are also save into Morph Object.
+
+        If voxelszie is provided, linestack is constructed and dendritic tree density is computed.
+        
+        """
 
         self._logger = logging.getLogger()
         
@@ -103,6 +110,18 @@ class Morph(object):
 
 
     def summary(self, save_to=None,  print_results=True):
+
+        """
+        Print out summary of the cell morphology. 
+
+        Parameters
+        ----------
+        save_to: str
+            path and filename of the output json file. 
+
+        print_results: bool
+            if True, print out summary using logging.
+        """
 
         # branch order / number of branch points
 

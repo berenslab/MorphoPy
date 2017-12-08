@@ -306,16 +306,6 @@ def update_df_paths(df_paths):
 
     return df_paths
 
-def get_distance_tip_to_path(point, path):
-    
-    distance_tip_to_all_points_in_path = np.sqrt(((point - path)**2).sum(1))
-    
-    closest_point = np.argmin(distance_tip_to_all_points_in_path)
-    closest_distance = distance_tip_to_all_points_in_path[closest_point]
-    
-    return [closest_point, closest_distance]
-
-
 def get_sorder(df_paths):
     
     df_paths['sorder'] = np.ones(len(df_paths)) * np.nan
