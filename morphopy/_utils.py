@@ -403,7 +403,7 @@ def get_path_euclidean_length(path):
     return np.sqrt(np.sum((path[0] - path[-1]) ** 2))
 
 def unique_row(a):
-    
+
     """
     Parameters
     ----------
@@ -445,13 +445,29 @@ def get_outer_terminals(all_terminals):
     return outer_terminals_3d
 
 def get_angle(v0, v1):
+
+    """
+    Get angle between two vectors.
+    
+    Parameters
+    ----------
+    v0: array
+        vector zero.
+    v1: array
+        vector one.
+
+    Returns
+    -------
+    Return a tuple, (angle in radian, angle in degree). 
+
+    """
+
     c = np.dot(v0, v1) / np.linalg.norm(v0) / np.linalg.norm(v1)
     return np.arccos(np.clip(c, -1, 1)), np.degrees(np.arccos(np.clip(c, -1, 1)))
 
 def get_node_vector(df_paths, path_id):
+
     s = df_paths.loc[path_id].path[0]
-    # e = df_paths.loc[path_id].connected_by_at
-    # if np.isnan(e).any():
     e = df_paths.loc[path_id].path[-1]
     v= e-s
     return v/np.linalg.norm(v)
