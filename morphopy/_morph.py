@@ -1,5 +1,3 @@
-import os
-import pickle
 import logging
 
 from ._utils import *
@@ -8,7 +6,7 @@ __all__ = ['Morph']
 
 class Morph(object):
 
-    def __init__(self, data, unit='um', voxelsize=None, threshold=30, loglevel='INFO'):
+    def __init__(self, data, unit='um', voxelsize=None, loglevel='INFO'):
 
         """
         Initialize Morph object. Load swc as Pandas DataFrame (df_swc).
@@ -239,6 +237,20 @@ class Morph(object):
 
 
     def show_threeviews(self, order='c', save_to=None):
+
+        """
+        Plot cell morphology in three views (Top and two sides).
+
+        Parameters
+        ----------
+        order: str
+            * 'c' (conventional ordering) 
+            * 's' (Strahler ordering)
+        save_to: str
+            Path the figure saved to. e.g. "./figure/threeviews.png"
+
+        """
+
 
         import matplotlib.pyplot as plt
         from matplotlib_scalebar.scalebar import ScaleBar
