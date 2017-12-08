@@ -70,11 +70,6 @@ def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
     """
     Get pair of items in a list. 
     
-    Argument `e=
-    e.g. [4:None] is equivalent to [4:].    
-
-    Argument
-    
     Parameters
     ----------
     l : list or array-like 
