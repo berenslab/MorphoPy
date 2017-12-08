@@ -10,7 +10,7 @@ def get_logger(loglevel):
     """
     Log out useful or debug infos.
 
-    Paramters
+    Parameters
     ---------
     loglevel: str
         'debug', 'info', 'warning', 'error', 'critical'. 
