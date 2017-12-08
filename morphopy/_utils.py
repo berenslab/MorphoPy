@@ -404,6 +404,29 @@ def get_path_euclidean_length(path):
 
 def unique_row(a):
     
+    """
+    Parameters
+    ----------
+    a: array
+        an array with replicated rows.
+
+    returns
+    -------
+    unique_a: array
+        an ordered array without replicated rows.
+
+    example
+    -------
+    >>> a = np.array([[9,9],
+                      [8,8],
+                      [1,1],
+                      [9,9]])
+    >>> unique_row(a)
+    >>> array([[1, 1],
+               [8, 8],
+               [9, 9]])
+    """
+
     b = np.ascontiguousarray(a).view(np.dtype((np.void, a.dtype.itemsize * a.shape[1])))
     _, idx = np.unique(b, return_index=True)
     
