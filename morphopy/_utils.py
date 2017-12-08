@@ -475,7 +475,7 @@ def get_outer_terminals(all_terminals):
 def get_angle(v0, v1):
 
     """
-    Get angle between two vectors.
+    Get angle (in both radian and degree) between two vectors.
     
     Parameters
     ----------
