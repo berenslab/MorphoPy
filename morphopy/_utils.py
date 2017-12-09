@@ -203,8 +203,10 @@ def get_df_paths(df_swc):
             type_dict[path_id] = max(path_type)[0]
             path_id += 1
 
-    df_paths = pd.DataFrame([type_dict, path_dict, radius_dict]).T
-    df_paths.columns = [['type', 'path', 'radius']]
+    df_paths = pd.DataFrame()
+    df_paths['type'] = pd.Series(type_dict)
+    df_paths['path'] = pd.Series(path_dict)
+    df_paths['radius'] = pd.Series(radius_dict)
     
     return df_paths
 
