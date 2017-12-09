@@ -145,12 +145,17 @@ def get_df_paths(df_swc):
     
     n = df_neurites.n.values
     parent = df_neurites.parent.values
+
     
-    if len(df_soma) > 1:
+    if len(df_soma) == 3: # only for 3-Point soma
         parent[parent == 2] = 1
-        parent[parent == 3] = 1    
-    
-    df_starting_points = df_neurites[n - parent != 1] # starting point of each path, which is not the branchpoint.
+        parent[parent == 3] = 1  
+        diff_n_parent = n - parent
+        diff_n_parent[1] = 1 # 
+    else:
+        diff_n_parent = n - parent
+
+    df_starting_points = df_neurites[diff_n_parent != 1] # starting point of each path, which is not the branchpoint.
     branchpoint_index = np.unique(df_starting_points.parent.values[1:]) # branchpoint is the parent point of starting point.
 
     path_dict = {}
@@ -165,7 +170,7 @@ def get_df_paths(df_swc):
         if e is not None:
             b = branchpoint_index[np.logical_and(branchpoint_index > s, branchpoint_index < e)] # b: list, branch index
         else:
-            b = branchpoint_index[branchpoint_index >= s]
+            b = branchpoint_index[branchpoint_index > s]
 
         branchpoint_index_pairs = get_consecutive_pairs_of_elements_from_list(b, s, e)
 
