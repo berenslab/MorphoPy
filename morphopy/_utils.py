@@ -157,8 +157,8 @@ def get_df_paths(df_swc):
     else:
         diff_n_parent = n - parent
 
-    df_starting_points = df_neurites[diff_n_parent != 1] # starting point of each path, which is not the branchpoint.
-    branchpoint_index = np.unique(df_starting_points.parent.values[1:]) # branchpoint is the parent point of starting point.
+    df_starting_points = df_neurites[diff_n_parent != 1] # starting point of each path, which is not the branch point.
+    branchpoint_index = np.unique(df_starting_points.parent.values[1:]) # branch point is the parent point of starting point.
 
     path_dict = {}
     type_dict = {}
@@ -213,12 +213,16 @@ def get_df_paths(df_swc):
     return df_paths
 
 def swc_to_linestack(filepath, unit, voxelsize=None):
-
     """
     Convert SWC to Line Stack (from real length to voxel coordinates).
+    :param filepath:
+    :param unit:
+    :param voxelsize:
+    :return:
     """
 
-    coords = pd.read_csv(filepath, comment='#', sep=' ', header=None)[[2,3,4]].as_matrix()
+
+    coords = pd.read_csv(filepath, comment='#', sep=' ', header=None)[[2, 3, 4]].as_matrix()
     
     if unit == 'pixel':
         coords = np.round(coords).astype(int)
@@ -272,10 +276,24 @@ def swc_to_linestack(filepath, unit, voxelsize=None):
 
 
 def connect_to_soma(current_path, soma):
+    """
+
+    :param current_path:
+    :param soma:
+    :return:
+    """
     # return (current_path[0] == soma).all(1).any()
     return (current_path == soma).all(1).any()
 
 def find_connection(all_paths, soma, path_id, paths_to_ignore=[]):
+    """
+
+    :param all_paths:
+    :param soma:
+    :param path_id:
+    :param paths_to_ignore:
+    :return:
+    """
     
     current_path = all_paths[path_id]
     
@@ -310,11 +328,13 @@ def find_connection(all_paths, soma, path_id, paths_to_ignore=[]):
     return connect_to, connect_to_at
 
 def back2soma(df_paths, path_id):
-    
-    '''
-    Given a path_id, find all the other paths which leads back to soma.
-    '''
-    
+    """
+    Given a path_id, find all the other paths which lead back to the soma.
+    :param df_paths:
+    :param path_id:
+    :return:
+    """
+
     path_id_original = path_id
     
     paths_to_soma = []
@@ -337,9 +357,16 @@ def back2soma(df_paths, path_id):
     return paths_to_soma
 
 def update_df_paths(df_paths, df_soma):
-
     """
-    Loop through all paths, add fours columns ['connect_to', 'connect_to_at', 'connected_by', 'connected_by_at'] to df_paths.
+    This function updates the df_paths object. It loops through all paths and adds the fours columns
+    ['connect_to', 'connect_to_at', 'connected_by', 'connected_by_at'] to df_paths.
+
+    :param df_paths: pandas.DataFrame containing paths.
+    :param df_soma: pandas.DataFrame containing the soma.
+    :return:
+        df_paths: pandas.DataFrame
+        Updated df_paths with added columns ['connect_to', 'connect_to_at', 'connected_by', 'connected_by_at'] for
+        each path.
     """
     
     logging.debug('  Start: Updating `df_paths` with connectivity debug.')
@@ -376,6 +403,12 @@ def update_df_paths(df_paths, df_soma):
     return df_paths
 
 def get_sorder(df_paths):
+    """
+    Returns the Strahler order for all paths in df_paths. #TODO add definition of Starhler order
+    :param df_paths: pandas.DataFrame
+    :return: df_paths: pandas.DataFrame
+        Updated DataFrame with new column ['sorder'] indicating the starhler order of each node along each path.
+    """
     
     df_paths['sorder'] = np.ones(len(df_paths)) * np.nan
     df_paths = df_paths.set_value(df_paths.connected_by.apply(len) == 0, 'sorder', 1)
@@ -444,6 +477,8 @@ def get_path_euclidean_length(path):
 def unique_row(a):
 
     """
+    Returns an array of the ordered, unique set of rows for input array a.
+
     Parameters
     ----------
     a: array
@@ -476,7 +511,7 @@ def unique_row(a):
 def get_outer_terminals(all_terminals):
 
     """
-    Get terminal points which forms the convex hull of the cell.
+    Get terminal points which form the convex hull of the cell.
 
     Parameters
     ----------
@@ -565,6 +600,11 @@ def get_local_vector(df_paths, path_id):
     return v/np.linalg.norm(v)
 
 def get_path_statistics(df_paths):
+    """
+
+    :param df_paths:
+    :return:
+    """
     
     logging.debug('  Start: Calculating path statistics (e.g. dendritic length, branch order...)')
 
@@ -595,9 +635,13 @@ def get_path_statistics(df_paths):
 
 
 def calculate_density(linestack, voxelsize):
-    '''
+    """
     reference: A. Stepanyantsa & D.B. Chklovskiib (2005). Neurogeometry and potential synaptic connectivity. Trends in Neuroscience.
-    '''
+    :param linestack:
+    :param voxelsize:
+    :return:
+    """
+
     import scipy.ndimage as ndimage
 
     logging.debug('  Start: Calculating dendritic density...')
@@ -616,6 +660,11 @@ def calculate_density(linestack, voxelsize):
     return density_stack, center_of_mass
 
 def get_average_angles(df_paths):
+    """
+
+    :param df_paths:
+    :return:
+    """
 
     nodal_angles_deg = {}
     nodal_angles_rad = {}
@@ -655,6 +704,17 @@ def get_average_angles(df_paths):
 
 
 def plot_skeleton(ax, df_paths, soma, axis0, axis1, order_type, lims):
+    """
+
+    :param ax:
+    :param df_paths:
+    :param soma:
+    :param axis0:
+    :param axis1:
+    :param order_type:
+    :param lims:
+    :return:
+    """
 
     if order_type == 'c':
         colors = plt.cm.viridis.colors
@@ -698,6 +758,11 @@ def plot_skeleton(ax, df_paths, soma, axis0, axis1, order_type, lims):
     ax.axis('off')
 
 def find_lims(df_paths):
+    """
+
+    :param df_paths:
+    :return:
+    """
     points = np.vstack(df_paths.path)
     maxlims = np.max(points, 0)
     minlims = np.min(points, 0)
@@ -716,6 +781,13 @@ def find_lims(df_paths):
     return xylims, zlims
 
 def get_path_on_stack(df_paths, voxelsize, coordinate_padding):
+    """
+
+    :param df_paths:
+    :param voxelsize:
+    :param coordinate_padding:
+    :return:
+    """
 
     if voxelsize is None:
         voxelsize = np.array([1,1,1])
@@ -754,7 +826,7 @@ def print_summary(summary):
     Parameters
     ----------
     summary: dict
-        a nested dict contains summary of the cell.
+        a nested dict that contains summary of the cell.
     """
 
     import logging
