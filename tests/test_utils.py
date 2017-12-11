@@ -100,7 +100,7 @@ def test_get_consecutive_pairs_of_elements_from_list_default():
 
     result = get_consecutive_pairs_of_elements_from_list(l, s=None, e=None)
 
-    assert result == [(None, 1), (1, 2), (2, 3), (3, 4), (4, None)]
+    assert result == [(1, 2), (2, 3), (3, 4), (4, None)]
 
 
 def test_get_consecutive_pairs_of_elements_from_list_with_start_node():
@@ -118,7 +118,7 @@ def test_get_consecutive_pairs_of_elements_from_list_with_end_node():
 
     result = get_consecutive_pairs_of_elements_from_list(l, s=None, e=5)
 
-    assert result == [(None, 1), (1, 2), (2, 3), (3, 4), (4, 5)]
+    assert result == [(1, 2), (2, 3), (3, 4), (4, 5)]
 
 
 def test_get_consecutive_pairs_of_elements_from_list_with_start_and_end_node():
@@ -151,7 +151,7 @@ def test_unique_row_pairs_of_same_value():
 
     a_ = unique_row(a)
 
-    assert a_ == np.array([[1, 1], [8, 8], [9, 9]])
+    assert (a_ == np.array([[1, 1], [8, 8], [9, 9]])).all()
 
 
 def test_unique_row_pairs_of_different_values():
@@ -159,7 +159,7 @@ def test_unique_row_pairs_of_different_values():
 
     a_ = unique_row(a)
 
-    assert a_ == np.array([[1, 2], [2, 3], [9, 8]])
+    assert (a_ == np.array([[1, 2], [2, 3], [9, 8]])).all()
 
 
 def test_unique_row_higher_number_first():
@@ -167,4 +167,4 @@ def test_unique_row_higher_number_first():
 
     a_ = unique_row(a)
 
-    assert a_ == np.array([[2, 1], [3, 6], [7, 4]])
+    assert (a_ == np.array([[2, 1], [3, 6], [7, 4]])).all()
