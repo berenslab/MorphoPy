@@ -143,3 +143,28 @@ def test_get_df_paths_creates_dataFrame():
 
 
 
+from ..morphopy._utils import unique_row
+
+
+def test_unique_row_pairs_of_same_value():
+    a = np.array([[9, 9], [8, 8], [1, 1], [9, 9]])
+
+    a_ = unique_row(a)
+
+    assert a_ == np.array([[1, 1], [8, 8], [9, 9]])
+
+
+def test_unique_row_pairs_of_different_values():
+    a = np.array([[1, 2], [2, 3], [2, 3], [9, 8]])
+
+    a_ = unique_row(a)
+
+    assert a_ == np.array([[1, 2], [2, 3], [9, 8]])
+
+
+def test_unique_row_higher_number_first():
+    a = np.array([[2, 1], [3, 6], [7, 4], [3, 6]])
+
+    a_ = unique_row(a)
+
+    assert a_ == np.array([[2, 1], [3, 6], [7, 4]])
