@@ -417,7 +417,7 @@ def get_path_dendritic_length(path):
     
     Returns
     -------
-    the dendritic lengh of this path: float
+    the dendritic length of this path: float
 
     """
 
@@ -434,10 +434,11 @@ def get_path_euclidean_length(path):
     
     Returns
     -------
-    the euclidean lengh of this path: float
+    the euclidean length of this path: float
 
     """
     return np.sqrt(np.sum((path[0] - path[-1]) ** 2))
+
 
 def unique_row(a):
 
