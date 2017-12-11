@@ -474,7 +474,7 @@ def unique_row(a):
 def get_outer_terminals(all_terminals):
 
     """
-    Get terminal points which found the convex hull of the cell.
+    Get terminal points which forms the convex hull of the cell.
 
     Parameters
     ----------
@@ -537,6 +537,7 @@ def get_remote_vector(df_paths, path_id):
     e = df_paths.loc[path_id].path[-1]
     v= e-s
     return v/np.linalg.norm(v)
+
 
 def get_local_vector(df_paths, path_id):
     
