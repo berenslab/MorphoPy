@@ -10,7 +10,7 @@ def get_logger(loglevel):
     """
     Log out useful or debug infos.
 
-    Paramters
+    Parameters
     ---------
     loglevel: str
         'debug', 'info', 'warning', 'error', 'critical'. 
@@ -41,7 +41,6 @@ def get_logger(loglevel):
     return logger
 
 def read_swc(filepath):
-    
     """
     Read swc into Pandas DataFrame
 
@@ -65,6 +64,7 @@ def read_swc(filepath):
   
     return df_swc
 
+
 def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
     
     """
@@ -86,7 +86,7 @@ def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
     Returns
     -------
     pair : list
-        a list of consecutive pairs of elemetns from the input list or array.
+        a list of consecutive pairs of elements from the input list or array.
         e.g. [(1,2), (2,3), (3,4), (4,None)]
     """
     if s is not None:
@@ -96,7 +96,8 @@ def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
     
     return pair
 
-def get_soma(df_swc):    
+
+def get_soma(df_swc):
 
     """
     Get rows of soma from df_swc. Soma format will be logged out.
@@ -121,6 +122,7 @@ def get_soma(df_swc):
     else:
         logging.info('Multi-Point soma is detected.')
     return df_soma
+
 
 def get_df_paths(df_swc):
     
@@ -415,11 +417,12 @@ def get_path_dendritic_length(path):
     
     Returns
     -------
-    the dendritic lengh of this path: float
+    the dendritic length of this path: float
 
     """
 
     return np.sum(np.sqrt(np.sum((path[1:] - path[:-1])**2, 1)))
+
 
 def get_path_euclidean_length(path):
     """
@@ -432,10 +435,11 @@ def get_path_euclidean_length(path):
     
     Returns
     -------
-    the euclidean lengh of this path: float
+    the euclidean length of this path: float
 
     """
     return np.sqrt(np.sum((path[0] - path[-1]) ** 2))
+
 
 def unique_row(a):
 
@@ -472,7 +476,7 @@ def unique_row(a):
 def get_outer_terminals(all_terminals):
 
     """
-    Get terminal points which found the convex hull of the cell.
+    Get terminal points which forms the convex hull of the cell.
 
     Parameters
     ----------
@@ -536,6 +540,7 @@ def get_remote_vector(df_paths, path_id):
     v= e-s
     return v/np.linalg.norm(v)
 
+
 def get_local_vector(df_paths, path_id):
     
     """
@@ -587,6 +592,7 @@ def get_path_statistics(df_paths):
     logging.debug('  Finished. \n')
     
     return df_paths
+
 
 def calculate_density(linestack, voxelsize):
     '''
@@ -648,7 +654,7 @@ def get_average_angles(df_paths):
     return average_nodal_angle_deg, average_nodal_angle_rad, average_local_angle_deg, average_local_angle_rad
 
 
-def plot_skeleten(ax, df_paths, soma, axis0, axis1, order_type, lims):
+def plot_skeleton(ax, df_paths, soma, axis0, axis1, order_type, lims):
 
     if order_type == 'c':
         colors = plt.cm.viridis.colors

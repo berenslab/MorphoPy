@@ -225,9 +225,9 @@ class Morph(object):
 
         lims = find_lims(dendrites)
 
-        plot_skeleten(ax2, dendrites, soma, 2, 0, order, lims)
-        plot_skeleten(ax3, dendrites, soma, 1, 2, order, lims)
-        plot_skeleten(ax1, dendrites, soma, 1, 0, order, lims)
+        plot_skeleton(ax2, dendrites, soma, 2, 0, order, lims)
+        plot_skeleton(ax3, dendrites, soma, 1, 2, order, lims)
+        plot_skeleton(ax1, dendrites, soma, 1, 0, order, lims)
         scalebar = ScaleBar(1, units=self.unit, location='lower left', box_alpha=0)
         ax1.add_artist(scalebar)    
         ax4.axis('off')

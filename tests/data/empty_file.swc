@@ -1,0 +1,8 @@
+# Original file Image001-005-01.swc edited using StdSwc version 1.31 on 6/22/15.
+# Irregularities and fixes documented in Image001-005-01.swc.std.  See StdSwc1.31.doc for more information.
+#
+# SWC to SWC conversion from L-Measure. Sridevi Polavaram: spolavar@gmu.edu
+# Original fileName:C:\Users\praveen\Desktop\DataProcessing\CurrentArchives\Processing\Seung\11-11-2014_Seung\rawArborTracesInPhysicalUnits\Image001-005_01-t1.swc
+#
+# in micrometers - steps: read&correct swc, add 1 to xyz, scale by voxel size, write swc
+
