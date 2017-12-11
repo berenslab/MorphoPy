@@ -87,14 +87,6 @@ def test_read_swc_all_variables_are_in():
     assert 'parent' in swc.keys(), "column 'parent' should be in pandas.DataFrame"
 
 
-def test_read_swc_unit_is_changed_to_microns():
-    filepath = './data/Image001-005-01.CNG.swc'
-    unit = 'pixel'
-    voxel_size = np.array([1, 1, 1])
-    df = read_swc(filepath, unit=unit, voxel_size=voxel_size)
-
-    assert(unit == 'um'), "unit should be changed into um."
-
 
 ### TEST FUNCTIONAL METHODS ###
 
