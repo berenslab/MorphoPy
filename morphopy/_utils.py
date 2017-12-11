@@ -86,7 +86,7 @@ def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
     Returns
     -------
     pair : list
-        a list of consecutive pairs of elemetns from the input list or array.
+        a list of consecutive pairs of elements from the input list or array.
         e.g. [(1,2), (2,3), (3,4), (4,None)]
     """
     if s is not None:
@@ -422,6 +422,7 @@ def get_path_dendritic_length(path):
     """
 
     return np.sum(np.sqrt(np.sum((path[1:] - path[:-1])**2, 1)))
+
 
 def get_path_euclidean_length(path):
     """
