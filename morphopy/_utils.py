@@ -404,10 +404,10 @@ def update_df_paths(df_paths, df_soma):
 
 def get_sorder(df_paths):
     """
-    Returns the Strahler order for all paths in df_paths. #TODO add definition of Starhler order
+    Returns the Strahler order for all paths in df_paths. #TODO add definition of Strahler order
     :param df_paths: pandas.DataFrame
     :return: df_paths: pandas.DataFrame
-        Updated DataFrame with new column ['sorder'] indicating the starhler order of each node along each path.
+        Updated DataFrame with new column ['sorder'] indicating the Strahler order of each node along each path.
     """
     
     df_paths['sorder'] = np.ones(len(df_paths)) * np.nan
@@ -658,6 +658,7 @@ def calculate_density(linestack, voxelsize):
     logging.debug('  Finished. \n')
 
     return density_stack, center_of_mass
+
 
 def get_average_angles(df_paths):
     """
