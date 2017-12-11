@@ -143,7 +143,7 @@ def test_get_df_paths_creates_dataFrame():
 
 
 
-from ..morphopy._utils import unique_row
+from .morphopy._utils import unique_row
 
 
 def test_unique_row_pairs_of_same_value():
