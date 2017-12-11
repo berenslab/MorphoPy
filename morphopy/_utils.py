@@ -86,7 +86,7 @@ def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
     Returns
     -------
     pair : list
-        a list of consecutive pairs of elemetns from the input list or array.
+        a list of consecutive pairs of elements from the input list or array.
         e.g. [(1,2), (2,3), (3,4), (4,None)]
     """
     if s is not None:
@@ -417,11 +417,12 @@ def get_path_dendritic_length(path):
     
     Returns
     -------
-    the dendritic lengh of this path: float
+    the dendritic length of this path: float
 
     """
 
     return np.sum(np.sqrt(np.sum((path[1:] - path[:-1])**2, 1)))
+
 
 def get_path_euclidean_length(path):
     """
@@ -434,10 +435,11 @@ def get_path_euclidean_length(path):
     
     Returns
     -------
-    the euclidean lengh of this path: float
+    the euclidean length of this path: float
 
     """
     return np.sqrt(np.sum((path[0] - path[-1]) ** 2))
+
 
 def unique_row(a):
 
@@ -474,7 +476,7 @@ def unique_row(a):
 def get_outer_terminals(all_terminals):
 
     """
-    Get terminal points which found the convex hull of the cell.
+    Get terminal points which forms the convex hull of the cell.
 
     Parameters
     ----------
@@ -537,6 +539,7 @@ def get_remote_vector(df_paths, path_id):
     e = df_paths.loc[path_id].path[-1]
     v= e-s
     return v/np.linalg.norm(v)
+
 
 def get_local_vector(df_paths, path_id):
     
