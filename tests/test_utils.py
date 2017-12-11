@@ -100,7 +100,7 @@ def test_get_consecutive_pairs_of_elements_from_list_default():
 
     result = get_consecutive_pairs_of_elements_from_list(l, s=None, e=None)
 
-    assert result == [(1, 2), (2, 3), (3, 4)]
+    assert result == [(None, 1), (1, 2), (2, 3), (3, 4), (4, None)]
 
 
 def test_get_consecutive_pairs_of_elements_from_list_with_start_node():
@@ -109,7 +109,7 @@ def test_get_consecutive_pairs_of_elements_from_list_with_start_node():
 
     result = get_consecutive_pairs_of_elements_from_list(l, s=0, e=None)
 
-    assert result == [(0, 1), (1, 2), (2, 3), (3, 4)]
+    assert result == [(0, 1), (1, 2), (2, 3), (3, 4), (4, None)]
 
 
 def test_get_consecutive_pairs_of_elements_from_list_with_end_node():
@@ -118,7 +118,7 @@ def test_get_consecutive_pairs_of_elements_from_list_with_end_node():
 
     result = get_consecutive_pairs_of_elements_from_list(l, s=None, e=5)
 
-    assert result == [(1, 2), (2, 3), (3, 4), (4, 5)]
+    assert result == [(None, 1), (1, 2), (2, 3), (3, 4), (4, 5)]
 
 
 def test_get_consecutive_pairs_of_elements_from_list_with_start_and_end_node():
