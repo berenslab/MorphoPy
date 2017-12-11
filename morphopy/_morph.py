@@ -6,40 +6,37 @@ __all__ = ['Morph']
 
 class Morph(object):
 
-    def __init__(self, data, unit='um', voxelsize=None, loglevel='INFO'):
+    def __init__(self, data, voxelsize=None, loglevel='INFO'):
 
         """
-        Initialize Morph object. Load swc as Pandas DataFrame (df_swc).
-        Split all paths on branch point and save as df_paths, related information (connection, path lengh, branch order etc.) are calculated. 
-        Other meta data are also save into Morph Object.
-
+        Initialize Morph object. Load swc as Pandas DataFrame (df_swc). Split all paths on branch point and save as df_paths, 
+        related information (connection, path lengh, branch order etc.) are calculated. Other meta data are also save into Morph Object.
         If voxelszie is provided, linestack is constructed and dendritic tree density is computed.
         
+        Parameters
+        ----------
+        data: str
+            path to the `.swc` file.
+        voxelsize: list or array-like
+            specify the voxel separation. e.g. [0.665, 0.665, 1]. 
+            If provided, linestack is reconstructed and dendritic tree density map will be computed.
+        loglevel: str
+            'debug', 'info', 'warning', 'error', 'critical'.     
         """
 
         # logging
         self._logger = get_logger(loglevel)
 
         # meta data
-
+        self.unit = 'um'
         self.voxelsize = voxelsize
-        self.unit_swc = unit
-        if unit == 'pixel' and voxelsize is None:
-            self.unit_df = 'pixel'
-        else:
-            self.unit_df = unit
-
-        filetype = data.split('/')[-1].split('.')[-1]
         
         # load data
-        if filetype == 'swc':
-            df_swc = read_swc(data, unit, voxelsize)
-        else:
-            logging.info('`.{}` is not supported yet.'.format(filetype))
-            return None
+        df_swc = read_swc(data)
 
+        df_soma = get_soma(df_swc)
         df_paths = get_df_paths(df_swc)
-        df_paths = update_df_paths(df_paths) # find which paths connnect to which
+        df_paths = update_df_paths(df_paths, df_soma) # find which paths connnect to which
         df_paths = get_path_statistics(df_paths)
         df_paths = get_sorder(df_paths) # get schaler order
 
@@ -48,7 +45,7 @@ class Morph(object):
 
         # linestack | pixel
 
-        linestack_output = swc_to_linestack(data, self.unit_swc, voxelsize)
+        linestack_output = swc_to_linestack(data, self.unit, voxelsize)
 
         if linestack_output is not None:
             self.linestack, self.soma_on_stack, self.coordindate_padding = linestack_output
@@ -178,9 +175,12 @@ class Morph(object):
 
         # print and save
         if print_results:
-            print_summary(summary, self.unit_df)
+            print_summary(summary)
 
         if save_to is not None:
+
+            logging.info('  Writing to {}'.format(save_to))
+
             import json
             with open(save_to, 'w') as f:
                 json.dump(summary, f)
@@ -225,10 +225,10 @@ class Morph(object):
 
         lims = find_lims(dendrites)
 
-        plot_skeleten(ax2, dendrites, soma, 2, 0, order, lims)
-        plot_skeleten(ax3, dendrites, soma, 1, 2, order, lims)
-        plot_skeleten(ax1, dendrites, soma, 1, 0, order, lims)
-        scalebar = ScaleBar(1, units=self.unit_df, location='lower left', box_alpha=0)
+        plot_skeleton(ax2, dendrites, soma, 2, 0, order, lims)
+        plot_skeleton(ax3, dendrites, soma, 1, 2, order, lims)
+        plot_skeleton(ax1, dendrites, soma, 1, 0, order, lims)
+        scalebar = ScaleBar(1, units=self.unit, location='lower left', box_alpha=0)
         ax1.add_artist(scalebar)    
         ax4.axis('off')
 
@@ -267,7 +267,7 @@ class Morph(object):
         
         plt.legend(frameon=False)
 
-        scalebar = ScaleBar(voxelsize[0], units=self.unit_df, location='lower left', box_alpha=0)
+        scalebar = ScaleBar(voxelsize[0], units=self.unit, location='lower left', box_alpha=0)
         plt.gca().add_artist(scalebar)   
         
         plt.axis('off')

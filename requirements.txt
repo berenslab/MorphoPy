@@ -1,9 +1,5 @@
 numpy
-pandas
+pandas==0.20.3
 scipy
 matplotlib
 matplotlib-scalebar
-tifffile
-scikit-fmm
-scikit-image
-bs4

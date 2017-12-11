@@ -40,9 +40,7 @@ def get_logger(loglevel):
         
     return logger
 
-
-def read_swc(filepath, unit, voxelsize):
-    
+def read_swc(filepath):
     """
     Read swc into Pandas DataFrame
 
@@ -50,10 +48,6 @@ def read_swc(filepath, unit, voxelsize):
     ----------
     filepath: str
         path to swc file
-    unit: str
-        unit of the swc
-    voxelsize: numpy.array, shape = (3,)
-        the voxel separation (x,y,z)
     
     Returns
     -------
@@ -67,10 +61,7 @@ def read_swc(filepath, unit, voxelsize):
     df_swc =  pd.read_csv(filepath, delim_whitespace=True, comment='#',
                           names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
     df_swc.index = df_swc.n.as_matrix()
-    if unit == 'pixel' and voxelsize is not None:
-        df_swc[['x', 'y', 'z']] = df_swc[['x', 'y', 'z']] * voxelsize
-        unit = 'um'
-    
+  
     return df_swc
 
 
@@ -79,28 +70,23 @@ def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
     """
     Get pair of items in a list. 
     
-    Argument `e=
-    e.g. [4:None] is equivalent to [4:].    
-
-    Argument
-    
     Parameters
     ----------
-    l : list
+    l : list or array-like 
         e.g. [1,2,3,4]
 
     s : int
-        An integer inserted to the front of a list.
-
+        An integer inserted to the front of the list or array.
 
     e : int or None
-        An integer or None appended to the list.
+        An integer or None appended to the list or array.
         `None` is always added unless other value is specified. 
         This is for slicing the last part of the list. e.g. [4:None] is equivalent to [4:] 
     
     Returns
     -------
     pair : list
+        a list of consecutive pairs of elemetns from the input list or array.
         e.g. [(1,2), (2,3), (3,4), (4,None)]
     """
     if s is not None:
@@ -109,6 +95,33 @@ def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
     pair = list(zip(l[:-1], l[1:]))
     
     return pair
+
+
+def get_soma(df_swc):
+
+    """
+    Get rows of soma from df_swc. Soma format will be logged out.
+
+    Parameters
+    ----------
+    df_swc: pandas.DataFrame
+
+    Returns
+    -------
+    df_soma: pandas.DataFrame 
+    """
+
+    df_soma = df_swc[df_swc.type == 1]
+
+    if len(df_soma) == 0:
+        logging.info('No soma is detected.')
+    elif len(df_soma) == 1:
+        logging.info('1-Point soma is detected.')
+    elif len(df_soma) == 3:
+        logging.info('3-Point soma is detected.')
+    else:
+        logging.info('Multi-Point soma is detected.')
+    return df_soma
 
 
 def get_df_paths(df_swc):
@@ -128,15 +141,29 @@ def get_df_paths(df_swc):
         * the first point of each path should be the branch point.
     """
     
-    n = df_swc.n.values
-    parent = df_swc.parent.values
-    df_starting_points = df_swc[n - parent != 1]
-    branchpoint_index = np.unique(df_starting_points.parent.values[1:])
+    df_soma = df_swc[df_swc.type == 1]
+    df_neurites = df_swc[df_swc.type != 1]
+    df_neurites = pd.concat([df_soma.iloc[[0]], df_neurites])
+    
+    n = df_neurites.n.values
+    parent = df_neurites.parent.values
+
+    
+    if len(df_soma) == 3: # only for 3-Point soma
+        parent[parent == 2] = 1
+        parent[parent == 3] = 1  
+        diff_n_parent = n - parent
+        diff_n_parent[1] = 1 # 
+    else:
+        diff_n_parent = n - parent
+
+    df_starting_points = df_neurites[diff_n_parent != 1] # starting point of each path, which is not the branchpoint.
+    branchpoint_index = np.unique(df_starting_points.parent.values[1:]) # branchpoint is the parent point of starting point.
 
     path_dict = {}
     type_dict = {}
     radius_dict = {}
-    path_id = 1
+    path_id = 0
 
     starting_points_pairs = get_consecutive_pairs_of_elements_from_list(df_starting_points.n.values)
 
@@ -145,7 +172,7 @@ def get_df_paths(df_swc):
         if e is not None:
             b = branchpoint_index[np.logical_and(branchpoint_index > s, branchpoint_index < e)] # b: list, branch index
         else:
-            b = branchpoint_index[branchpoint_index >= s]
+            b = branchpoint_index[branchpoint_index > s]
 
         branchpoint_index_pairs = get_consecutive_pairs_of_elements_from_list(b, s, e)
 
@@ -178,13 +205,10 @@ def get_df_paths(df_swc):
             type_dict[path_id] = max(path_type)[0]
             path_id += 1
 
-    path_dict[0] = df_swc[df_swc.type == 1][['x', 'y', 'z']].values
-    type_dict[0] = max(df_swc[df_swc.type == 1][['type']].values)[0]
-    radius_dict[0] = df_swc[df_swc.type == 1][['radius']].values
-
-    
-    df_paths = pd.DataFrame([type_dict, path_dict, radius_dict]).T
-    df_paths.columns = [['type', 'path', 'radius']]
+    df_paths = pd.DataFrame()
+    df_paths['type'] = pd.Series(type_dict)
+    df_paths['path'] = pd.Series(path_dict)
+    df_paths['radius'] = pd.Series(radius_dict)
     
     return df_paths
 
@@ -258,8 +282,8 @@ def find_connection(all_paths, soma, path_id, paths_to_ignore=[]):
     
     if connect_to_soma(current_path, soma):
 
-        connect_to = 0 
-        connect_to_at = soma[0]
+        connect_to = -1
+        connect_to_at = soma
         
         return connect_to, connect_to_at
         
@@ -297,7 +321,7 @@ def back2soma(df_paths, path_id):
     
     counter = 0
         
-    while df_paths.loc[path_id].connect_to != 0:
+    while df_paths.loc[path_id].connect_to != -1:
         if path_id in paths_to_soma:
             logging.debug("\tPath {} cannot trace back to soma: {}".format(path_id_original, paths_to_soma))
             break
@@ -312,7 +336,7 @@ def back2soma(df_paths, path_id):
 
     return paths_to_soma
 
-def update_df_paths(df_paths):
+def update_df_paths(df_paths, df_soma):
 
     """
     Loop through all paths, add fours columns ['connect_to', 'connect_to_at', 'connected_by', 'connected_by_at'] to df_paths.
@@ -320,9 +344,9 @@ def update_df_paths(df_paths):
     
     logging.debug('  Start: Updating `df_paths` with connectivity debug.')
 
-    soma = df_paths.loc[0]['path']
+    soma = df_soma.iloc[0][['x', 'y', 'z']].values
     
-    all_paths = df_paths.loc[1:].path.to_dict()
+    all_paths = df_paths.path.to_dict()
     all_keys = list(all_paths.keys())
 
     connect_to_dict = {}
@@ -330,9 +354,6 @@ def update_df_paths(df_paths):
 
     for path_id in all_keys:
         connect_to_dict[path_id], connect_to_at_dict[path_id] = find_connection(all_paths, soma, path_id, paths_to_ignore=[])
-
-    connect_to_dict.update({0: -1})
-    connect_to_at_dict.update({0: []})
     
     df_paths['connect_to'] = pd.Series(connect_to_dict)
     df_paths['connect_to_at'] = pd.Series(connect_to_at_dict)
@@ -344,9 +365,6 @@ def update_df_paths(df_paths):
 
         connected_by_dict[path_id]    = df_paths[df_paths.connect_to == path_id].index.tolist()
         connected_by_at_dict[path_id] = df_paths[df_paths.connect_to == path_id].connect_to_at.tolist()
-
-    connected_by_dict.update({0: list(df_paths[df_paths['connect_to'] == 0].index)})
-    connected_by_at_dict.update({0: df_paths.loc[0].path[0]})
 
     df_paths['connected_by'] = pd.Series(connected_by_dict)
     df_paths['connected_by_at'] = pd.Series(connected_by_at_dict)
@@ -388,13 +406,64 @@ def get_sorder(df_paths):
     return df_paths
 
 def get_path_dendritic_length(path):
+
+    """
+    Get the dendritic length of a path, which is the sum of the distance between each consecutive points.
+
+    Parameters
+    ----------
+    path: array 
+        a coordinate array with dim=(n, 3)
+    
+    Returns
+    -------
+    the dendritic lengh of this path: float
+
+    """
+
     return np.sum(np.sqrt(np.sum((path[1:] - path[:-1])**2, 1)))
 
 def get_path_euclidean_length(path):
+    """
+    get the euclidean length of a path, which is the distance between the first and last points.
+
+    Parameters
+    ----------
+    path: array 
+        a coordinate array with dim=(n, 3)
+    
+    Returns
+    -------
+    the euclidean lengh of this path: float
+
+    """
     return np.sqrt(np.sum((path[0] - path[-1]) ** 2))
 
 def unique_row(a):
-    
+
+    """
+    Parameters
+    ----------
+    a: array
+        an array with replicated rows.
+
+    returns
+    -------
+    unique_a: array
+        an ordered array without replicated rows.
+
+    example
+    -------
+    >>> a = np.array([[9,9],
+                      [8,8],
+                      [1,1],
+                      [9,9]])
+    >>> unique_row(a)
+    >>> array([[1, 1],
+               [8, 8],
+               [9, 9]])
+    """
+
     b = np.ascontiguousarray(a).view(np.dtype((np.void, a.dtype.itemsize * a.shape[1])))
     _, idx = np.unique(b, return_index=True)
     
@@ -403,37 +472,92 @@ def unique_row(a):
     return unique_a
 
 def get_outer_terminals(all_terminals):
+
+    """
+    Get terminal points which found the convex hull of the cell.
+
+    Parameters
+    ----------
+    all_terminals: array
+        The array contains all terminal points from terminal paths (no other paths connected to them) 
+    
+    Returns
+    -------
+    outer_terminals_3d: array
+        The array contains all terminal points which found the convex hull of the cell.
+
+    """
     
     from scipy.spatial import ConvexHull
     hull = ConvexHull(all_terminals[:,:2])
     outer_terminals_3d = all_terminals[hull.vertices]
-#     outer_terminals_2d = all_terminals[:, :2][hull.vertices]
     outer_terminals_3d = np.vstack([outer_terminals_3d, outer_terminals_3d[0]])
     
     return outer_terminals_3d
 
 def get_angle(v0, v1):
+
+    """
+    Get angle (in both radian and degree) between two vectors.
+    
+    Parameters
+    ----------
+    v0: array
+        vector zero.
+    v1: array
+        vector one.
+
+    Returns
+    -------
+    Return a tuple, (angle in radian, angle in degree). 
+
+    """
+
     c = np.dot(v0, v1) / np.linalg.norm(v0) / np.linalg.norm(v1)
     return np.arccos(np.clip(c, -1, 1)), np.degrees(np.arccos(np.clip(c, -1, 1)))
 
-def get_node_vector(df_paths, path_id):
+def get_remote_vector(df_paths, path_id):
+
+    """
+    Get vector of certain path between the first and the last point.
+    
+    Parameters
+    ----------
+    df_paths: pandas.DataFrame
+
+    path_id: int
+
+    Returns
+    -------
+    normalized v: array
+        returned a normalized vector.
+    """
+
     s = df_paths.loc[path_id].path[0]
-    # e = df_paths.loc[path_id].connected_by_at
-    # if np.isnan(e).any():
     e = df_paths.loc[path_id].path[-1]
     v= e-s
     return v/np.linalg.norm(v)
 
-def get_nearest_recorded_point_vector(df_paths, path_id):
+def get_local_vector(df_paths, path_id):
+    
+    """
+    Get vector of certain path between the first and the last point.
+    
+    Parameters
+    ----------
+    df_paths: pandas.DataFrame
 
-    v = np.array([0,0,0])
+    path_id: int
+
+    Returns
+    -------
+    normalized v: array
+        returned a normalized vector.
+    """
+
     s = df_paths.loc[path_id].path[0]
-    i = 0
-    while (v == 0).all():
-        i+=1
-        e = df_paths.loc[path_id].path[i]
-        v = e-s
-        if i>5:break
+    e = df_paths.loc[path_id].path[1]
+    v= e-s
     
     return v/np.linalg.norm(v)
 
@@ -441,8 +565,7 @@ def get_path_statistics(df_paths):
     
     logging.debug('  Start: Calculating path statistics (e.g. dendritic length, branch order...)')
 
-
-    all_keys = df_paths.index[1:]
+    all_keys = df_paths.index
     
     dendritic_length_dict = {}
     euclidean_length_dict = {}
@@ -458,8 +581,6 @@ def get_path_statistics(df_paths):
         back_to_soma_dict[path_id] = back2soma(df_paths, path_id)
         corder_dict[path_id] = len(back_to_soma_dict[path_id])
 
-    corder_dict.update({0: 0})
-
     df_paths['dendritic_length'] = pd.Series(dendritic_length_dict)
     df_paths['euclidean_length'] = pd.Series(euclidean_length_dict)
     df_paths['back_to_soma'] = pd.Series(back_to_soma_dict)
@@ -468,6 +589,7 @@ def get_path_statistics(df_paths):
     logging.debug('  Finished. \n')
     
     return df_paths
+
 
 def calculate_density(linestack, voxelsize):
     '''
@@ -621,7 +743,7 @@ def get_path_on_stack(df_paths, voxelsize, coordinate_padding):
     return df_paths[cols]
 
 
-def print_summary(summary, unit):
+def print_summary(summary):
     
     """
     Print out summary statistics of the cell.
@@ -630,9 +752,6 @@ def print_summary(summary, unit):
     ----------
     summary: dict
         a nested dict contains summary of the cell.
-
-    unit: str
-        the unit of swc file. Either 'um' or 'pixel'.
     """
 
     import logging
@@ -677,7 +796,7 @@ def print_summary(summary, unit):
 
     logging.info('  # Average tortuosity: {:.3f}\n'.format(average_tortuosity))
 
-    logging.info('  # Dendritic length ({})\n'.format(unit))
+    logging.info('  # Dendritic length (μm)\n')
     # logging.info('  ## Dendritic length\n')
     logging.info('    Sum: {:.3f}'.format(dendritic_sum))
     logging.info('    Mean: {:.3f}'.format(dendritic_mean))
@@ -685,7 +804,7 @@ def print_summary(summary, unit):
     logging.info('    Min: {:.3f}'.format(dendritic_min))
     logging.info('    Max: {:.3f}\n'.format(dendritic_max))
 
-    logging.info('  # Euclidean length ({})\n'.format(unit))
+    logging.info('  # Euclidean length (μm)\n')
     # logging.info('  ## Euclidean length\n')
 
     logging.info('    Sum: {:.3f}'.format(euclidean_sum))
@@ -701,7 +820,7 @@ def print_summary(summary, unit):
         typical_radius = summary['density']['typical_radius']
         dendritic_area = summary['density']['dendritic_area']
         
-        logging.info('  # Density related ({})\n'.format(unit))
+        logging.info('  # Density related (μm)\n')
         logging.info('    Asymmetry: {:.3f}'.format(asymmetry))
         logging.info('    Outer Radius: {:.3f}'.format(outer_radius))
         logging.info('    Typical Radius : {:.3f}\n'.format(typical_radius))
