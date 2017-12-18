@@ -37,9 +37,9 @@ class Morph(object):
 
         df_soma = get_soma(df_swc)
         df_paths = get_df_paths(df_swc)
-        df_paths = update_df_paths(df_paths, df_soma) # find which paths connnect to which
+        df_paths = update_df_paths(df_paths, df_soma) # find which paths connect to which
         df_paths = get_path_statistics(df_paths)
-        df_paths = get_sorder(df_paths) # get schaler order
+        df_paths = get_sorder(df_paths) # get Strahler order
 
         self.df_swc = df_swc
         self.df_paths = df_paths
