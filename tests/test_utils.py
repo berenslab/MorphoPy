@@ -4,8 +4,7 @@ import sys
 sys.path.append('..')
 
 #### TEST GET_ANGLE #####
-from ..morphopy._utils import get_angle
-
+from MorphoPy.morphopy._utils import get_angle
 
 def test_get_angle_with_orthogonal_vectors():
     v0 = np.array([0, 0, 1])
@@ -62,7 +61,7 @@ def test_get_angle_returns_float():
 
 ### TEST READING METHODS ####
 
-from morphopy._utils import read_swc
+from MorphoPy.morphopy._utils import read_swc
 
 
 def test_read_swc_returned_fileformat():
@@ -91,7 +90,7 @@ def test_read_swc_all_variables_are_in():
 ### TEST FUNCTIONAL METHODS ###
 
 
-from morphopy._utils import get_consecutive_pairs_of_elements_from_list
+from MorphoPy.morphopy._utils import get_consecutive_pairs_of_elements_from_list
 
 
 def test_get_consecutive_pairs_of_elements_from_list_default():
@@ -130,7 +129,7 @@ def test_get_consecutive_pairs_of_elements_from_list_with_start_and_end_node():
     assert result == [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5)]
 
 
-from morphopy._utils import get_df_paths
+from MorphoPy.morphopy._utils import get_df_paths
 
 
 def test_get_df_paths_creates_dataFrame():
@@ -143,7 +142,7 @@ def test_get_df_paths_creates_dataFrame():
 
 
 
-from morphopy._utils import unique_row
+from MorphoPy.morphopy._utils import unique_row
 
 
 def test_unique_row_pairs_of_same_value():
