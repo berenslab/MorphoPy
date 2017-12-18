@@ -4,7 +4,7 @@ import sys
 sys.path.append('..')
 
 #### TEST GET_ANGLE #####
-from morphopy._utils import get_angle
+from ..morphopy._utils import get_angle
 
 
 def test_get_angle_with_orthogonal_vectors():
