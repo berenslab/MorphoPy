@@ -553,7 +553,7 @@ def get_angle(v0, v1):
     v1 = np.array(v1)
 
     if not v0.any() or not v1.any():
-        return 0
+        return 0, 0
 
     c = np.dot(v0, v1) / np.linalg.norm(v0) / np.linalg.norm(v1)
     return np.arccos(np.clip(c, -1, 1)), np.degrees(np.arccos(np.clip(c, -1, 1)))
