@@ -68,7 +68,7 @@ from morphopy._utils import read_swc
 def test_read_swc_returned_fileformat():
 
     import pandas as pd
-    filepath = 'tests/data/Image001-005-01.CNG.swc'
+    filepath = '/data/Image001-005-01.CNG.swc'
     df = read_swc(filepath)
 
     assert(isinstance(df, pd.DataFrame)), "read_swc() should return a pandas.DataFrame"
@@ -76,7 +76,7 @@ def test_read_swc_returned_fileformat():
 
 def test_read_swc_all_variables_are_in():
 
-    filepath = 'tests/data/Image001-005-01.CNG.swc'
+    filepath = '/data/Image001-005-01.CNG.swc'
     swc = read_swc(filepath)
 
     assert 'n' in swc.keys(), "column 'n' should be in pandas.DataFrame"
@@ -135,7 +135,7 @@ from morphopy._utils import get_df_paths
 
 def test_get_df_paths_creates_dataFrame():
     import pandas as pd
-    filepath = 'tests/data/Image001-005-01.CNG.swc'
+    filepath = '/data/Image001-005-01.CNG.swc'
     df = read_swc(filepath)
 
     paths = get_df_paths(df)
