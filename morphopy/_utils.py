@@ -549,9 +549,15 @@ def get_angle(v0, v1):
     Return a tuple, (angle in radian, angle in degree). 
 
     """
+    v0 = np.array(v0)
+    v1 = np.array(v1)
+
+    if not v0.any() or not v1.any():
+        return 0
 
     c = np.dot(v0, v1) / np.linalg.norm(v0) / np.linalg.norm(v1)
     return np.arccos(np.clip(c, -1, 1)), np.degrees(np.arccos(np.clip(c, -1, 1)))
+
 
 def get_remote_vector(df_paths, path_id):
 
