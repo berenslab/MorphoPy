@@ -11,7 +11,7 @@ def test_get_angle_with_orthogonal_vectors():
     v0 = np.array([0, 0, 1])
     v1 = np.array([0, 1, 0])
 
-    r, d = get_angle(v0,v1)
+    r, d = get_angle(v0, v1)
     assert(r == 90*np.pi/180), "returned angle should be pi/2"
     assert (d == 90), "returned angle should be 90 degree"
 
@@ -68,7 +68,7 @@ from morphopy._utils import read_swc
 def test_read_swc_returned_fileformat():
 
     import pandas as pd
-    filepath = './data/Image001-005-01.CNG.swc'
+    filepath = 'tests/data/Image001-005-01.CNG.swc'
     df = read_swc(filepath)
 
     assert(isinstance(df, pd.DataFrame)), "read_swc() should return a pandas.DataFrame"
@@ -76,7 +76,7 @@ def test_read_swc_returned_fileformat():
 
 def test_read_swc_all_variables_are_in():
 
-    filepath = './data/Image001-005-01.CNG.swc'
+    filepath = 'tests/data/Image001-005-01.CNG.swc'
     swc = read_swc(filepath)
 
     assert 'n' in swc.keys(), "column 'n' should be in pandas.DataFrame"
@@ -135,7 +135,7 @@ from morphopy._utils import get_df_paths
 
 def test_get_df_paths_creates_dataFrame():
     import pandas as pd
-    filepath = './data/Image001-005-01.CNG.swc'
+    filepath = 'tests/data/Image001-005-01.CNG.swc'
     df = read_swc(filepath)
 
     paths = get_df_paths(df)
