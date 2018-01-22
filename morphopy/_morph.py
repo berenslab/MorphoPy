@@ -6,7 +6,7 @@ __all__ = ['Morph']
 
 class Morph(object):
 
-    def __init__(self, data, voxelsize=None, loglevel='INFO'):
+    def __init__(self, data, voxelsize=None, loglevel='info'):
 
         """
         Initialize Morph object. Load swc as Pandas DataFrame (df_swc). Split all paths on branch point and save as
