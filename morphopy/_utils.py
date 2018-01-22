@@ -33,7 +33,7 @@ def get_logger(loglevel):
     try:
         LEVEL = LEVELS[loglevel]
         logger.setLevel(LEVEL)
-    except:
+    except ValueError:
         logger.setLevel(logging.INFO)
         logging.info('  Please enter a valid logging mode (DEBUG, INFO, WARNING, ERROR, CRITICAL).')
         logger.setLevel(logging.ERROR)
