@@ -9,3 +9,6 @@
 # others
 
 *.egg-info/
+
+# jupyter
+*.ipynb*

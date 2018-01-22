@@ -508,6 +508,7 @@ def unique_row(a):
     
     return unique_a
 
+
 def get_outer_terminals(all_terminals):
 
     """
@@ -691,11 +692,11 @@ def get_average_angles(df_paths):
         if len(path_ids) == 2:
             v00 = get_remote_vector(df_paths, path_ids[0])
             v01 = get_remote_vector(df_paths, path_ids[1])
-            nodal_angles_rad[n], nodal_angles_deg[n] = get_angle(v00,v01)
+            nodal_angles_rad[n], nodal_angles_deg[n] = get_angle(v00, v01)
 
             v10 = get_local_vector(df_paths, path_ids[0])
             v11 = get_local_vector(df_paths, path_ids[1])
-            local_angles_rad[n], local_angles_deg[n] = get_angle(v10,v11)
+            local_angles_rad[n], local_angles_deg[n] = get_angle(v10, v11)
 
             n+=1
         else:
