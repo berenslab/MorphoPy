@@ -97,10 +97,38 @@ def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
     return pair
 
 
-def get_soma(df_swc):
+# def get_soma(df_swc):
+
+#     """
+#     Get rows of soma from df_swc. Soma format will be logged out.
+
+#     Parameters
+#     ----------
+#     df_swc: pandas.DataFrame
+
+#     Returns
+#     -------
+#     df_soma: pandas.DataFrame 
+#     """
+
+#     df_soma = df_swc[df_swc.type == 1]
+
+#     if len(df_soma) == 0:
+#         logging.info('No soma is detected.')
+#     elif len(df_soma) == 1:
+#         logging.info('1-Point soma is detected.')
+#     elif len(df_soma) == 3:
+#         logging.info('3-Point soma is detected.')
+#     else:
+#         logging.info('Multi-Point soma is detected.')
+#     return df_soma
+
+def get_one_point_soma(df_swc):
 
     """
-    Get rows of soma from df_swc. Soma format will be logged out.
+    If soma is represented by one point, then retrieve this point.
+    If there are more than one points are used as soma, 
+    then the mean of the coordinates of all points is used as soma. 
 
     Parameters
     ----------
@@ -108,26 +136,27 @@ def get_soma(df_swc):
 
     Returns
     -------
-    df_soma: pandas.DataFrame 
+    df_soma_1p: pandas.DataFrame
     """
-
+    
     df_soma = df_swc[df_swc.type == 1]
-
-    if len(df_soma) == 0:
-        logging.info('No soma is detected.')
-    elif len(df_soma) == 1:
-        logging.info('1-Point soma is detected.')
-    elif len(df_soma) == 3:
-        logging.info('3-Point soma is detected.')
+    if len(df_soma) > 1:
+        logging.info('  More then one points of soma are found. The average of all points is used as soma.')
+        df_soma.set_value(1, 'x', df_soma['x'].mean())
+        df_soma.set_value(1, 'y', df_soma['y'].mean())
+        df_soma.set_value(1, 'z', df_soma['z'].mean())
+        df_soma.set_value(1, 'radius', df_soma['radius'].mean())
     else:
-        logging.info('Multi-Point soma is detected.')
-    return df_soma
+        logging.info('  One point soma is found.')
+    
+    df_soma_1p = df_soma.iloc[[0]]
 
+    return df_soma_1p
 
 def get_df_paths(df_swc):
     
     """
-    Split swc into paths. 
+    Split the original swc into paths (Soma, Dendrites, Axon, etc..). 
     
     Parameters
     ----------
@@ -136,22 +165,29 @@ def get_df_paths(df_swc):
     Returns
     -------
     df_paths: pandas.DataFrame
-        A DataFrame with columns ['type', 'path', 'radius']
+        A DataFrame with columns ['type', 'path', 'radius', 'n_index']
         * the first row (df.iloc[0]) is soma. 
         * the first point of each path should be the branch point.
     """
     
     df_soma = df_swc[df_swc.type == 1]
+    
+    if len(df_soma)<1:
+        logging.info('  No soma is founded. The first row is used as soma.')
+        df_swc.set_value(1, 'type', 1)
+        
+    df_soma_1p = get_one_point_soma(df_swc)
+    
     df_neurites = df_swc[df_swc.type != 1]
-    df_neurites = pd.concat([df_soma.iloc[[0]], df_neurites])
+    df_neurites = pd.concat([df_soma_1p, df_neurites])
     
     n = df_neurites.n.values
     parent = df_neurites.parent.values
-
     
-    if len(df_soma) == 3: # only for 3-Point soma
-        parent[parent == 2] = 1
-        parent[parent == 3] = 1  
+    
+    if len(df_soma) > 1: # only for multi-Point soma
+        for i in range(2, len(df_soma)+1): 
+            parent[parent == i] = 1 # reconnect those nodes to the soma
         diff_n_parent = n - parent
         diff_n_parent[1] = 1 # 
     else:
@@ -163,7 +199,8 @@ def get_df_paths(df_swc):
     path_dict = {}
     type_dict = {}
     radius_dict = {}
-    path_id = 0
+    n_index_dict = {}
+    path_id = 1
 
     starting_points_pairs = get_consecutive_pairs_of_elements_from_list(df_starting_points.n.values)
 
@@ -179,17 +216,18 @@ def get_df_paths(df_swc):
         for bs, be in branchpoint_index_pairs:
             logging.debug('\t {}: {}, {}'.format(path_id, bs, be))
             
-            path = df_swc.loc[bs:be][['x', 'y', 'z']].values
-            path_type = df_swc.loc[bs:be][['type']].values
-            path_radius = df_swc.loc[bs:be][['radius']].values
-            
+            path = df_neurites.loc[bs:be][['x', 'y', 'z']].values
+            path_type = df_neurites.loc[bs:be][['type']].values
+            path_radius = df_neurites.loc[bs:be][['radius']].values
+            path_n_index = df_neurites.loc[bs:be][['n']].values
             if bs == s:
-                parent_idx = df_swc.loc[[bs]].parent.values[0]
+                parent_idx = df_neurites.loc[[bs]].parent.values[0]
+                
                 if parent_idx != -1:
 
-                    parent_coord = df_swc.loc[[parent_idx]][['x', 'y', 'z']].values
-                    parent_radius = df_swc.loc[[parent_idx]][['radius']].values
-
+                    parent_coord = df_neurites.loc[[parent_idx]][['x', 'y', 'z']].values
+                    parent_radius = df_neurites.loc[[parent_idx]][['radius']].values
+                    
                     if not (parent_coord == path).all(1).any():
 
                         path = np.vstack([parent_coord, path])
@@ -198,17 +236,25 @@ def get_df_paths(df_swc):
             if be == e:
                 path_dict[path_id] = path[:-1]
                 radius_dict[path_id] = path_radius[:-1]
+                n_index_dict[path_id] = path_n_index[:-1]
             else:
                 path_dict[path_id] = path
                 radius_dict[path_id] = path_radius
+                n_index_dict[path_id] = path_n_index
 
             type_dict[path_id] = max(path_type)[0]
             path_id += 1
-
+            
+    type_dict[0] = df_soma_1p['type'].as_matrix()[0]
+    path_dict[0] = df_soma_1p[['x', 'y', 'z']].as_matrix()
+    radius_dict[0] = df_soma_1p['radius'].as_matrix()
+    n_index_dict[0] = df_soma_1p['n'].as_matrix()
+    
     df_paths = pd.DataFrame()
     df_paths['type'] = pd.Series(type_dict)
     df_paths['path'] = pd.Series(path_dict)
     df_paths['radius'] = pd.Series(radius_dict)
+    df_paths['n_index'] = pd.Series(n_index_dict)
     
     return df_paths
 
