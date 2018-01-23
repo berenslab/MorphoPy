@@ -35,6 +35,10 @@ class Morph(object):
         self.unit = 'um'
         self.voxelsize = voxelsize
         
+        logging.info('  SWC file: {}\n'.format(data))
+        logging.info('  unit: {}'.format(self.unit))
+        logging.info('  voxel size: {}\n'.format(self.voxelsize))
+
         # load data
         df_swc = read_swc(data)
 
@@ -52,17 +56,23 @@ class Morph(object):
 
     def processing(self):
 
+        """
+        Further processing df_paths and get statistics info such as path lengths, branching order into DataFrame.
+
+        Linestack is reconstructed if needed data is given (voxel size of the original image). 
+        Then dendritic density is calculated based on linestack.  
+        """
+
         df_paths = get_path_statistics(self.df_paths)
-        # df_paths = get_sorder(self.df_paths) # get Strahler order
 
-        # linestack | pixel
+        # reconstruct linestack from swc.
 
-        linestack_output = swc_to_linestack(self.df_swc, self.unit, self.voxelsize)
+        linestack_output = swc_to_linestack(self.df_swc, self.voxelsize)
 
         if linestack_output is not None:
             self.linestack, self.soma_on_stack, self.coordindate_padding = linestack_output
             self.df_paths = get_path_on_stack(self.df_paths, self.voxelsize, self.coordindate_padding)
-            self.density_stack, self.dendritic_center = calculate_density(self.linestack, voxelsize)
+            self.density_stack, self.dendritic_center = calculate_density(self.linestack, self.voxelsize)
         else:
             self.linestack = None
 

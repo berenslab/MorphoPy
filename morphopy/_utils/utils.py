@@ -233,7 +233,7 @@ def get_df_paths(df_swc):
     
     return df_paths
 
-def swc_to_linestack(df_swc, unit, voxelsize=None):
+def swc_to_linestack(df_swc, voxelsize=None):
     
     """
     Convert SWC to Line Stack (from real length to voxel coordinates).
@@ -512,7 +512,7 @@ def get_path_statistics(df_paths):
 
     df_paths.sorder = df_paths['sorder'].astype(int)
 
-    logging.info('  Finished. \n')
+    logging.info('  Done. \n')
     
     return df_paths
 
