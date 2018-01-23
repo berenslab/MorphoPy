@@ -1,6 +1,9 @@
 import logging
 
-from ._utils import *
+from ._utils.utils import *
+from ._utils.check import *
+from ._utils.visualize import *
+
 
 __all__ = ['Morph']
 
@@ -35,18 +38,26 @@ class Morph(object):
         # load data
         df_swc = read_swc(data)
 
-        df_soma = get_soma(df_swc)
+        # check data
+        logging.info('  ===================  ')
+        logging.info('  Checking `.swc`...   \n')
+        check_swc(df_swc)
+
+        # split swc into soma, dendrites, axon, etc..
         df_paths = get_df_paths(df_swc)
-        df_paths = update_df_paths(df_paths, df_soma) # find which paths connect to which
-        df_paths = get_path_statistics(df_paths)
-        df_paths = get_sorder(df_paths) # get Strahler order
+        df_paths = check_path_connection(df_paths) # find which paths connect to which
 
         self.df_swc = df_swc
         self.df_paths = df_paths
 
+    def processing(self):
+
+        df_paths = get_path_statistics(self.df_paths)
+        # df_paths = get_sorder(self.df_paths) # get Strahler order
+
         # linestack | pixel
 
-        linestack_output = swc_to_linestack(data, self.unit, voxelsize)
+        linestack_output = swc_to_linestack(self.df_swc, self.unit, self.voxelsize)
 
         if linestack_output is not None:
             self.linestack, self.soma_on_stack, self.coordindate_padding = linestack_output
@@ -54,6 +65,7 @@ class Morph(object):
             self.density_stack, self.dendritic_center = calculate_density(self.linestack, voxelsize)
         else:
             self.linestack = None
+
 
     def summary(self, save_to=None,  print_results=True):
 
@@ -215,8 +227,8 @@ class Morph(object):
         ax4 = plt.subplot2grid((4,4), (3,0), rowspan=1, colspan=1)  
 
         df_paths = self.df_paths
-        dendrites = df_paths[df_paths.type == 3]
-        soma = df_paths.loc[0].path[0]
+        dendrites = df_paths[df_paths.type != 1]
+        soma = df_paths[df_paths.type == 1].path[0][0]
 
         # xylims, zlims = find_lims(df_paths)
         # lims = (xylims, zlims)

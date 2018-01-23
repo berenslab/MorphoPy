@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 from copy import deepcopy
 import logging
-import matplotlib.pyplot as plt
 
+from .summarize import *
 
 def get_logger(loglevel):
 
@@ -62,6 +62,8 @@ def read_swc(filepath):
                           names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
     df_swc.index = df_swc.n.as_matrix()
   
+    types = df_swc.type.unique()
+
     return df_swc
 
 
@@ -95,33 +97,6 @@ def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
     pair = list(zip(l[:-1], l[1:]))
     
     return pair
-
-
-# def get_soma(df_swc):
-
-#     """
-#     Get rows of soma from df_swc. Soma format will be logged out.
-
-#     Parameters
-#     ----------
-#     df_swc: pandas.DataFrame
-
-#     Returns
-#     -------
-#     df_soma: pandas.DataFrame 
-#     """
-
-#     df_soma = df_swc[df_swc.type == 1]
-
-#     if len(df_soma) == 0:
-#         logging.info('No soma is detected.')
-#     elif len(df_soma) == 1:
-#         logging.info('1-Point soma is detected.')
-#     elif len(df_soma) == 3:
-#         logging.info('3-Point soma is detected.')
-#     else:
-#         logging.info('Multi-Point soma is detected.')
-#     return df_soma
 
 def get_one_point_soma(df_swc):
 
@@ -258,35 +233,26 @@ def get_df_paths(df_swc):
     
     return df_paths
 
-def swc_to_linestack(filepath, unit, voxelsize=None):
+def swc_to_linestack(df_swc, unit, voxelsize=None):
+    
     """
     Convert SWC to Line Stack (from real length to voxel coordinates).
-    :param filepath:
+    :param df_swc:
     :param unit:
     :param voxelsize:
     :return:
     """
 
+    coords = df_swc[['x', 'y', 'z']].as_matrix()
 
-    coords = pd.read_csv(filepath, comment='#', sep=' ', header=None)[[2, 3, 4]].as_matrix()
-    
-    if unit == 'pixel':
-        coords = np.round(coords).astype(int)
-
-    else: # unit == 'um'
-
-        if voxelsize is None:
-            logging.debug('  Not able to build linestack from float coordinates.')
-            return None
-        else:
-            # coords = np.round(coords / voxelsize).astype(int) # not able to handle the soma-centered swc.
-            logging.debug('  coords in um are converted back to pixel.')
-            coords = coords - coords.min(0)
-            coords = np.round(coords / voxelsize).astype(int)   
-            # coords = np.round(coords / voxelsize)
-            # coords = coords - coords.min(0)
-            # coords = coords.astype(int)
-            # logging.debug('{}'.format(coords.max(0)))
+    if voxelsize is None:
+        logging.debug('  Not able to build linestack from real length coordinates.')
+        return None
+    else:
+        # coords = np.round(coords / voxelsize).astype(int) # not able to handle the soma-centered swc.
+        logging.debug('  Real length coordindates are converted back to pixel.')
+        coords = coords - coords.min(0)
+        coords = np.round(coords / voxelsize).astype(int)   
 
     imagesize = coords.max(0) + 1
     logging.debug('  Start: Creating linestack...')
@@ -389,26 +355,26 @@ def back2soma(df_paths, path_id):
         
     while df_paths.loc[path_id].connect_to != -1:
         if path_id in paths_to_soma:
-            logging.debug("\tPath {} cannot trace back to soma: {}".format(path_id_original, paths_to_soma))
+            # logging.info("\tPath {} cannot trace back to soma: {}".format(path_id_original, paths_to_soma))
+            logging.info("\tPath {} cannot trace back to soma.".format(path_id_original))
             break
         else:
             paths_to_soma.append(path_id)
             path_id = df_paths.loc[path_id].connect_to   
 
-        if path_id == -99:
-            break
+        # if path_id == -99:
+        #     break
 
     paths_to_soma.append(path_id)  
 
     return paths_to_soma
 
-def update_df_paths(df_paths, df_soma):
+def check_path_connection(df_paths):
     """
     This function updates the df_paths object. It loops through all paths and adds the fours columns
     ['connect_to', 'connect_to_at', 'connected_by', 'connected_by_at'] to df_paths.
 
     :param df_paths: pandas.DataFrame containing paths.
-    :param df_soma: pandas.DataFrame containing the soma.
     :return:
         df_paths: pandas.DataFrame
         Updated df_paths with added columns ['connect_to', 'connect_to_at', 'connected_by', 'connected_by_at'] for
@@ -417,7 +383,7 @@ def update_df_paths(df_paths, df_soma):
     
     logging.debug('  Start: Updating `df_paths` with connectivity debug.')
 
-    soma = df_soma.iloc[0][['x', 'y', 'z']].values
+    soma = df_paths[df_paths.type == 1]['path'][0]
     
     all_paths = df_paths.path.to_dict()
     all_keys = list(all_paths.keys())
@@ -447,78 +413,6 @@ def update_df_paths(df_paths, df_soma):
     logging.debug('  Finished.\n')
 
     return df_paths
-
-def get_sorder(df_paths):
-    """
-    Returns the Strahler order for all paths in df_paths. #TODO add definition of Strahler order
-    :param df_paths: pandas.DataFrame
-    :return: df_paths: pandas.DataFrame
-        Updated DataFrame with new column ['sorder'] indicating the Strahler order of each node along each path.
-    """
-    
-    df_paths['sorder'] = np.ones(len(df_paths)) * np.nan
-    df_paths = df_paths.set_value(df_paths.connected_by.apply(len) == 0, 'sorder', 1)
-    
-    while np.isnan(df_paths.sorder).any():
-    
-        df_sub = df_paths[np.isnan(df_paths.sorder)]
-
-        for row in df_sub.iterrows():
-
-            path_id = row[0]
-            connected_by = row[1]['connected_by']
-
-            sorder0 = df_paths.loc[connected_by[0]].sorder
-            sorder1 = df_paths.loc[connected_by[1]].sorder
-
-            if np.isnan(sorder0) or np.isnan(sorder1):
-                continue
-            else:
-                
-                if sorder0 == sorder1:
-                    df_paths.set_value(path_id, 'sorder', sorder0+1)
-                else:
-                    df_paths.set_value(path_id, 'sorder', np.max([sorder0, sorder1]))
-
-    df_paths.sorder = df_paths['sorder'].astype(int)
-                    
-    return df_paths
-
-def get_path_dendritic_length(path):
-
-    """
-    Get the dendritic length of a path, which is the sum of the distance between each consecutive points.
-
-    Parameters
-    ----------
-    path: array 
-        a coordinate array with dim=(n, 3)
-    
-    Returns
-    -------
-    the dendritic length of this path: float
-
-    """
-
-    return np.sum(np.sqrt(np.sum((path[1:] - path[:-1])**2, 1)))
-
-
-def get_path_euclidean_length(path):
-    """
-    get the euclidean length of a path, which is the distance between the first and last points.
-
-    Parameters
-    ----------
-    path: array 
-        a coordinate array with dim=(n, 3)
-    
-    Returns
-    -------
-    the euclidean length of this path: float
-
-    """
-    return np.sqrt(np.sum((path[0] - path[-1]) ** 2))
-
 
 def unique_row(a):
 
@@ -554,112 +448,21 @@ def unique_row(a):
     
     return unique_a
 
-
-def get_outer_terminals(all_terminals):
-
-    """
-    Get terminal points which form the convex hull of the cell.
-
-    Parameters
-    ----------
-    all_terminals: array
-        The array contains all terminal points from terminal paths (no other paths connected to them) 
-    
-    Returns
-    -------
-    outer_terminals_3d: array
-        The array contains all terminal points which found the convex hull of the cell.
-
-    """
-    
-    from scipy.spatial import ConvexHull
-    hull = ConvexHull(all_terminals[:,:2])
-    outer_terminals_3d = all_terminals[hull.vertices]
-    outer_terminals_3d = np.vstack([outer_terminals_3d, outer_terminals_3d[0]])
-    
-    return outer_terminals_3d
-
-def get_angle(v0, v1):
-
-    """
-    Get angle (in both radian and degree) between two vectors.
-    
-    Parameters
-    ----------
-    v0: array
-        vector zero.
-    v1: array
-        vector one.
-
-    Returns
-    -------
-    Return a tuple, (angle in radian, angle in degree). 
-
-    """
-    v0 = np.array(v0)
-    v1 = np.array(v1)
-
-    if not v0.any() or not v1.any():
-        return 0, 0
-
-    c = np.dot(v0, v1) / np.linalg.norm(v0) / np.linalg.norm(v1)
-    return np.arccos(np.clip(c, -1, 1)), np.degrees(np.arccos(np.clip(c, -1, 1)))
-
-
-def get_remote_vector(df_paths, path_id):
-
-    """
-    Get vector of certain path between the first and the last point.
-    
-    Parameters
-    ----------
-    df_paths: pandas.DataFrame
-
-    path_id: int
-
-    Returns
-    -------
-    normalized v: array
-        returned a normalized vector.
-    """
-
-    s = df_paths.loc[path_id].path[0]
-    e = df_paths.loc[path_id].path[-1]
-    v= e-s
-    return v/np.linalg.norm(v)
-
-
-def get_local_vector(df_paths, path_id):
-    
-    """
-    Get vector of certain path between the first and the second point.
-    
-    Parameters
-    ----------
-    df_paths: pandas.DataFrame
-
-    path_id: int
-
-    Returns
-    -------
-    normalized v: array
-        returned a normalized vector.
-    """
-
-    s = df_paths.loc[path_id].path[0]
-    e = df_paths.loc[path_id].path[1]
-    v= e-s
-    
-    return v/np.linalg.norm(v)
-
 def get_path_statistics(df_paths):
     """
 
-    :param df_paths:
-    :return:
+    Add path statistics (e.g. dendritic/euclidean lenght of each path, ordering, index of paths back to soma...)
+
+    Parameters
+    ==========
+    df_paths
+
+    Returns
+    =======
+    a updated df_paths
     """
     
-    logging.debug('  Start: Calculating path statistics (e.g. dendritic length, branch order...)')
+    logging.info('  Start: Calculating path statistics (e.g. dendritic length, branching order...)')
 
     all_keys = df_paths.index
     
@@ -682,10 +485,73 @@ def get_path_statistics(df_paths):
     df_paths['back_to_soma'] = pd.Series(back_to_soma_dict)
     df_paths['corder'] = pd.Series(corder_dict)
 
-    logging.debug('  Finished. \n')
+    # Strahler order
+    df_paths['sorder'] = np.ones(len(df_paths)) * np.nan
+    df_paths = df_paths.set_value(df_paths.connected_by.apply(len) == 0, 'sorder', 1)
+    
+    while np.isnan(df_paths.sorder).any():
+    
+        df_sub = df_paths[np.isnan(df_paths.sorder)]
+
+        for row in df_sub.iterrows():
+
+            path_id = row[0]
+            connected_by = row[1]['connected_by']
+
+            sorder0 = df_paths.loc[connected_by[0]].sorder
+            sorder1 = df_paths.loc[connected_by[1]].sorder
+
+            if np.isnan(sorder0) or np.isnan(sorder1):
+                continue
+            else:
+                
+                if sorder0 == sorder1:
+                    df_paths.set_value(path_id, 'sorder', sorder0+1)
+                else:
+                    df_paths.set_value(path_id, 'sorder', np.max([sorder0, sorder1]))
+
+    df_paths.sorder = df_paths['sorder'].astype(int)
+
+    logging.info('  Finished. \n')
     
     return df_paths
 
+
+# def get_sorder(df_paths):
+#     """
+#     Returns the Strahler order for all paths in df_paths. #TODO add definition of Strahler order
+#     :param df_paths: pandas.DataFrame
+#     :return: df_paths: pandas.DataFrame
+#         Updated DataFrame with new column ['sorder'] indicating the Strahler order of each node along each path.
+#     """
+    
+#     df_paths['sorder'] = np.ones(len(df_paths)) * np.nan
+#     df_paths = df_paths.set_value(df_paths.connected_by.apply(len) == 0, 'sorder', 1)
+    
+#     while np.isnan(df_paths.sorder).any():
+    
+#         df_sub = df_paths[np.isnan(df_paths.sorder)]
+
+#         for row in df_sub.iterrows():
+
+#             path_id = row[0]
+#             connected_by = row[1]['connected_by']
+
+#             sorder0 = df_paths.loc[connected_by[0]].sorder
+#             sorder1 = df_paths.loc[connected_by[1]].sorder
+
+#             if np.isnan(sorder0) or np.isnan(sorder1):
+#                 continue
+#             else:
+                
+#                 if sorder0 == sorder1:
+#                     df_paths.set_value(path_id, 'sorder', sorder0+1)
+#                 else:
+#                     df_paths.set_value(path_id, 'sorder', np.max([sorder0, sorder1]))
+
+#     df_paths.sorder = df_paths['sorder'].astype(int)
+                    
+#     return df_paths
 
 def calculate_density(linestack, voxelsize):
     """
@@ -711,128 +577,6 @@ def calculate_density(linestack, voxelsize):
     logging.debug('  Finished. \n')
 
     return density_stack, center_of_mass
-
-
-def get_average_angles(df_paths):
-    """
-
-    :param df_paths:
-    :return:
-    """
-
-    nodal_angles_deg = {}
-    nodal_angles_rad = {}
-    
-    local_angles_deg = {}
-    local_angles_rad = {}
-    
-    n = 0
-    for i in np.unique(df_paths.connect_to):
-
-        if i == -1:
-            continue
-
-        path_ids = df_paths[df_paths.connect_to == i].index.tolist()
-        
-        # print(i, len(path_ids))
-        if len(path_ids) == 2:
-            v00 = get_remote_vector(df_paths, path_ids[0])
-            v01 = get_remote_vector(df_paths, path_ids[1])
-            nodal_angles_rad[n], nodal_angles_deg[n] = get_angle(v00, v01)
-
-            v10 = get_local_vector(df_paths, path_ids[0])
-            v11 = get_local_vector(df_paths, path_ids[1])
-            local_angles_rad[n], local_angles_deg[n] = get_angle(v10, v11)
-
-            n+=1
-        else:
-            continue
-
-    average_nodal_angle_deg = np.mean(list(nodal_angles_deg.values()))
-    average_nodal_angle_rad = np.mean(list(nodal_angles_rad.values()))
-
-    average_local_angle_deg = np.mean(list(local_angles_deg.values()))
-    average_local_angle_rad = np.mean(list(local_angles_rad.values()))
-
-    return average_nodal_angle_deg, average_nodal_angle_rad, average_local_angle_deg, average_local_angle_rad
-
-
-def plot_skeleton(ax, df_paths, soma, axis0, axis1, order_type, lims):
-    """
-
-    :param ax:
-    :param df_paths:
-    :param soma:
-    :param axis0:
-    :param axis1:
-    :param order_type:
-    :param lims:
-    :return:
-    """
-
-    if order_type == 'c':
-        colors = plt.cm.viridis.colors
-        colors_idx = np.linspace(0, 255, max(df_paths.corder)+1).astype(int)
-    elif order_type == 's':
-        colors = plt.cm.viridis_r.colors
-        colors_idx = np.linspace(0, 255, max(df_paths.sorder)+1).astype(int)
-        
-    ax.scatter(soma[axis0], soma[axis1], s=280, color='grey')
-    for row in df_paths.iterrows():
-
-        path_id = row[0]
-
-        path = row[1]['path']
-        bpt = path[0]
-        if order_type == 'c':
-            order = row[1]['corder']
-            ax.plot(path[:, axis0], path[:, axis1], color=colors[colors_idx[int(order)]])
-            ax.scatter(bpt[axis0], bpt[axis1], color=colors[colors_idx[int(order)]], zorder=1)
-
-        elif order_type == 's':
-            order = row[1]['sorder']
-            ax.plot(path[:, axis0], path[:, axis1], color=colors[colors_idx[int(order)-1]])
-            ax.scatter(bpt[axis0], bpt[axis1], color=colors[colors_idx[int(order)-1]], zorder=1)
-    
-    xylims, zlim = lims
-
-    if axis0 == 2 and axis1 == 0: # ax2
-        ax.set_xlim(zlim[0], zlim[1])
-        ax.set_ylim(xylims[0], xylims[1])   
-
-    elif axis0 == 1 and axis1 == 2: # ax3
-        ax.set_xlim(xylims[0], xylims[1])
-        ax.set_ylim(zlim[0], zlim[1])
-     
-
-    elif axis0 == 1 and axis1 == 0: # ax1
-        ax.set_xlim(xylims[0], xylims[1])
-        ax.set_ylim(xylims[0], xylims[1])
-
-    ax.axis('off')
-
-def find_lims(df_paths):
-    """
-
-    :param df_paths:
-    :return:
-    """
-    points = np.vstack(df_paths.path)
-    maxlims = np.max(points, 0)
-    minlims = np.min(points, 0)
-    xylims = np.hstack([maxlims[:2], minlims[:2]])
-    zlims = np.hstack([maxlims[2], minlims[2]])
-    if (xylims >= 0).all():
-        xylims = np.array([0, max(xylims).astype(int) + 30])
-    else:
-        xylims = np.array([-max(abs(xylims)).astype(int) - 30, max(abs(xylims)).astype(int) + 30])
-
-    if (zlims >= 0).all():
-        zlims = np.array([-10, max(zlims).astype(int) + 30])
-    else:
-        zlims = np.array([-max(abs(zlims)).astype(int) - 30, max(abs(zlims)).astype(int) + 30])
-        
-    return xylims, zlims
 
 def get_path_on_stack(df_paths, voxelsize, coordinate_padding):
     """
