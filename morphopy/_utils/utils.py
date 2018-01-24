@@ -61,9 +61,38 @@ def read_swc(filepath):
     df_swc =  pd.read_csv(filepath, delim_whitespace=True, comment='#',
                           names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
     df_swc.index = df_swc.n.as_matrix()
+    
+    df_soma = df_swc[df_swc.type == 1]
+    if len(df_soma) > 1:
+        logging.info('  More then one points of soma are found. The average of all points is used as soma.\n')
+        
+        # using the average of all soma points as THE soma point.
+        df_soma.set_value(1, 'x', df_soma['x'].mean())
+        df_soma.set_value(1, 'y', df_soma['y'].mean())
+        df_soma.set_value(1, 'z', df_soma['z'].mean())
+        df_soma.set_value(1, 'radius', df_soma['radius'].mean())
+        
+        # reconnecting all other soma points to THE soma point
+        # also changing the parents of neurites which connected to soma to 1 
+        for i in range(2, len(df_soma)+1):
+            n_index = df_swc[df_swc.parent == i].index
+            for j in n_index:
+                df_swc.set_value(j, 'parent', 1)
+        
+        df_swc = df_swc.drop(df_swc.index[1:len(df_soma)])
+        df_soma = df_swc.iloc[[0]]
+        
+    elif len(df_soma) < 1:
+        logging.info('  No soma is founded. The first row is used as soma.\n')
+        df_swc.set_value(1, 'type', 1)
+        df_soma = df_swc[df_swc.type == 1]
+#     elif len(df_soma) == 1:
+    else:
+        logging.info('  One point soma is found.\n')
+
+    df_swc[['x', 'y', 'z']] = df_swc[['x', 'y', 'z']] - df_swc[['x', 'y', 'z']].iloc[0]
 
     return df_swc
-
 
 def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
     
@@ -96,70 +125,56 @@ def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
     
     return pair
 
-# def get_one_point_soma(df_swc):
+# def preprocess_swc(df_swc):
 
 #     """
-#     If soma is represented by one point, then retrieve this point.
     
-#     If there are more than one points are used as soma, 
-#     then the mean of the coordinates of all points is used as soma. 
+#     Preprocess swc data into two parts: df_soma and df_neurites 
+#     (although the soma point is also inclued in the neurites...)
 
-#     Parameters
-#     ----------
-#     df_swc: pandas.DataFrame
+#     The validity of soma points are also assessed. 
 
-#     Returns
-#     -------
-#     df_soma_1p: pandas.DataFrame
+#     For 1-point soma, it will be retrieved without modification.
+
+#     For 3 or multi-point soma, the AVERAGE of all soma points is used as the 1-point soma.
+#     All points connected to soma points will be reconnected to point 1. 
+
 #     """
+    
+#     df_swc = deepcopy(df_swc)
     
 #     df_soma = df_swc[df_swc.type == 1]
 #     if len(df_soma) > 1:
-#         logging.info('  More then one points of soma are found. The average of all points is used as soma.')
+#         logging.info('  More then one points of soma are found. The average of all points is used as soma.\n')
+        
+#         # using the average of all soma points as THE soma point.
 #         df_soma.set_value(1, 'x', df_soma['x'].mean())
 #         df_soma.set_value(1, 'y', df_soma['y'].mean())
 #         df_soma.set_value(1, 'z', df_soma['z'].mean())
 #         df_soma.set_value(1, 'radius', df_soma['radius'].mean())
+        
+#         # reconnecting all other soma points to THE soma point
+#         # also changing the parents of neurites which connected to soma to 1 
+#         for i in range(2, len(df_soma)+1):
+#             n_index = df_swc[df_swc.parent == i].index
+#             for j in n_index:
+#                 df_swc.set_value(j, 'parent', 1)
+#         df_soma = df_swc.iloc[[0]]
+        
+#     elif len(df_soma) < 1:
+#         logging.info('  No soma is founded. The first row is used as soma.\n')
+#         df_swc.set_value(1, 'type', 1)
+#         df_soma = df_swc[df_swc.type == 1]
+# #     elif len(df_soma) == 1:
 #     else:
-#         logging.info('  One point soma is found.')
+#         logging.info('  One point soma is found.\n')
+        
+#     df_neurites = df_swc[df_swc.type != 1]
+#     df_neurites = pd.concat([df_soma.iloc[[0]], df_neurites])
     
-#     df_soma_1p = df_soma.iloc[[0]]
+#     df_swc[['x', 'y', 'z']] = df_swc[['x', 'y', 'z']] - df_swc[['x', 'y', 'z']].iloc[0]
 
-#     return df_soma_1p
-
-def preprocess_swc(df_swc):
-    
-    df_swc = deepcopy(df_swc)
-    
-    df_soma = df_swc[df_swc.type == 1]
-    if len(df_soma) > 1:
-        logging.info('  More then one points of soma are found. The average of all points is used as soma.')
-        
-        # using the average of all soma points as THE soma point.
-        df_soma.set_value(1, 'x', df_soma['x'].mean())
-        df_soma.set_value(1, 'y', df_soma['y'].mean())
-        df_soma.set_value(1, 'z', df_soma['z'].mean())
-        df_soma.set_value(1, 'radius', df_soma['radius'].mean())
-        
-        # reconnecting all other soma points to THE soma point
-        # also changing the parents of neurites which connected to soma to 1 
-        for i in range(2, len(df_soma)+1):
-            n_index = df_swc[df_swc.parent == i].index
-            for j in n_index:
-                df_swc.set_value(j, 'parent', 1)
-        
-    elif len(df_soma) < 1:
-        logging.info('  No soma is founded. The first row is used as soma.')
-        df_swc.set_value(1, 'type', 1)
-        df_soma = df_swc[df_swc.type == 1]
-#     elif len(df_soma) == 1:
-    else:
-        logging.info('  One point soma is found.')
-        
-    df_neurites = df_swc[df_swc.type != 1]
-    df_neurites = pd.concat([df_soma.iloc[[0]], df_neurites])
-        
-    return df_swc, df_soma, df_neurites
+#     return df_swc, df_soma, df_neurites
 
 def get_df_paths(df_swc):
     
@@ -176,28 +191,12 @@ def get_df_paths(df_swc):
         A DataFrame with columns ['type', 'path', 'radius', 'n_index']
         * the first row (df.iloc[0]) is soma. 
         * the first point of each path should be the branch point.
-    """
-    
-    # df_soma = df_swc[df_swc.type == 1]
-    
-    # if len(df_soma)<1:
-    #     logging.info('  No soma is founded. The first row is used as soma.')
-    #     df_swc.set_value(1, 'type', 1)
-        
-    # df_soma_1p = get_one_point_soma(df_swc)
-    
-    # df_neurites = df_swc[df_swc.type != 1]
-    # df_neurites = pd.concat([df_soma_1p, df_neurites])
-    
-    # if len(df_soma) > 1: # only for multi-Point soma
-    #     for i in range(2, len(df_soma)+1): 
-    #         parent[parent == i] = 1 # reconnect those nodes to the soma
-    #     diff_n_parent = n - parent
-    #     diff_n_parent[1] = 1 # 
-    # else:
-    #     diff_n_parent = n - parent    
+    """ 
 
-    df_swc, df_soma, df_neurites = preprocess_swc(df_swc)
+    # df_swc, df_soma, df_neurites = preprocess_swc(df_swc)
+    df_soma = df_swc.iloc[[0]]
+    df_neurites = df_swc[df_swc.type != 1]
+    df_neurites = pd.concat([df_soma.iloc[[0]], df_neurites])
     
     n = df_neurites.n.values
     parent = df_neurites.parent.values
@@ -256,10 +255,10 @@ def get_df_paths(df_swc):
             type_dict[path_id] = max(path_type)[0]
             path_id += 1
             
-    type_dict[0] = df_soma_1p['type'].as_matrix()[0]
-    path_dict[0] = df_soma_1p[['x', 'y', 'z']].as_matrix()
-    radius_dict[0] = df_soma_1p['radius'].as_matrix()
-    n_index_dict[0] = df_soma_1p['n'].as_matrix()
+    type_dict[0] = df_soma['type'].as_matrix()[0]
+    path_dict[0] = df_soma[['x', 'y', 'z']].as_matrix()
+    radius_dict[0] = df_soma['radius'].as_matrix()
+    n_index_dict[0] = df_soma['n'].as_matrix()
     
     df_paths = pd.DataFrame()
     df_paths['type'] = pd.Series(type_dict)
@@ -331,6 +330,7 @@ def connect_to_soma(current_path, soma):
     :return:
     """
     # return (current_path[0] == soma).all(1).any()
+    # logging.debug(current_path == soma)
     return (current_path == soma).all(1).any()
 
 def find_connection(all_paths, soma, path_id, paths_to_ignore=[]):
@@ -416,37 +416,39 @@ def check_path_connection(df_paths):
         Updated df_paths with added columns ['connect_to', 'connect_to_at', 'connected_by', 'connected_by_at'] for
         each path.
     """
-    
-    logging.debug('  Start: Updating `df_paths` with connectivity debug.')
 
     soma = df_paths[df_paths.type == 1]['path'][0]
     
+    logging.debug(soma)
+
     all_paths = df_paths.path.to_dict()
     all_keys = list(all_paths.keys())
 
+    # find which path the current path connects to.
     connect_to_dict = {}
     connect_to_at_dict = {}
-
     for path_id in all_keys:
         connect_to_dict[path_id], connect_to_at_dict[path_id] = find_connection(all_paths, soma, path_id, paths_to_ignore=[])
-    
     df_paths['connect_to'] = pd.Series(connect_to_dict)
     df_paths['connect_to_at'] = pd.Series(connect_to_at_dict)
 
+    # find all paths connect to current path.  
     connected_by_dict = {}
     connected_by_at_dict = {}
-
     for path_id in all_keys:
-
         connected_by_dict[path_id]    = df_paths[df_paths.connect_to == path_id].index.tolist()
         connected_by_at_dict[path_id] = df_paths[df_paths.connect_to == path_id].connect_to_at.tolist()
-
     df_paths['connected_by'] = pd.Series(connected_by_dict)
     df_paths['connected_by_at'] = pd.Series(connected_by_at_dict)
 
-#     df_paths = add_soma_to_some_paths(df_paths, soma)
-    
-    logging.debug('  Finished.\n')
+    # check if all paths can goes back to soma.
+    back_to_soma_dict = {}
+    for path_id in all_keys:
+        back_to_soma_dict[path_id] = back2soma(df_paths, path_id)
+    else:
+        logging.info('  All paths can be traced back to soma. It is a single tree.')
+
+    df_paths['back_to_soma'] = pd.Series(back_to_soma_dict)
 
     return df_paths
 
@@ -513,81 +515,42 @@ def get_path_statistics(df_paths):
         
         dendritic_length_dict[path_id] = get_path_dendritic_length(path)
         euclidean_length_dict[path_id] = get_path_euclidean_length(path)
-        back_to_soma_dict[path_id] = back2soma(df_paths, path_id)
-        corder_dict[path_id] = len(back_to_soma_dict[path_id])
+        corder_dict[path_id] = len(df_paths.loc[path_id].back_to_soma)
 
     df_paths['dendritic_length'] = pd.Series(dendritic_length_dict)
     df_paths['euclidean_length'] = pd.Series(euclidean_length_dict)
-    df_paths['back_to_soma'] = pd.Series(back_to_soma_dict)
     df_paths['corder'] = pd.Series(corder_dict)
 
-    # Strahler order
-    df_paths['sorder'] = np.ones(len(df_paths)) * np.nan
-    df_paths = df_paths.set_value(df_paths.connected_by.apply(len) == 0, 'sorder', 1)
+    # # Strahler order
+    # df_paths['sorder'] = np.ones(len(df_paths)) * np.nan
+    # df_paths = df_paths.set_value(df_paths.connected_by.apply(len) == 0, 'sorder', 1)
     
-    while np.isnan(df_paths.sorder).any():
+    # while np.isnan(df_paths.sorder).any():
     
-        df_sub = df_paths[np.isnan(df_paths.sorder)]
+    #     df_sub = df_paths[np.isnan(df_paths.sorder)]
 
-        for row in df_sub.iterrows():
+    #     for row in df_sub.iterrows():
 
-            path_id = row[0]
-            connected_by = row[1]['connected_by']
+    #         path_id = row[0]
+    #         connected_by = row[1]['connected_by']
 
-            sorder0 = df_paths.loc[connected_by[0]].sorder
-            sorder1 = df_paths.loc[connected_by[1]].sorder
+    #         sorder0 = df_paths.loc[connected_by[0]].sorder
+    #         sorder1 = df_paths.loc[connected_by[1]].sorder
 
-            if np.isnan(sorder0) or np.isnan(sorder1):
-                continue
-            else:
+    #         if np.isnan(sorder0) or np.isnan(sorder1):
+    #             continue
+    #         else:
                 
-                if sorder0 == sorder1:
-                    df_paths.set_value(path_id, 'sorder', sorder0+1)
-                else:
-                    df_paths.set_value(path_id, 'sorder', np.max([sorder0, sorder1]))
+    #             if sorder0 == sorder1:
+    #                 df_paths.set_value(path_id, 'sorder', sorder0+1)
+    #             else:
+    #                 df_paths.set_value(path_id, 'sorder', np.max([sorder0, sorder1]))
 
-    df_paths.sorder = df_paths['sorder'].astype(int)
+    # df_paths.sorder = df_paths['sorder'].astype(int)
 
     logging.info('  Done. \n')
     
     return df_paths
-
-
-# def get_sorder(df_paths):
-#     """
-#     Returns the Strahler order for all paths in df_paths. #TODO add definition of Strahler order
-#     :param df_paths: pandas.DataFrame
-#     :return: df_paths: pandas.DataFrame
-#         Updated DataFrame with new column ['sorder'] indicating the Strahler order of each node along each path.
-#     """
-    
-#     df_paths['sorder'] = np.ones(len(df_paths)) * np.nan
-#     df_paths = df_paths.set_value(df_paths.connected_by.apply(len) == 0, 'sorder', 1)
-    
-#     while np.isnan(df_paths.sorder).any():
-    
-#         df_sub = df_paths[np.isnan(df_paths.sorder)]
-
-#         for row in df_sub.iterrows():
-
-#             path_id = row[0]
-#             connected_by = row[1]['connected_by']
-
-#             sorder0 = df_paths.loc[connected_by[0]].sorder
-#             sorder1 = df_paths.loc[connected_by[1]].sorder
-
-#             if np.isnan(sorder0) or np.isnan(sorder1):
-#                 continue
-#             else:
-                
-#                 if sorder0 == sorder1:
-#                     df_paths.set_value(path_id, 'sorder', sorder0+1)
-#                 else:
-#                     df_paths.set_value(path_id, 'sorder', np.max([sorder0, sorder1]))
-
-#     df_paths.sorder = df_paths['sorder'].astype(int)
-                    
-#     return df_paths
 
 def calculate_density(linestack, voxelsize):
     """
@@ -669,7 +632,7 @@ def print_summary(summary):
     num_branchpoints = summary['general']['number_of_branch_points']
     num_irreducible_nodes = summary['general']['number_of_irreducible_nodes']
     max_branch_order = summary['general']['max_branch_order']
-    max_strahler_order = summary['general'] ['max_strahler_order']
+    # max_strahler_order = summary['general'] ['max_strahler_order']
     average_nodal_angle_deg = summary['angle']['average_nodal_angle_in_degree']
     average_nodal_angle_rad = summary['angle']['average_nodal_angle_in_radian']
     average_local_angle_deg = summary['angle']['average_local_angle_in_degree']
@@ -695,7 +658,7 @@ def print_summary(summary):
     logging.info('    Number of irreducible nodes: {}\n'.format(num_irreducible_nodes))
 
     logging.info('    Max branching order: {}'.format(max_branch_order))
-    logging.info('    Max Strahler order: {}\n\n'.format(max_strahler_order))
+    # logging.info('    Max Strahler order: {}\n\n'.format(max_strahler_order))
 
     logging.info('  # Angle \n')
     logging.info('    Average nodal angle in degree: {:.3f}'.format(average_nodal_angle_deg))

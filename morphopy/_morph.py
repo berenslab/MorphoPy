@@ -45,6 +45,7 @@ class Morph(object):
         # check data
         logging.info('  ===================  ')
         logging.info('  Checking `.swc`...   \n')
+        
         check_swc(df_swc)
 
         # split swc into soma, dendrites, axon, etc..
@@ -98,7 +99,7 @@ class Morph(object):
         num_branchpoints = len(branchpoints)
 
         max_branch_order = max(self.df_paths.corder)
-        max_strahler_order = max(self.df_paths.sorder)
+        # max_strahler_order = max(self.df_paths.sorder)
 
         terminalpaths = self.df_paths.path[self.df_paths.connected_by.apply(len) == 0].as_matrix()
         terminalpoints = np.vstack([p[-1] for p in terminalpaths])
@@ -138,7 +139,7 @@ class Morph(object):
                 "number_of_branch_points": int(num_branchpoints),
                 "number_of_irreducible_nodes": int(num_irreducible_nodes),
                 "max_branch_order": int(max_branch_order),
-                "max_strahler_order": int(max_strahler_order),
+                # "max_strahler_order": int(max_strahler_order),
             },
             "angle": {
                 "average_nodal_angle_in_degree": average_nodal_angle_deg,
