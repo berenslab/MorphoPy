@@ -6,12 +6,12 @@ def check_soma(types):
     Check if soma exist.
     """
 
-    logging.info('  Has soma points?')
+    logging.info('  Has soma (Type 1)?')
     if 1 in types:
-        logging.info('\t Yes')
+        logging.info('\tYes\n')
         return True
     else:
-        logging.info('\t No')
+        logging.info('\tNo\n')
         return False
     
 def check_axon(types):
@@ -20,12 +20,12 @@ def check_axon(types):
     Check if axon exist.
     """    
     
-    logging.info('  Has axon?')
+    logging.info('  Has axon (Type 2)?')
     if 2 in types:
-        logging.info('\t Yes')
+        logging.info('\tYes\n')
         return True
     else:
-        logging.info('\t No')
+        logging.info('\tNo\n')
         return False
 
 def check_basal_dendrites(types):
@@ -34,12 +34,12 @@ def check_basal_dendrites(types):
     Check if (basal) dendrites exist.
     """    
     
-    logging.info('  Has basal dendrites?')
+    logging.info('  Has basal dendrites (Type 3)?')
     if 3 in types:
-        logging.info('\t Yes')
+        logging.info('\tYes\n')
         return True
     else:
-        logging.info('\t No')
+        logging.info('\tNo\n')
         return False
     
 def check_apical_dendrites(types):
@@ -48,13 +48,26 @@ def check_apical_dendrites(types):
     Check if apical denderites exist.
     """    
     
-    logging.info('  Has apical dendrites?')
+    logging.info('  Has apical dendrites (Type 4)?')
     if 4 in types:
-        logging.info('\t Yes')
+        logging.info('\tYes\n')
         return True
     else:
-        logging.info('\t No')
+        logging.info('\tNo\n')
         return False
+
+def check_others(types):
+    """
+    Check if undefined or costum types exist.
+    """ 
+    logging.info('  Has undefined or costum types (Type 0/5)?')
+    if 0 in types or 5 in types:
+        logging.info('\tYes\n')
+        return True
+    else:
+        logging.info('\tNo\n')
+        return False
+
 
 def check_swc(df_swc):
 
@@ -64,7 +77,9 @@ def check_swc(df_swc):
 
     types = df_swc.type.unique()
 
-    check_soma(types)
-    check_axon(types)
-    check_basal_dendrites(types)
-    check_apical_dendrites(types)    
+    hassoma = check_soma(types)
+    hasaxon = check_axon(types)
+    hasbasaldendrites = check_basal_dendrites(types)
+    hasapicaldenderites = check_apical_dendrites(types)
+    hasothers = check_others(types)
+

@@ -61,8 +61,6 @@ def read_swc(filepath):
     df_swc =  pd.read_csv(filepath, delim_whitespace=True, comment='#',
                           names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
     df_swc.index = df_swc.n.as_matrix()
-  
-    types = df_swc.type.unique()
 
     return df_swc
 
@@ -98,35 +96,70 @@ def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
     
     return pair
 
-def get_one_point_soma(df_swc):
+# def get_one_point_soma(df_swc):
 
-    """
-    If soma is represented by one point, then retrieve this point.
-    If there are more than one points are used as soma, 
-    then the mean of the coordinates of all points is used as soma. 
+#     """
+#     If soma is represented by one point, then retrieve this point.
+    
+#     If there are more than one points are used as soma, 
+#     then the mean of the coordinates of all points is used as soma. 
 
-    Parameters
-    ----------
-    df_swc: pandas.DataFrame
+#     Parameters
+#     ----------
+#     df_swc: pandas.DataFrame
 
-    Returns
-    -------
-    df_soma_1p: pandas.DataFrame
-    """
+#     Returns
+#     -------
+#     df_soma_1p: pandas.DataFrame
+#     """
+    
+#     df_soma = df_swc[df_swc.type == 1]
+#     if len(df_soma) > 1:
+#         logging.info('  More then one points of soma are found. The average of all points is used as soma.')
+#         df_soma.set_value(1, 'x', df_soma['x'].mean())
+#         df_soma.set_value(1, 'y', df_soma['y'].mean())
+#         df_soma.set_value(1, 'z', df_soma['z'].mean())
+#         df_soma.set_value(1, 'radius', df_soma['radius'].mean())
+#     else:
+#         logging.info('  One point soma is found.')
+    
+#     df_soma_1p = df_soma.iloc[[0]]
+
+#     return df_soma_1p
+
+def preprocess_swc(df_swc):
+    
+    df_swc = deepcopy(df_swc)
     
     df_soma = df_swc[df_swc.type == 1]
     if len(df_soma) > 1:
         logging.info('  More then one points of soma are found. The average of all points is used as soma.')
+        
+        # using the average of all soma points as THE soma point.
         df_soma.set_value(1, 'x', df_soma['x'].mean())
         df_soma.set_value(1, 'y', df_soma['y'].mean())
         df_soma.set_value(1, 'z', df_soma['z'].mean())
         df_soma.set_value(1, 'radius', df_soma['radius'].mean())
+        
+        # reconnecting all other soma points to THE soma point
+        # also changing the parents of neurites which connected to soma to 1 
+        for i in range(2, len(df_soma)+1):
+            n_index = df_swc[df_swc.parent == i].index
+            for j in n_index:
+                df_swc.set_value(j, 'parent', 1)
+        
+    elif len(df_soma) < 1:
+        logging.info('  No soma is founded. The first row is used as soma.')
+        df_swc.set_value(1, 'type', 1)
+        df_soma = df_swc[df_swc.type == 1]
+#     elif len(df_soma) == 1:
     else:
         logging.info('  One point soma is found.')
-    
-    df_soma_1p = df_soma.iloc[[0]]
-
-    return df_soma_1p
+        
+    df_neurites = df_swc[df_swc.type != 1]
+    df_neurites = pd.concat([df_soma.iloc[[0]], df_neurites])
+        
+    return df_swc, df_soma, df_neurites
 
 def get_df_paths(df_swc):
     
@@ -145,29 +178,32 @@ def get_df_paths(df_swc):
         * the first point of each path should be the branch point.
     """
     
-    df_soma = df_swc[df_swc.type == 1]
+    # df_soma = df_swc[df_swc.type == 1]
     
-    if len(df_soma)<1:
-        logging.info('  No soma is founded. The first row is used as soma.')
-        df_swc.set_value(1, 'type', 1)
+    # if len(df_soma)<1:
+    #     logging.info('  No soma is founded. The first row is used as soma.')
+    #     df_swc.set_value(1, 'type', 1)
         
-    df_soma_1p = get_one_point_soma(df_swc)
+    # df_soma_1p = get_one_point_soma(df_swc)
     
-    df_neurites = df_swc[df_swc.type != 1]
-    df_neurites = pd.concat([df_soma_1p, df_neurites])
+    # df_neurites = df_swc[df_swc.type != 1]
+    # df_neurites = pd.concat([df_soma_1p, df_neurites])
+    
+    # if len(df_soma) > 1: # only for multi-Point soma
+    #     for i in range(2, len(df_soma)+1): 
+    #         parent[parent == i] = 1 # reconnect those nodes to the soma
+    #     diff_n_parent = n - parent
+    #     diff_n_parent[1] = 1 # 
+    # else:
+    #     diff_n_parent = n - parent    
+
+    df_swc, df_soma, df_neurites = preprocess_swc(df_swc)
     
     n = df_neurites.n.values
     parent = df_neurites.parent.values
+    diff_n_parent = n - parent
+    diff_n_parent[1] = 1 # the first non-soma point should be included.
     
-    
-    if len(df_soma) > 1: # only for multi-Point soma
-        for i in range(2, len(df_soma)+1): 
-            parent[parent == i] = 1 # reconnect those nodes to the soma
-        diff_n_parent = n - parent
-        diff_n_parent[1] = 1 # 
-    else:
-        diff_n_parent = n - parent
-
     df_starting_points = df_neurites[diff_n_parent != 1] # starting point of each path, which is not the branch point.
     branchpoint_index = np.unique(df_starting_points.parent.values[1:]) # branch point is the parent point of starting point.
 
