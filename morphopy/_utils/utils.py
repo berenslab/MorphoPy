@@ -221,29 +221,35 @@ def get_df_paths(df_swc):
         else:
             b = branchpoint_index[branchpoint_index > s]
 
+        logging.debug("  {}".format(b))
         branchpoint_index_pairs = get_consecutive_pairs_of_elements_from_list(b, s, e)
 
         for bs, be in branchpoint_index_pairs:
+            
             logging.debug('\t {}: {}, {}'.format(path_id, bs, be))
             
             path = df_neurites.loc[bs:be][['x', 'y', 'z']].values
+
+        
+            # logging.debug('  Lenght of path is {}'.format(len(path)))
+
             path_type = df_neurites.loc[bs:be][['type']].values
             path_radius = df_neurites.loc[bs:be][['radius']].values
             path_n_index = df_neurites.loc[bs:be][['n']].values
+            
             if bs == s:
-                parent_idx = df_neurites.loc[[bs]].parent.values[0]
-                
+                parent_idx = df_neurites.loc[[bs]].parent.values[0]    
                 if parent_idx != -1:
-
                     parent_coord = df_neurites.loc[[parent_idx]][['x', 'y', 'z']].values
                     parent_radius = df_neurites.loc[[parent_idx]][['radius']].values
-                    
                     if not (parent_coord == path).all(1).any():
-
                         path = np.vstack([parent_coord, path])
                         path_radius = np.vstack([parent_radius, path_radius])
 
             if be == e:
+
+                if len(path[:-1]) < 2: continue # remove a path contains just one point 
+
                 path_dict[path_id] = path[:-1]
                 radius_dict[path_id] = path_radius[:-1]
                 n_index_dict[path_id] = path_n_index[:-1]
@@ -521,32 +527,32 @@ def get_path_statistics(df_paths):
     df_paths['euclidean_length'] = pd.Series(euclidean_length_dict)
     df_paths['corder'] = pd.Series(corder_dict)
 
-    # # Strahler order
-    # df_paths['sorder'] = np.ones(len(df_paths)) * np.nan
-    # df_paths = df_paths.set_value(df_paths.connected_by.apply(len) == 0, 'sorder', 1)
+    # Strahler order
+    df_paths['sorder'] = np.ones(len(df_paths)) * np.nan
+    df_paths = df_paths.set_value(df_paths.connected_by.apply(len) == 0, 'sorder', 1)
     
-    # while np.isnan(df_paths.sorder).any():
+    while np.isnan(df_paths.sorder).any():
     
-    #     df_sub = df_paths[np.isnan(df_paths.sorder)]
+        df_sub = df_paths[np.isnan(df_paths.sorder)]
 
-    #     for row in df_sub.iterrows():
+        for row in df_sub.iterrows():
 
-    #         path_id = row[0]
-    #         connected_by = row[1]['connected_by']
+            path_id = row[0]
+            connected_by = row[1]['connected_by']
 
-    #         sorder0 = df_paths.loc[connected_by[0]].sorder
-    #         sorder1 = df_paths.loc[connected_by[1]].sorder
+            sorder0 = df_paths.loc[connected_by[0]].sorder
+            sorder1 = df_paths.loc[connected_by[1]].sorder
 
-    #         if np.isnan(sorder0) or np.isnan(sorder1):
-    #             continue
-    #         else:
+            if np.isnan(sorder0) or np.isnan(sorder1):
+                continue
+            else:
                 
-    #             if sorder0 == sorder1:
-    #                 df_paths.set_value(path_id, 'sorder', sorder0+1)
-    #             else:
-    #                 df_paths.set_value(path_id, 'sorder', np.max([sorder0, sorder1]))
+                if sorder0 == sorder1:
+                    df_paths.set_value(path_id, 'sorder', sorder0+1)
+                else:
+                    df_paths.set_value(path_id, 'sorder', np.max([sorder0, sorder1]))
 
-    # df_paths.sorder = df_paths['sorder'].astype(int)
+    df_paths.sorder = df_paths['sorder'].astype(int)
 
     logging.info('  Done. \n')
     
