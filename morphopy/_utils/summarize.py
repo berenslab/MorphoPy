@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 
-def get_path_dendritic_length(path):
+def get_path_real_length(path):
 
     """
     Get the dendritic length of a path, which is the sum of the distance between each consecutive points.

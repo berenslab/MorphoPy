@@ -562,7 +562,7 @@ def unique_row(a):
 def get_path_statistics(df_paths):
     """
 
-    Add path statistics (e.g. dendritic/euclidean lenght of each path, ordering, index of paths back to soma...)
+    Add path statistics (e.g. real/euclidean length of each path, ordering, index of paths back to soma...)
 
     Parameters
     ==========
@@ -573,11 +573,11 @@ def get_path_statistics(df_paths):
     a updated df_paths
     """
     
-    logging.info('  Start: Calculating path statistics (e.g. dendritic length, branching order...)')
+    logging.info('  Start: Calculating path statistics (e.g. real length, branching order...)')
 
     all_keys = df_paths.index
     
-    dendritic_length_dict = {}
+    real_length_dict = {}
     euclidean_length_dict = {}
     back_to_soma_dict = {}
     corder_dict = {}
@@ -586,11 +586,11 @@ def get_path_statistics(df_paths):
         
         path = df_paths.loc[path_id].path
         
-        dendritic_length_dict[path_id] = get_path_dendritic_length(path)
+        real_length_dict[path_id] = get_path_real_length(path)
         euclidean_length_dict[path_id] = get_path_euclidean_length(path)
         corder_dict[path_id] = len(df_paths.loc[path_id].back_to_soma)
 
-    df_paths['dendritic_length'] = pd.Series(dendritic_length_dict)
+    df_paths['real_length'] = pd.Series(real_length_dict)
     df_paths['euclidean_length'] = pd.Series(euclidean_length_dict)
     df_paths['corder'] = pd.Series(corder_dict)
 
