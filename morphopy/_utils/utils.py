@@ -57,7 +57,7 @@ def read_swc(filepath):
     
     swc =  pd.read_csv(filepath, delim_whitespace=True, comment='#',
                           names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
-    swc.index = df_swc.n.as_matrix()
+    swc.index = swc.n.as_matrix()
     
     G = nx.DiGraph()
     
@@ -516,6 +516,12 @@ def check_path_connection(df_paths):
         # logging.info('  All paths can be traced back to soma. It is a single tree.')
 
     df_paths['back_to_soma'] = pd.Series(back_to_soma_dict)
+
+    disconnected_paths = [x for x in df_paths.back_to_soma if x[-1] not in df_paths[df_paths.connect_to == -1].index]
+    if len(disconnected_paths)>0:
+        logging.info("  Path {} cannot trace back to soma.".format([disconnected_path[0] for disconnected_path in disconnected_paths]))
+    else:
+        logging.info('  All paths can be traced back to soma. It is a single tree.')
 
     return df_paths
 
