@@ -241,12 +241,6 @@ class Morph(object):
         dendrites = df_paths[df_paths.type != 1]
         soma = df_paths[df_paths.type == 1].path[0][0]
 
-        # xylims, zlims = find_lims(df_paths)
-        # lims = (xylims, zlims)
-        # maxlims = (np.max(np.vstack(df_paths.path), 0)[1:]).astype(int) 
-        # maxlims = np.hstack([maxlims[0], maxlims]) + 30
-        # minlims = (np.min(np.vstack(df_paths.path), 0)[1:]).astype(int)
-
         lims = find_lims(dendrites)
 
         plot_skeleton(ax2, dendrites, soma, 2, 0, order, lims)
