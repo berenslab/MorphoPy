@@ -40,7 +40,7 @@ class Morph(object):
         logging.info('  voxel size: {}\n'.format(self.voxelsize))
 
         # load data
-        df_swc = read_swc(data)
+        G, df_swc = read_swc(data)
 
         # check data
         logging.info('  ===================  ')
@@ -49,7 +49,7 @@ class Morph(object):
         check_swc(df_swc)
 
         # split swc into soma, dendrites, axon, etc..
-        df_paths = get_df_paths(df_swc)
+        df_paths = get_df_paths(G)
         df_paths = check_path_connection(df_paths) # find which paths connect to which
 
         self.df_swc = df_swc

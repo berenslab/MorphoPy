@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import networkx as nx
 from copy import deepcopy
 import logging
 
@@ -51,79 +52,136 @@ def read_swc(filepath):
     
     Returns
     -------
-    df_swc: pandas.DataFrame
-        A Pandas DataFrame, with columns ['n', 'type', 'x', 'y', 'z', 'radius', 'parent']
-        * 'n' is the index of current row, 'parent' is the row current row connects to
-        * 'x', 'y', 'z' are spatial the coordinates
-        * 'type' is morphological structure identifier, 0-undefined, 1-soma, 2-axon, 3-dendrite, 4-apical dendrite, 5-custom.
+    G: networkx Graph object.
     """
     
-    df_swc =  pd.read_csv(filepath, delim_whitespace=True, comment='#',
+    swc =  pd.read_csv(filepath, delim_whitespace=True, comment='#',
                           names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
-    df_swc.index = df_swc.n.as_matrix()
+    swc.index = df_swc.n.as_matrix()
     
-    df_soma = df_swc[df_swc.type == 1]
-    if len(df_soma) > 1:
-        logging.info('  More then one points of soma are found. The average of all points is used as soma.\n')
-        
-        # using the average of all soma points as THE soma point.
-        df_soma.set_value(1, 'x', df_soma['x'].mean())
-        df_soma.set_value(1, 'y', df_soma['y'].mean())
-        df_soma.set_value(1, 'z', df_soma['z'].mean())
-        df_soma.set_value(1, 'radius', df_soma['radius'].mean())
-        
-        # reconnecting all other soma points to THE soma point
-        # also changing the parents of neurites which connected to soma to 1 
-        for i in range(2, len(df_soma)+1):
-            n_index = df_swc[df_swc.parent == i].index
-            for j in n_index:
-                df_swc.set_value(j, 'parent', 1)
-        
-        df_swc = df_swc.drop(df_swc.index[1:len(df_soma)])
-        df_soma = df_swc.iloc[[0]]
-        
-    elif len(df_soma) < 1:
-        logging.info('  No soma is founded. The first row is used as soma.\n')
-        df_swc.set_value(1, 'type', 1)
-        df_soma = df_swc[df_swc.type == 1]
-#     elif len(df_soma) == 1:
-    else:
-        logging.info('  One point soma is found.\n')
+    G = nx.DiGraph()
+    
+    # raw data
+    n = swc['n'].tolist()
+    pos = np.array([swc['x'].tolist(), swc['y'].tolist(), swc['z'].tolist()]).T
+    radius = swc['radius'].tolist()
+    t = swc['type'].tolist()
+    pid = swc['parent'].tolist()
+    t[pid == -1] = 1 # if soma is missing, the first point is soma
+    
+    # node
+    node_keys = ['pos', 'type', 'radius']
+    node_data = list(zip(n,
+                        [dict(zip(node_keys, [pos[ix], t[ix], radius[ix]])) for ix in range(pos.shape[0])]))
+    parent_idx = np.array([n.index(pid[ix]) for ix in range(1, len(pid))])
 
-    df_swc[['x', 'y', 'z']] = df_swc[['x', 'y', 'z']] - df_swc[['x', 'y', 'z']].iloc[0]
+    # edge
+    ec = np.sqrt(np.sum((pos[parent_idx] - pos[1:]) ** 2, axis=1)) 
+    edge_keys =['euclidean_dist', 'path_length']
+    edge_data = list(zip(pid[1:], n[1:],
+                        [dict(zip(edge_keys, [ec[ix], ec[ix]])) for ix in range(ec.shape[0])]))
 
-    return df_swc
+    G.add_nodes_from(node_data)
+    G.add_edges_from(edge_data)
+    
+    return G, swc
 
-def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
+def graph_to_path(G):
+    
+    edges_all = G.edge
+    nodes_all = np.array(list(G.node.keys()))
+    
+    num_branch = np.array(list(G.out_degree().values()))
+    branchpoints = nodes_all[np.logical_and(num_branch != 1, num_branch !=0)]
+    
+    path_all = {}
+    i = 1
+    for current_key in branchpoints: 
+        next_keys = list(edges_all[current_key].keys())
+        path = [current_key]
+        for next_key in next_keys:
+            while len(edges_all[next_key]) == 1:
+                path.append(next_key)
+                next_key += 1
+            else:
+                path.append(next_key)
+                path_all[i] = np.array(path)
+                path = [current_key]
+            i+=1
+            
+    return path_all
+
+def get_df_paths(G):
     
     """
-    Get pair of items in a list. 
+    Split the original swc into paths (Soma, Dendrites, Axon, etc..). 
     
     Parameters
     ----------
-    l : list or array-like 
-        e.g. [1,2,3,4]
-
-    s : int
-        An integer inserted to the front of the list or array.
-
-    e : int or None
-        An integer or None appended to the list or array.
-        `None` is always added unless other value is specified. 
-        This is for slicing the last part of the list. e.g. [4:None] is equivalent to [4:] 
+    G : networkx Graph object.
     
     Returns
     -------
-    pair : list
-        a list of consecutive pairs of elements from the input list or array.
-        e.g. [(1,2), (2,3), (3,4), (4,None)]
-    """
-    if s is not None:
-        l = np.append(s, l)
-    l = np.append(l, e)
-    pair = list(zip(l[:-1], l[1:]))
+    df_paths: pandas.DataFrame
+        A DataFrame with columns ['type', 'path', 'radius', 'n_index']
+        * the first row (df.iloc[0]) is soma. 
+        * the first point of each path should be the branch point.
+    """ 
+
+    path_idx_dict = graph_to_path(G)
     
-    return pair
+    path_dict = {}
+    type_dict = {}
+    radius_dict = {}
+    for key in path_idx_dict.keys():
+        path_dict[key] = np.vstack([G.node[key]['pos'] for key in path_idx_dict[key]])
+        type_dict[key] = np.vstack([G.node[key]['type'] for key in path_idx_dict[key]])[1]
+        radius_dict[key] = np.vstack([G.node[key]['radius'] for key in path_idx_dict[key]])
+    
+    type_dict[0] = G.node[1]['type']
+    path_dict[0] = G.node[1]['pos'].reshape(1,3)
+    radius_dict[0] = [G.node[1]['radius']]
+    path_idx_dict[0] = [1]
+    
+    
+    df_paths = pd.DataFrame()
+    df_paths['type'] = pd.Series(type_dict)
+    df_paths['path'] = pd.Series(path_dict)
+    df_paths['radius'] = pd.Series(radius_dict)
+    df_paths['n_index'] = pd.Series(path_idx_dict)
+    
+    return df_paths
+
+# def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
+    
+#     """
+#     Get pair of items in a list. 
+    
+#     Parameters
+#     ----------
+#     l : list or array-like 
+#         e.g. [1,2,3,4]
+
+#     s : int
+#         An integer inserted to the front of the list or array.
+
+#     e : int or None
+#         An integer or None appended to the list or array.
+#         `None` is always added unless other value is specified. 
+#         This is for slicing the last part of the list. e.g. [4:None] is equivalent to [4:] 
+    
+#     Returns
+#     -------
+#     pair : list
+#         a list of consecutive pairs of elements from the input list or array.
+#         e.g. [(1,2), (2,3), (3,4), (4,None)]
+#     """
+#     if s is not None:
+#         l = np.append(s, l)
+#     l = np.append(l, e)
+#     pair = list(zip(l[:-1], l[1:]))
+    
+#     return pair
 
 # def preprocess_swc(df_swc):
 
@@ -176,102 +234,102 @@ def get_consecutive_pairs_of_elements_from_list(l, s=None, e=None):
 
 #     return df_swc, df_soma, df_neurites
 
-def get_df_paths(df_swc):
+# def get_df_paths(df_swc):
     
-    """
-    Split the original swc into paths (Soma, Dendrites, Axon, etc..). 
+#     """
+#     Split the original swc into paths (Soma, Dendrites, Axon, etc..). 
     
-    Parameters
-    ----------
-    df_swc : pandas.DataFrame
+#     Parameters
+#     ----------
+#     df_swc : pandas.DataFrame
     
-    Returns
-    -------
-    df_paths: pandas.DataFrame
-        A DataFrame with columns ['type', 'path', 'radius', 'n_index']
-        * the first row (df.iloc[0]) is soma. 
-        * the first point of each path should be the branch point.
-    """ 
+#     Returns
+#     -------
+#     df_paths: pandas.DataFrame
+#         A DataFrame with columns ['type', 'path', 'radius', 'n_index']
+#         * the first row (df.iloc[0]) is soma. 
+#         * the first point of each path should be the branch point.
+#     """ 
 
-    # df_swc, df_soma, df_neurites = preprocess_swc(df_swc)
-    df_soma = df_swc.iloc[[0]]
-    df_neurites = df_swc[df_swc.type != 1]
-    df_neurites = pd.concat([df_soma.iloc[[0]], df_neurites])
+#     # df_swc, df_soma, df_neurites = preprocess_swc(df_swc)
+#     df_soma = df_swc.iloc[[0]]
+#     df_neurites = df_swc[df_swc.type != 1]
+#     df_neurites = pd.concat([df_soma.iloc[[0]], df_neurites])
     
-    n = df_neurites.n.values
-    parent = df_neurites.parent.values
-    diff_n_parent = n - parent
-    diff_n_parent[1] = 1 # the first non-soma point should be included.
+#     n = df_neurites.n.values
+#     parent = df_neurites.parent.values
+#     diff_n_parent = n - parent
+#     diff_n_parent[1] = 1 # the first non-soma point should be included.
     
-    df_starting_points = df_neurites[diff_n_parent != 1] # starting point of each path, which is not the branch point.
-    branchpoint_index = np.unique(df_starting_points.parent.values[1:]) # branch point is the parent point of starting point.
+#     df_starting_points = df_neurites[diff_n_parent != 1] # starting point of each path, which is not the branch point.
+#     branchpoint_index = np.unique(df_starting_points.parent.values[1:]) # branch point is the parent point of starting point.
 
-    path_dict = {}
-    type_dict = {}
-    radius_dict = {}
-    n_index_dict = {}
-    path_id = 1
+#     path_dict = {}
+#     type_dict = {}
+#     radius_dict = {}
+#     n_index_dict = {}
+#     path_id = 1
 
-    starting_points_pairs = get_consecutive_pairs_of_elements_from_list(df_starting_points.n.values)
+#     starting_points_pairs = get_consecutive_pairs_of_elements_from_list(df_starting_points.n.values)
 
-    for s, e in starting_points_pairs: # s: start index, e: end index
-        logging.debug('{}, {}'.format(s, e))
-        if e is not None:
-            b = branchpoint_index[np.logical_and(branchpoint_index > s, branchpoint_index < e)] # b: list, branch index
-        else:
-            b = branchpoint_index[branchpoint_index > s]
+#     for s, e in starting_points_pairs: # s: start index, e: end index
+#         logging.debug('{}, {}'.format(s, e))
+#         if e is not None:
+#             b = branchpoint_index[np.logical_and(branchpoint_index > s, branchpoint_index < e)] # b: list, branch index
+#         else:
+#             b = branchpoint_index[branchpoint_index > s]
 
-        logging.debug("  \t{}".format(b))
-        branchpoint_index_pairs = get_consecutive_pairs_of_elements_from_list(b, s, e)
+#         logging.debug("  \t{}".format(b))
+#         branchpoint_index_pairs = get_consecutive_pairs_of_elements_from_list(b, s, e)
 
-        for bs, be in branchpoint_index_pairs:
+#         for bs, be in branchpoint_index_pairs:
             
-            logging.debug('\t {}: {}, {}'.format(path_id, bs, be))
+#             logging.debug('\t {}: {}, {}'.format(path_id, bs, be))
             
-            path = df_neurites.loc[bs:be][['x', 'y', 'z']].values
+#             path = df_neurites.loc[bs:be][['x', 'y', 'z']].values
 
-            logging.debug('  Lenght of path is {}'.format(len(path)))
+#             logging.debug('  Lenght of path is {}'.format(len(path)))
 
-            path_type = df_neurites.loc[bs:be][['type']].values
-            path_radius = df_neurites.loc[bs:be][['radius']].values
-            path_n_index = df_neurites.loc[bs:be][['n']].values
+#             path_type = df_neurites.loc[bs:be][['type']].values
+#             path_radius = df_neurites.loc[bs:be][['radius']].values
+#             path_n_index = df_neurites.loc[bs:be][['n']].values
             
-            if bs == s:
-                parent_idx = df_neurites.loc[[bs]].parent.values[0]    
-                if parent_idx != -1:
-                    parent_coord = df_neurites.loc[[parent_idx]][['x', 'y', 'z']].values
-                    parent_radius = df_neurites.loc[[parent_idx]][['radius']].values
-                    if not (parent_coord == path).all(1).any():
-                        path = np.vstack([parent_coord, path])
-                        path_radius = np.vstack([parent_radius, path_radius])
+#             if bs == s:
+#                 parent_idx = df_neurites.loc[[bs]].parent.values[0]    
+#                 if parent_idx != -1:
+#                     parent_coord = df_neurites.loc[[parent_idx]][['x', 'y', 'z']].values
+#                     parent_radius = df_neurites.loc[[parent_idx]][['radius']].values
+#                     if not (parent_coord == path).all(1).any():
+#                         path = np.vstack([parent_coord, path])
+#                         path_radius = np.vstack([parent_radius, path_radius])
 
-            if be == e:
+#             if be == e:
 
-                if len(path[:-1]) <= 2: continue # remove a path contains just one point 
+#                 if len(path[:-1]) <= 2: continue # remove a path contains just one point 
 
-                path_dict[path_id] = path[:-1]
-                radius_dict[path_id] = path_radius[:-1]
-                n_index_dict[path_id] = path_n_index[:-1]
-            else:
-                path_dict[path_id] = path
-                radius_dict[path_id] = path_radius
-                n_index_dict[path_id] = path_n_index
+#                 path_dict[path_id] = path[:-1]
+#                 radius_dict[path_id] = path_radius[:-1]
+#                 n_index_dict[path_id] = path_n_index[:-1]
+#             else:
+#                 path_dict[path_id] = path
+#                 radius_dict[path_id] = path_radius
+#                 n_index_dict[path_id] = path_n_index
 
-            type_dict[path_id] = max(path_type)[0]
-            path_id += 1
+#             type_dict[path_id] = max(path_type)[0]
+#             path_id += 1
             
-    type_dict[0] = df_soma['type'].as_matrix()[0]
-    path_dict[0] = df_soma[['x', 'y', 'z']].as_matrix()
-    radius_dict[0] = df_soma['radius'].as_matrix()
-    n_index_dict[0] = df_soma['n'].as_matrix()
+#     type_dict[0] = df_soma['type'].as_matrix()[0]
+#     path_dict[0] = df_soma[['x', 'y', 'z']].as_matrix()
+#     radius_dict[0] = df_soma['radius'].as_matrix()
+#     n_index_dict[0] = df_soma['n'].as_matrix()
     
-    df_paths = pd.DataFrame()
-    df_paths['type'] = pd.Series(type_dict)
-    df_paths['path'] = pd.Series(path_dict)
-    df_paths['radius'] = pd.Series(radius_dict)
-    df_paths['n_index'] = pd.Series(n_index_dict)
+#     df_paths = pd.DataFrame()
+#     df_paths['type'] = pd.Series(type_dict)
+#     df_paths['path'] = pd.Series(path_dict)
+#     df_paths['radius'] = pd.Series(radius_dict)
+#     df_paths['n_index'] = pd.Series(n_index_dict)
     
-    return df_paths
+#     return df_paths
 
 def swc_to_linestack(df_swc, voxelsize=None):
     
@@ -374,7 +432,7 @@ def find_connection(all_paths, soma, path_id, paths_to_ignore=[]):
             connect_to_at = target_path[connect_to_at_loc[0]]
             return connect_to, connect_to_at
     
-    logging.debug("Path {} connects to no other path. Try fix it.".format(path_id))
+    logging.info("Path {} connects to no other path. Try fix it.".format(path_id))
     connect_to = -99 
     connect_to_at = np.nan
     
@@ -403,8 +461,8 @@ def back2soma(df_paths, path_id):
             paths_to_soma.append(path_id)
             path_id = df_paths.loc[path_id].connect_to   
 
-        # if path_id == -99:
-        #     break
+        if path_id == -99:
+            break
 
     paths_to_soma.append(path_id)  
 
@@ -454,8 +512,8 @@ def check_path_connection(df_paths):
     back_to_soma_dict = {}
     for path_id in all_keys:
         back_to_soma_dict[path_id] = back2soma(df_paths, path_id)
-    else:
-        logging.info('  All paths can be traced back to soma. It is a single tree.')
+    
+        # logging.info('  All paths can be traced back to soma. It is a single tree.')
 
     df_paths['back_to_soma'] = pd.Series(back_to_soma_dict)
 
