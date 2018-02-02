@@ -62,6 +62,7 @@ def test_get_angle_returns_float():
 
 ### TEST READING METHODS ####
 
+import networkx as nx
 from morphopy._utils.utils import read_swc
 
 
@@ -69,15 +70,16 @@ def test_read_swc_returned_fileformat():
 
     import pandas as pd
     filepath = 'data/Image001-005-01.CNG.swc'
-    df = read_swc(filepath)
+    G, swc = read_swc(filepath)
 
-    assert(isinstance(df, pd.DataFrame)), "read_swc() should return a pandas.DataFrame"
+    assert(isinstance(G, nx.DiGraph)), "read_swc() should return a graph as networkx.DiGraph"
+    assert(isinstance(swc, pd.DataFrame)), "read_swc() should return a swc as pandas.DataFrame"
 
 
 def test_read_swc_all_variables_are_in():
 
     filepath = 'data/Image001-005-01.CNG.swc'
-    swc = read_swc(filepath)
+    G, swc = read_swc(filepath)
 
     assert 'n' in swc.keys(), "column 'n' should be in pandas.DataFrame"
     assert 'x' in swc.keys(), "column 'x' should be in pandas.DataFrame"
@@ -97,9 +99,9 @@ from morphopy._utils.utils import get_df_paths
 def test_get_df_paths_creates_dataFrame():
     import pandas as pd
     filepath = 'data/Image001-005-01.CNG.swc'
-    df = read_swc(filepath)
+    G, swc = read_swc(filepath)
 
-    paths = get_df_paths(df)
+    paths = get_df_paths(G)
     assert (isinstance(paths, pd.DataFrame)), "get_df_paths() should return a pandas.DataFrame"
 
 
