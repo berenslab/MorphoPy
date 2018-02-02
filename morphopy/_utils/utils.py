@@ -135,7 +135,7 @@ def get_df_paths(G):
     radius_dict = {}
     for key in path_idx_dict.keys():
         path_dict[key] = np.vstack([G.node[key]['pos'] for key in path_idx_dict[key]])
-        type_dict[key] = np.vstack([G.node[key]['type'] for key in path_idx_dict[key]])[1]
+        type_dict[key] = np.vstack([G.node[key]['type'] for key in path_idx_dict[key]])[1][0]
         radius_dict[key] = np.vstack([G.node[key]['radius'] for key in path_idx_dict[key]])
     
     type_dict[0] = G.node[1]['type']
@@ -574,7 +574,7 @@ def get_path_statistics(df_paths):
     dendritic_length_dict = {}
     euclidean_length_dict = {}
     back_to_soma_dict = {}
-    corder_dict = {}
+    branch_order_dict = {}
     
     for path_id in all_keys:
         
@@ -582,38 +582,11 @@ def get_path_statistics(df_paths):
         
         dendritic_length_dict[path_id] = get_path_dendritic_length(path)
         euclidean_length_dict[path_id] = get_path_euclidean_length(path)
-        corder_dict[path_id] = len(df_paths.loc[path_id].back_to_soma)
+        branch_order_dict[path_id] = len(df_paths.loc[path_id].back_to_soma) - 1
 
     df_paths['dendritic_length'] = pd.Series(dendritic_length_dict)
     df_paths['euclidean_length'] = pd.Series(euclidean_length_dict)
-    df_paths['corder'] = pd.Series(corder_dict)
-
-    # # Strahler order
-    # df_paths['sorder'] = np.ones(len(df_paths)) * np.nan
-    # df_paths = df_paths.set_value(df_paths.connected_by.apply(len) == 0, 'sorder', 1)
-    
-    # while np.isnan(df_paths.sorder).any():
-    
-    #     df_sub = df_paths[np.isnan(df_paths.sorder)]
-
-    #     for row in df_sub.iterrows():
-
-    #         path_id = row[0]
-    #         connected_by = row[1]['connected_by']
-
-    #         sorder0 = df_paths.loc[connected_by[0]].sorder
-    #         sorder1 = df_paths.loc[connected_by[1]].sorder
-
-    #         if np.isnan(sorder0) or np.isnan(sorder1):
-    #             continue
-    #         else:
-                
-    #             if sorder0 == sorder1:
-    #                 df_paths.set_value(path_id, 'sorder', sorder0+1)
-    #             else:
-    #                 df_paths.set_value(path_id, 'sorder', np.max([sorder0, sorder1]))
-
-    # df_paths.sorder = df_paths['sorder'].astype(int)
+    df_paths['branch_order'] = pd.Series(branch_order_dict)
 
     logging.info('  Done. \n')
     
