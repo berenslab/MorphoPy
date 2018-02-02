@@ -1,12 +1,15 @@
 import logging
 
-from ._utils import *
+from ._utils.utils import *
+from ._utils.check import *
+from ._utils.visualize import *
+
 
 __all__ = ['Morph']
 
 class Morph(object):
 
-    def __init__(self, data, voxelsize=None, loglevel='INFO'):
+    def __init__(self, data, voxelsize=None, loglevel='info'):
 
         """
         Initialize Morph object. Load swc as Pandas DataFrame (df_swc). Split all paths on branch point and save as
@@ -32,28 +35,48 @@ class Morph(object):
         self.unit = 'um'
         self.voxelsize = voxelsize
         
-        # load data
-        df_swc = read_swc(data)
+        logging.info('  SWC file: {}\n'.format(data))
+        logging.info('  unit: {}'.format(self.unit))
+        logging.info('  voxel size: {}\n'.format(self.voxelsize))
 
-        df_soma = get_soma(df_swc)
-        df_paths = get_df_paths(df_swc)
-        df_paths = update_df_paths(df_paths, df_soma) # find which paths connect to which
-        df_paths = get_path_statistics(df_paths)
-        df_paths = get_sorder(df_paths) # get Strahler order
+        # load data
+        G, df_swc = read_swc(data)
+
+        # check data
+        logging.info('  ===================  ')
+        logging.info('  Checking `.swc`...   \n')
+        
+        check_swc(df_swc)
+
+        # split swc into soma, dendrites, axon, etc..
+        df_paths = get_df_paths(G)
+        df_paths = check_path_connection(df_paths) # find which paths connect to which
 
         self.df_swc = df_swc
         self.df_paths = df_paths
 
-        # linestack | pixel
+    def processing(self):
 
-        linestack_output = swc_to_linestack(data, self.unit, voxelsize)
+        """
+        Further processing df_paths and get statistics info such as path lengths, branching order into DataFrame.
+
+        Linestack is reconstructed if needed data is given (voxel size of the original image). 
+        Then dendritic density is calculated based on linestack.  
+        """
+
+        df_paths = get_path_statistics(self.df_paths)
+
+        # reconstruct linestack from swc.
+
+        linestack_output = swc_to_linestack(self.df_swc, self.voxelsize)
 
         if linestack_output is not None:
             self.linestack, self.soma_on_stack, self.coordindate_padding = linestack_output
             self.df_paths = get_path_on_stack(self.df_paths, self.voxelsize, self.coordindate_padding)
-            self.density_stack, self.dendritic_center = calculate_density(self.linestack, voxelsize)
+            self.density_stack, self.dendritic_center = calculate_density(self.linestack, self.voxelsize)
         else:
             self.linestack = None
+
 
     def summary(self, save_to=None,  print_results=True):
 
@@ -76,7 +99,7 @@ class Morph(object):
         num_branchpoints = len(branchpoints)
 
         max_branch_order = max(self.df_paths.corder)
-        max_strahler_order = max(self.df_paths.sorder)
+        # max_strahler_order = max(self.df_paths.sorder)
 
         terminalpaths = self.df_paths.path[self.df_paths.connected_by.apply(len) == 0].as_matrix()
         terminalpoints = np.vstack([p[-1] for p in terminalpaths])
@@ -116,7 +139,7 @@ class Morph(object):
                 "number_of_branch_points": int(num_branchpoints),
                 "number_of_irreducible_nodes": int(num_irreducible_nodes),
                 "max_branch_order": int(max_branch_order),
-                "max_strahler_order": int(max_strahler_order),
+                # "max_strahler_order": int(max_strahler_order),
             },
             "angle": {
                 "average_nodal_angle_in_degree": average_nodal_angle_deg,
@@ -215,14 +238,8 @@ class Morph(object):
         ax4 = plt.subplot2grid((4,4), (3,0), rowspan=1, colspan=1)  
 
         df_paths = self.df_paths
-        dendrites = df_paths[df_paths.type == 3]
-        soma = df_paths.loc[0].path[0]
-
-        # xylims, zlims = find_lims(df_paths)
-        # lims = (xylims, zlims)
-        # maxlims = (np.max(np.vstack(df_paths.path), 0)[1:]).astype(int) 
-        # maxlims = np.hstack([maxlims[0], maxlims]) + 30
-        # minlims = (np.min(np.vstack(df_paths.path), 0)[1:]).astype(int)
+        dendrites = df_paths[df_paths.type != 1]
+        soma = df_paths[df_paths.type == 1].path[0][0]
 
         lims = find_lims(dendrites)
 
