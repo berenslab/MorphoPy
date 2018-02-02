@@ -57,7 +57,7 @@ def read_swc(filepath):
     
     swc =  pd.read_csv(filepath, delim_whitespace=True, comment='#',
                           names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
-    swc.index = df_swc.n.as_matrix()
+    swc.index = swc.n.as_matrix()
     
     G = nx.DiGraph()
     
