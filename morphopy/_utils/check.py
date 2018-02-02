@@ -45,7 +45,7 @@ def check_basal_dendrites(types):
 def check_apical_dendrites(types):
     
     """
-    Check if apical denderites exist.
+    Check if apical dendrites exist.
     """    
     
     logging.info('  Has apical dendrites (Type 4)?')
@@ -58,9 +58,9 @@ def check_apical_dendrites(types):
 
 def check_others(types):
     """
-    Check if undefined or costum types exist.
+    Check if undefined or custom types exist.
     """ 
-    logging.info('  Has undefined or costum types (Type 0/5)?')
+    logging.info('  Has undefined or custom types (Type 0/5)?')
     if 0 in types or 5 in types:
         logging.info('\tYes\n')
         return True

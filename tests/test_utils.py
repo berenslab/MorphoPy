@@ -4,7 +4,7 @@ import sys
 sys.path.append('..')
 
 #### TEST GET_ANGLE #####
-from morphopy._utils import get_angle
+from morphopy._utils.summarize import get_angle
 
 
 def test_get_angle_with_orthogonal_vectors():
@@ -62,22 +62,24 @@ def test_get_angle_returns_float():
 
 ### TEST READING METHODS ####
 
-from morphopy._utils import read_swc
+import networkx as nx
+from morphopy._utils.utils import read_swc
 
 
 def test_read_swc_returned_fileformat():
 
     import pandas as pd
     filepath = 'data/Image001-005-01.CNG.swc'
-    df = read_swc(filepath)
+    G, swc = read_swc(filepath)
 
-    assert(isinstance(df, pd.DataFrame)), "read_swc() should return a pandas.DataFrame"
+    assert(isinstance(G, nx.DiGraph)), "read_swc() should return a graph as networkx.DiGraph"
+    assert(isinstance(swc, pd.DataFrame)), "read_swc() should return a swc as pandas.DataFrame"
 
 
 def test_read_swc_all_variables_are_in():
 
     filepath = 'data/Image001-005-01.CNG.swc'
-    swc = read_swc(filepath)
+    G, swc = read_swc(filepath)
 
     assert 'n' in swc.keys(), "column 'n' should be in pandas.DataFrame"
     assert 'x' in swc.keys(), "column 'x' should be in pandas.DataFrame"
@@ -91,59 +93,20 @@ def test_read_swc_all_variables_are_in():
 ### TEST FUNCTIONAL METHODS ###
 
 
-from morphopy._utils import get_consecutive_pairs_of_elements_from_list
-
-
-def test_get_consecutive_pairs_of_elements_from_list_default():
-
-    l = [1, 2, 3, 4]
-
-    result = get_consecutive_pairs_of_elements_from_list(l, s=None, e=None)
-
-    assert result == [(1, 2), (2, 3), (3, 4), (4, None)]
-
-
-def test_get_consecutive_pairs_of_elements_from_list_with_start_node():
-
-    l = [1, 2, 3, 4]
-
-    result = get_consecutive_pairs_of_elements_from_list(l, s=0, e=None)
-
-    assert result == [(0, 1), (1, 2), (2, 3), (3, 4), (4, None)]
-
-
-def test_get_consecutive_pairs_of_elements_from_list_with_end_node():
-
-    l = [1, 2, 3, 4]
-
-    result = get_consecutive_pairs_of_elements_from_list(l, s=None, e=5)
-
-    assert result == [(1, 2), (2, 3), (3, 4), (4, 5)]
-
-
-def test_get_consecutive_pairs_of_elements_from_list_with_start_and_end_node():
-
-    l = [1, 2, 3, 4]
-
-    result = get_consecutive_pairs_of_elements_from_list(l, s=0, e=5)
-
-    assert result == [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5)]
-
-
-from morphopy._utils import get_df_paths
+from morphopy._utils.utils import get_df_paths
 
 
 def test_get_df_paths_creates_dataFrame():
     import pandas as pd
     filepath = 'data/Image001-005-01.CNG.swc'
-    df = read_swc(filepath)
+    G, swc = read_swc(filepath)
 
-    paths = get_df_paths(df)
+    paths = get_df_paths(G)
     assert (isinstance(paths, pd.DataFrame)), "get_df_paths() should return a pandas.DataFrame"
 
 
 
-from morphopy._utils import unique_row
+from morphopy._utils.utils import unique_row
 
 
 def test_unique_row_pairs_of_same_value():
