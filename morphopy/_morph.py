@@ -98,8 +98,7 @@ class Morph(object):
         branchpoints = unique_row(branchpoints)
         num_branchpoints = len(branchpoints)
 
-        max_branch_order = max(self.df_paths.corder)
-        # max_strahler_order = max(self.df_paths.sorder)
+        max_branch_order = max(self.df_paths.branch_order)
 
         terminalpaths = self.df_paths.path[self.df_paths.connected_by.apply(len) == 0].as_matrix()
         terminalpoints = np.vstack([p[-1] for p in terminalpaths])
@@ -113,7 +112,7 @@ class Morph(object):
 
         # path length
 
-        dendritic = self.df_paths['dendritic_length']
+        dendritic = self.df_paths['real_length']
         dendritic_sum = dendritic.sum()
         dendritic_mean = dendritic.mean()
         dendritic_median = dendritic.median()
@@ -212,16 +211,13 @@ class Morph(object):
         # return summary
 
 
-    def show_threeviews(self, order='c', save_to=None):
+    def show_threeviews(self, save_to=None):
 
         """
         Plot cell morphology in three views (Top and two sides).
 
         Parameters
         ----------
-        order: str
-            * 'c' (conventional ordering) 
-            * 's' (Strahler ordering)
         save_to: str
             Path the figure saved to. e.g. "./figure/threeviews.png"
 
@@ -243,9 +239,9 @@ class Morph(object):
 
         lims = find_lims(dendrites)
 
-        plot_skeleton(ax2, dendrites, soma, 2, 0, order, lims)
-        plot_skeleton(ax3, dendrites, soma, 1, 2, order, lims)
-        plot_skeleton(ax1, dendrites, soma, 1, 0, order, lims)
+        plot_skeleton(ax2, dendrites, soma, 2, 0, lims)
+        plot_skeleton(ax3, dendrites, soma, 1, 2, lims)
+        plot_skeleton(ax1, dendrites, soma, 1, 0, lims)
         scalebar = ScaleBar(1, units=self.unit, location='lower left', box_alpha=0)
         ax1.add_artist(scalebar)    
         ax4.axis('off')

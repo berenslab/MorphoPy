@@ -24,7 +24,7 @@ def find_lims(df_paths):
         
     return xylims, zlims
 
-def plot_skeleton(ax, df_paths, soma, axis0, axis1, order_type, lims):
+def plot_skeleton(ax, df_paths, soma, axis0, axis1, lims):
     """
 
     :param ax:
@@ -32,17 +32,12 @@ def plot_skeleton(ax, df_paths, soma, axis0, axis1, order_type, lims):
     :param soma:
     :param axis0:
     :param axis1:
-    :param order_type:
     :param lims:
     :return:
     """
 
-    if order_type == 'c':
-        colors = plt.cm.viridis.colors
-        colors_idx = np.linspace(0, 255, max(df_paths.corder)+1).astype(int)
-    elif order_type == 's':
-        colors = plt.cm.viridis_r.colors
-        colors_idx = np.linspace(0, 255, max(df_paths.sorder)+1).astype(int)
+    colors = plt.cm.viridis.colors
+    colors_idx = np.linspace(0, 255, max(df_paths.branch_order)+1).astype(int)
         
     ax.scatter(soma[axis0], soma[axis1], s=280, color='grey')
     for row in df_paths.iterrows():
@@ -51,15 +46,10 @@ def plot_skeleton(ax, df_paths, soma, axis0, axis1, order_type, lims):
 
         path = row[1]['path']
         bpt = path[0]
-        if order_type == 'c':
-            order = row[1]['corder']
-            ax.plot(path[:, axis0], path[:, axis1], color=colors[colors_idx[int(order)]])
-            ax.scatter(bpt[axis0], bpt[axis1], color=colors[colors_idx[int(order)]], zorder=1)
 
-        elif order_type == 's':
-            order = row[1]['sorder']
-            ax.plot(path[:, axis0], path[:, axis1], color=colors[colors_idx[int(order)-1]])
-            ax.scatter(bpt[axis0], bpt[axis1], color=colors[colors_idx[int(order)-1]], zorder=1)
+        order = row[1]['branch_order']
+        ax.plot(path[:, axis0], path[:, axis1], color=colors[colors_idx[int(order)]])
+        ax.scatter(bpt[axis0], bpt[axis1], color=colors[colors_idx[int(order)]], zorder=1)
     
     xylims, zlim = lims
 

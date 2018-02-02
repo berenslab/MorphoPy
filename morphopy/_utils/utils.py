@@ -135,7 +135,7 @@ def get_df_paths(G):
     radius_dict = {}
     for key in path_idx_dict.keys():
         path_dict[key] = np.vstack([G.node[key]['pos'] for key in path_idx_dict[key]])
-        type_dict[key] = np.vstack([G.node[key]['type'] for key in path_idx_dict[key]])[1]
+        type_dict[key] = np.vstack([G.node[key]['type'] for key in path_idx_dict[key]])[1][0]
         radius_dict[key] = np.vstack([G.node[key]['radius'] for key in path_idx_dict[key]])
     
     type_dict[0] = G.node[1]['type']
@@ -394,7 +394,7 @@ def get_path_statistics(df_paths):
     real_length_dict = {}
     euclidean_length_dict = {}
     back_to_soma_dict = {}
-    corder_dict = {}
+    branch_order_dict = {}
     
     for path_id in all_keys:
         
@@ -402,12 +402,11 @@ def get_path_statistics(df_paths):
         
         real_length_dict[path_id] = get_path_real_length(path)
         euclidean_length_dict[path_id] = get_path_euclidean_length(path)
-        corder_dict[path_id] = len(df_paths.loc[path_id].back_to_soma)
+        branch_order_dict[path_id] = len(df_paths.loc[path_id].back_to_soma) - 1
 
     df_paths['real_length'] = pd.Series(real_length_dict)
     df_paths['euclidean_length'] = pd.Series(euclidean_length_dict)
-    df_paths['corder'] = pd.Series(corder_dict)
-
+    df_paths['branch_order'] = pd.Series(branch_order_dict)
 
     logging.info('  Done. \n')
     
