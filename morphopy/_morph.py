@@ -112,7 +112,7 @@ class Morph(object):
 
         # path length
 
-        dendritic = self.df_paths['dendritic_length']
+        dendritic = self.df_paths['real_length']
         dendritic_sum = dendritic.sum()
         dendritic_mean = dendritic.mean()
         dendritic_median = dendritic.median()
