@@ -77,138 +77,182 @@ class Morph(object):
         else:
             self.linestack = None
 
-
-    def summary(self, save_to=None,  print_results=True):
+    def summary(self):
 
         """
-        Print out summary of the cell morphology. 
-
-        Parameters
-        ----------
-        save_to: str
-            path and filename of the output json file. 
-
-        print_results: bool
-            if True, print out summary using logging.
+        The summary of the cell morphology. 
         """
+        
+        df_paths = self.df_paths.copy()
+        
+        soma = df_paths[df_paths.type == 1]
+        axon = df_paths[df_paths.type == 2]
+        dend_basal = df_paths[df_paths.type == 3]
+        dend_apical = df_paths[df_paths.type == 4]
+        
+        axon_summary = get_summary_of_paths(axon)
+        dend_basal_summary = get_summary_of_paths(dend_basal)
+        dend_apical_summary = get_summary_of_paths(dend_apical)
 
-        # branch order / number of branch points
+        labels = [
+                'type',
+                'num_path_segments',
+                'num_branchpoints',
+                'num_irreducible_nodes',
+                'max_branch_order',
+                'average_nodal_angle_deg',
+                'average_nodal_angle_rad',
+                'average_local_angle_deg',
+                'average_local_angle_rad',
+                'average_tortuosity',
+                'real_length_sum',
+                'real_length_mean',
+                'real_length_median',
+                'real_length_min',
+                'real_length_max',
+                'euclidean_length_sum',
+                'euclidean_length_mean',
+                'euclidean_length_median',
+                'euclidean_length_min',
+                'euclidean_length_max',
+                ]
+        
+        neurites = [axon_summary,dend_basal_summary,dend_apical_summary]
+        df_summary = pd.DataFrame.from_records([n for n in neurites if n is not None], columns=labels)
+            
+        return df_summary
 
-        branchpoints = np.vstack(self.df_paths.connect_to_at)
-        branchpoints = unique_row(branchpoints)
-        num_branchpoints = len(branchpoints)
+    # def summary(self, save_to=None,  print_results=True):
 
-        max_branch_order = max(self.df_paths.branch_order)
+    #     """
+    #     Print out summary of the cell morphology. 
 
-        terminalpaths = self.df_paths.path[self.df_paths.connected_by.apply(len) == 0].as_matrix()
-        terminalpoints = np.vstack([p[-1] for p in terminalpaths])
-        num_terminalpoints = len(terminalpoints)
+    #     Parameters
+    #     ----------
+    #     save_to: str
+    #         path and filename of the output json file. 
 
-        outerterminals = get_outer_terminals(terminalpoints)
+    #     print_results: bool
+    #         if True, print out summary using logging.
+    #     """
 
-        num_irreducible_nodes = num_branchpoints + num_terminalpoints
+    #     # branch order / number of branch points
 
-        num_dendritic_segments = len(self.df_paths)
+    #     branchpoints = np.vstack(self.df_paths.connect_to_at)
+    #     branchpoints = unique_row(branchpoints)
+    #     num_branchpoints = len(branchpoints)
 
-        # path length
+    #     max_branch_order = max(self.df_paths.branch_order)
 
-        dendritic = self.df_paths['real_length']
-        dendritic_sum = dendritic.sum()
-        dendritic_mean = dendritic.mean()
-        dendritic_median = dendritic.median()
-        dendritic_min = dendritic.min()
-        dendritic_max = dendritic.max()
+    #     terminalpaths = self.df_paths.path[self.df_paths.connected_by.apply(len) == 0].as_matrix()
+    #     terminalpoints = np.vstack([p[-1] for p in terminalpaths])
+    #     num_terminalpoints = len(terminalpoints)
 
-        euclidean = self.df_paths['euclidean_length']
-        euclidean_sum = euclidean.sum()
-        euclidean_mean = euclidean.mean()
-        euclidean_median = euclidean.median()
-        euclidean_min = euclidean.min()
-        euclidean_max = euclidean.max()
+    #     outerterminals = get_outer_terminals(terminalpoints)
 
-        tortuosity = dendritic / euclidean
-        average_tortuosity = np.mean(tortuosity)      
+    #     num_irreducible_nodes = num_branchpoints + num_terminalpoints
 
-        # node angles
-        average_nodal_angle_deg, average_nodal_angle_rad, average_local_angle_deg, average_local_angle_rad = get_average_angles(self.df_paths)
+    #     num_dendritic_segments = len(self.df_paths)
 
-        summary = {
-            "general": {
-                "number_of_dendritic_segments": int(num_dendritic_segments),
-                "number_of_branch_points": int(num_branchpoints),
-                "number_of_irreducible_nodes": int(num_irreducible_nodes),
-                "max_branch_order": int(max_branch_order),
-                # "max_strahler_order": int(max_strahler_order),
-            },
-            "angle": {
-                "average_nodal_angle_in_degree": average_nodal_angle_deg,
-                "average_nodal_angle_in_radian": average_nodal_angle_rad,
-                "average_local_angle_in_degree": average_local_angle_deg,
-                "average_local_angle_in_radian": average_local_angle_rad,
-            },
-            "length": {
-                "tortuosity": average_tortuosity,
-                "dendritic": {
-                    "sum": dendritic_sum,
-                    "mean": dendritic_mean,
-                    "median": dendritic_median,
-                    "min": dendritic_min,
-                    "max": dendritic_max,
-                },
-                "euclidean":{
-                    "sum": euclidean_sum,
-                    "mean": euclidean_mean,
-                    "median": euclidean_median,
-                    "min": euclidean_min,
-                    "max": euclidean_max,
-                }
-            }
+    #     # path length
 
-        }
+    #     dendritic = self.df_paths['real_length']
+    #     dendritic_sum = dendritic.sum()
+    #     dendritic_mean = dendritic.mean()
+    #     dendritic_median = dendritic.median()
+    #     dendritic_min = dendritic.min()
+    #     dendritic_max = dendritic.max()
 
-        # dendritic tree density
-        if self.linestack is not None:
+    #     euclidean = self.df_paths['euclidean_length']
+    #     euclidean_sum = euclidean.sum()
+    #     euclidean_mean = euclidean.mean()
+    #     euclidean_median = euclidean.median()
+    #     euclidean_min = euclidean.min()
+    #     euclidean_max = euclidean.max()
 
-            if self.voxelsize is None:
-                voxelsize = [1,1,1]
-            else:
-                voxelsize = self.voxelsize
+    #     tortuosity = dendritic / euclidean
+    #     average_tortuosity = np.mean(tortuosity)      
 
-            dendritic_center = self.dendritic_center
+    #     # node angles
+    #     average_nodal_angle_deg, average_nodal_angle_rad, average_local_angle_deg, average_local_angle_rad = get_average_angles(self.df_paths)
 
-            soma_coordinates = self.soma_on_stack
+    #     summary = {
+    #         "general": {
+    #             "number_of_dendritic_segments": int(num_dendritic_segments),
+    #             "number_of_branch_points": int(num_branchpoints),
+    #             "number_of_irreducible_nodes": int(num_irreducible_nodes),
+    #             "max_branch_order": int(max_branch_order),
+    #             # "max_strahler_order": int(max_strahler_order),
+    #         },
+    #         "angle": {
+    #             "average_nodal_angle_in_degree": average_nodal_angle_deg,
+    #             "average_nodal_angle_in_radian": average_nodal_angle_rad,
+    #             "average_local_angle_in_degree": average_local_angle_deg,
+    #             "average_local_angle_in_radian": average_local_angle_rad,
+    #         },
+    #         "length": {
+    #             "tortuosity": average_tortuosity,
+    #             "dendritic": {
+    #                 "sum": dendritic_sum,
+    #                 "mean": dendritic_mean,
+    #                 "median": dendritic_median,
+    #                 "min": dendritic_min,
+    #                 "max": dendritic_max,
+    #             },
+    #             "euclidean":{
+    #                 "sum": euclidean_sum,
+    #                 "mean": euclidean_mean,
+    #                 "median": euclidean_median,
+    #                 "min": euclidean_min,
+    #                 "max": euclidean_max,
+    #             }
+    #         }
 
-            asymmetry = np.sqrt(((soma_coordinates[:2] - dendritic_center)**2).sum())
+    #     }
 
-            all_termianls_to_dendritic_center = np.sqrt(np.sum((terminalpoints[:,:2] - dendritic_center) ** 2,  1)) * voxelsize[0]
-            out_terminals_to_dendritic_center = np.sqrt(np.sum((outerterminals[:, :2]- dendritic_center) **2, 1)) * voxelsize[0]
+    #     # dendritic tree density
+    #     if self.linestack is not None:
 
-            typical_radius = np.mean(all_termianls_to_dendritic_center)
-            outer_radius = np.mean(out_terminals_to_dendritic_center)
+    #         if self.voxelsize is None:
+    #             voxelsize = [1,1,1]
+    #         else:
+    #             voxelsize = self.voxelsize
 
-            import cv2
-            dendritic_area = cv2.contourArea(outerterminals[:, :2].astype(np.float32)) * voxelsize[0]**2/1000
+    #         dendritic_center = self.dendritic_center
 
-            summary.update({"density": {
-                "asymmetry": asymmetry,
-                "outer_radius": outer_radius,
-                "typical_radius": typical_radius,
-                "dendritic_area": dendritic_area
-            }})
+    #         soma_coordinates = self.soma_on_stack
 
-        # print and save
-        if print_results:
-            print_summary(summary)
+    #         asymmetry = np.sqrt(((soma_coordinates[:2] - dendritic_center)**2).sum())
 
-        if save_to is not None:
+    #         all_termianls_to_dendritic_center = np.sqrt(np.sum((terminalpoints[:,:2] - dendritic_center) ** 2,  1)) * voxelsize[0]
+    #         out_terminals_to_dendritic_center = np.sqrt(np.sum((outerterminals[:, :2]- dendritic_center) **2, 1)) * voxelsize[0]
 
-            logging.info('  Writing to {}'.format(save_to))
+    #         typical_radius = np.mean(all_termianls_to_dendritic_center)
+    #         outer_radius = np.mean(out_terminals_to_dendritic_center)
 
-            import json
-            with open(save_to, 'w') as f:
-                json.dump(summary, f)
+    #         import cv2
+    #         dendritic_area = cv2.contourArea(outerterminals[:, :2].astype(np.float32)) * voxelsize[0]**2/1000
 
-        # return summary
+    #         summary.update({"density": {
+    #             "asymmetry": asymmetry,
+    #             "outer_radius": outer_radius,
+    #             "typical_radius": typical_radius,
+    #             "dendritic_area": dendritic_area
+    #         }})
+
+    #     # print and save
+    #     if print_results:
+    #         print_summary(summary)
+
+    #     if save_to is not None:
+
+    #         logging.info('  Writing to {}'.format(save_to))
+
+    #         import json
+    #         with open(save_to, 'w') as f:
+    #             json.dump(summary, f)
+
+    #     # return summary
 
 
     def show_threeviews(self, save_to=None):
@@ -249,39 +293,39 @@ class Morph(object):
         if save_to is not None:
             plt.savefig(save_to)
     
-    def show_density(self):
+    # def show_density(self): 
 
-        """
-        Plot cell morphology on dendritic density map.
-        """
+    #     """
+    #     Plot cell morphology on dendritic density map.
+    #     """
 
-        try:
-            density_stack = self.density_stack
-            voxelsize = self.voxelsize
-        except:
-            logging.info('No density stack. Please provide the voxel sizes of the `.swc` file.')
-            return None
+    #     try:
+    #         density_stack = self.density_stack
+    #         voxelsize = self.voxelsize
+    #     except:
+    #         logging.info('No density stack. Please provide the voxel sizes of the `.swc` file.')
+    #         return None
         
-        import matplotlib.pyplot as plt
-        from matplotlib_scalebar.scalebar import ScaleBar
+    #     import matplotlib.pyplot as plt
+    #     from matplotlib_scalebar.scalebar import ScaleBar
 
-        linestack = self.linestack
-        dendritic_center = self.dendritic_center
-        soma_on_stack = self.soma_on_stack
+    #     linestack = self.linestack
+    #     dendritic_center = self.dendritic_center
+    #     soma_on_stack = self.soma_on_stack
         
-        plt.figure(figsize=(16, 16))
-        plt.imshow(density_stack.sum(2), cmap=plt.cm.gnuplot2_r, origin='lower')
-        plt.scatter(dendritic_center[1], dendritic_center[0], color='g', marker='*', s=180, label='Dendritic Center')
-        plt.scatter(soma_on_stack[1], soma_on_stack[0], color='r',  marker='*', s=180, label='Soma')
+    #     plt.figure(figsize=(16, 16))
+    #     plt.imshow(density_stack.sum(2), cmap=plt.cm.gnuplot2_r, origin='lower')
+    #     plt.scatter(dendritic_center[1], dendritic_center[0], color='g', marker='*', s=180, label='Dendritic Center')
+    #     plt.scatter(soma_on_stack[1], soma_on_stack[0], color='r',  marker='*', s=180, label='Soma')
         
-        linestack_xy = linestack.sum(2)
-        linestack_xy[linestack_xy !=0] = 1
-        linestack_xy = np.ma.masked_array(linestack_xy, ~linestack.any(2))
-        plt.imshow(linestack_xy, origin='lower', cmap=plt.cm.binary)
+    #     linestack_xy = linestack.sum(2)
+    #     linestack_xy[linestack_xy !=0] = 1
+    #     linestack_xy = np.ma.masked_array(linestack_xy, ~linestack.any(2))
+    #     plt.imshow(linestack_xy, origin='lower', cmap=plt.cm.binary)
         
-        plt.legend(frameon=False)
+    #     plt.legend(frameon=False)
 
-        scalebar = ScaleBar(voxelsize[0], units=self.unit, location='lower left', box_alpha=0)
-        plt.gca().add_artist(scalebar)   
+    #     scalebar = ScaleBar(voxelsize[0], units=self.unit, location='lower left', box_alpha=0)
+    #     plt.gca().add_artist(scalebar)   
         
-        plt.axis('off')
+    #     plt.axis('off')

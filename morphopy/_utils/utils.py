@@ -339,39 +339,6 @@ def check_path_connection(df_paths):
 
     return df_paths
 
-def unique_row(a):
-
-    """
-    Returns an array of the ordered, unique set of rows for input array a.
-
-    Parameters
-    ----------
-    a: array
-        an array with replicated rows.
-
-    returns
-    -------
-    unique_a: array
-        an ordered array without replicated rows.
-
-    example
-    -------
-    >>> a = np.array([[9,9],
-                      [8,8],
-                      [1,1],
-                      [9,9]])
-    >>> unique_row(a)
-    >>> array([[1, 1],
-               [8, 8],
-               [9, 9]])
-    """
-
-    b = np.ascontiguousarray(a).view(np.dtype((np.void, a.dtype.itemsize * a.shape[1])))
-    _, idx = np.unique(b, return_index=True)
-    
-    unique_a = a[idx]
-    
-    return unique_a
 
 def get_path_statistics(df_paths):
     """
