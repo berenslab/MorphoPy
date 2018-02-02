@@ -337,12 +337,6 @@ def check_path_connection(df_paths):
 
     df_paths['back_to_soma'] = pd.Series(back_to_soma_dict)
 
-    disconnected_paths = [x for x in df_paths.back_to_soma if x[-1] not in df_paths[df_paths.connect_to == -1].index]
-    if len(disconnected_paths)>0:
-        logging.info("  Path {} cannot trace back to soma.".format([disconnected_path[0] for disconnected_path in disconnected_paths]))
-    else:
-        logging.info('  All paths can be traced back to soma. It is a single tree.')
-
     return df_paths
 
 def unique_row(a):
