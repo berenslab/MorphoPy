@@ -131,3 +131,4 @@ def test_unique_row_higher_number_first():
     a_ = unique_row(a)
 
     assert (a_ == np.array([[2, 1], [3, 6], [7, 4]])).all()
+
