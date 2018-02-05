@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def plot_morph(ax, df_paths, view, plot_axon, plot_dendrites):
+def plot_morph(ax, df_paths, view, plot_axon, plot_basal_dendrites, plot_apical_dendrites):
     
     if view == 'xy':
         axis0 = 0
@@ -16,29 +16,44 @@ def plot_morph(ax, df_paths, view, plot_axon, plot_dendrites):
     
     soma = df_paths[df_paths.type == 1].path[0][0]
     axon = df_paths[df_paths.type == 2]
-    dendrites = df_paths[df_paths.type == 3]
-        
+    basal_dendrites = df_paths[df_paths.type == 3]
+    apical_dendrites = df_paths[df_paths.type == 4] 
 
     ax.scatter(0, 0, s=280, color='grey')
     
-    if plot_dendrites and len(dendrites)>0:
+    if plot_basal_dendrites and len(basal_dendrites)>0:
         
-        dcolors_idx = np.linspace(0, 255, max(dendrites.branch_order)+1).astype(int)
-        dcolors = np.vstack(plt.cm.Reds_r(dcolors_idx))[:, :3]
+        bdcolors_idx = np.linspace(0, 200, max(basal_dendrites.branch_order)+1).astype(int)
+        bdcolors = np.vstack(plt.cm.Reds_r(bdcolors_idx))[:, :3]
 
-        for row in dendrites.iterrows():
+        for row in basal_dendrites.iterrows():
 
             path_id = row[0]
             path = row[1]['path'] - soma
             order = row[1]['branch_order']
             bpt = path[0]     
 
-            dend_plot = ax.plot(path[:, axis0], path[:, axis1], color=dcolors[int(order)])
-            ax.scatter(bpt[axis0], bpt[axis1], color=dcolors[int(order)], zorder=1)
+            dend_plot = ax.plot(path[:, axis0], path[:, axis1], color=bdcolors[int(order)])
+            ax.scatter(bpt[axis0], bpt[axis1], color=bdcolors[int(order)], zorder=1)
+
+    if plot_apical_dendrites and len(apical_dendrites)>0:
+        
+        adcolors_idx = np.linspace(0, 200, max(apical_dendrites.branch_order)+1).astype(int)
+        adcolors = np.vstack(plt.cm.Purples_r(adcolors_idx))[:, :3]
+
+        for row in apical_dendrites.iterrows():
+
+            path_id = row[0]
+            path = row[1]['path'] - soma
+            order = row[1]['branch_order']
+            bpt = path[0]     
+
+            dend_plot = ax.plot(path[:, axis0], path[:, axis1], color=adcolors[int(order)])
+            ax.scatter(bpt[axis0], bpt[axis1], color=adcolors[int(order)], zorder=1)
     
     if plot_axon and len(axon)>0:
         
-        acolors_idx = np.linspace(0, 255, max(axon.branch_order)+1).astype(int)
+        acolors_idx = np.linspace(0, 200, max(axon.branch_order)+1).astype(int)
         acolors = np.vstack(plt.cm.Blues_r(acolors_idx))[:, :3]
         
         for row in axon.iterrows():
@@ -52,10 +67,12 @@ def plot_morph(ax, df_paths, view, plot_axon, plot_dendrites):
             ax.scatter(bpt[axis0], bpt[axis1], color=acolors[int(order)], zorder=1)
 
     lim_max = int(np.ceil((np.vstack(df_paths.path.as_matrix()) - soma).max() / 20) * 20)
-#     lim_min = int(np.floor((np.vstack(self.df_paths.path.as_matrix()) - soma).min() / 20) * 20)
+    lim_min = int(np.floor((np.vstack(df_paths.path.as_matrix()) - soma).min() / 20) * 20)
 
-    ax.set_xlim(-lim_max, lim_max)
-    ax.set_ylim(-lim_max, lim_max)
+    lim = max(abs(lim_max), abs(lim_min))
+
+    ax.set_xlim(-lim, lim)
+    ax.set_ylim(-lim, lim)
     
     ax.set_title('{}'.format(view))
     

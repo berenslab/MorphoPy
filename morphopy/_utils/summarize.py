@@ -264,7 +264,7 @@ def get_summary_of_type(df_paths):
     terminalpoints = np.vstack([p[-1] for p in terminalpaths])
     num_terminalpoints = len(terminalpoints)
 
-    outerterminals = get_outer_terminals(terminalpoints)
+    # outerterminals = get_outer_terminals(terminalpoints)
 
     num_irreducible_nodes = num_branchpoints + num_terminalpoints
 
@@ -327,6 +327,9 @@ def get_summary_data(df_paths):
     The summary of the cell morphology. 
     """
     
+    logging.info('  Calculating summary data...')
+
+
     df_paths = df_paths.copy()
     
     soma = df_paths[df_paths.type == 1]

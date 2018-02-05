@@ -151,23 +151,23 @@ class Morph(object):
             
             logging.info('  ======================\n')
 
-    def show_morph(self, view='xy', plot_axon=True, plot_dendrites=True):
+    def show_morph(self, view='xy', plot_axon=True, plot_basal_dendrites=True, plot_apical_dendrites=True):
         
         df_paths = self.df_paths.copy()
         fig, ax = plt.subplots(1, 1, figsize=(12,12))
-        ax = plot_morph(ax, df_paths, view, plot_axon, plot_dendrites)
+        ax = plot_morph(ax, df_paths, view, plot_axon, plot_basal_dendrites, plot_apical_dendrites)
 
         return fig, ax
     
-    def show_threeviews(self, plot_axon=True, plot_dendrites=True):
+    def show_threeviews(self, plot_axon=True, plot_basal_dendrites=True, plot_apical_dendrites=True):
         
-        df_paths = self.df_paths
+        df_paths = self.df_paths.copy()
         
         fig, ax = plt.subplots(1, 3, figsize=(18,6))
         
-        ax0 = plot_morph(ax[0], df_paths, 'xy', plot_axon, plot_dendrites)
-        ax1 = plot_morph(ax[1], df_paths, 'xz', plot_axon, plot_dendrites)
-        ax2 = plot_morph(ax[2], df_paths, 'yz', plot_axon, plot_dendrites)
+        ax0 = plot_morph(ax[0], df_paths, 'xy', plot_axon, plot_basal_dendrites, plot_apical_dendrites)
+        ax1 = plot_morph(ax[1], df_paths, 'xz', plot_axon, plot_basal_dendrites, plot_apical_dendrites)
+        ax2 = plot_morph(ax[2], df_paths, 'yz', plot_axon, plot_basal_dendrites, plot_apical_dendrites)
     
     def show_animation(self):
         
@@ -175,51 +175,75 @@ class Morph(object):
         import matplotlib.animation as animation
         from IPython.display import HTML
         
-        df_paths = self.df_paths
+        df_paths = self.df_paths.copy()
         
         soma = df_paths[df_paths.type == 1].path[0][0]
         axon = df_paths[df_paths.type == 2]
-        dendrites = df_paths[df_paths.type == 3]
+        basal_dendrites = df_paths[df_paths.type == 3]
+        apical_dendrites = df_paths[df_paths.type == 4] 
             
         fig = plt.figure(figsize=(12,12))
         ax = fig.add_subplot(111, projection='3d')
 
         def init():
-            
+
+            # soma            
             ax.scatter(0,0,0, s=280, color='grey')
 
-            dcolors_idx = np.linspace(0, 255, max(df_paths.branch_order)+1).astype(int)
-            dcolors = np.vstack(plt.cm.Reds_r(dcolors_idx))[:, :3]
+            # basal dendrites
 
-            for row in dendrites.iterrows():
+            if len(basal_dendrites)>0:
+                bdcolors_idx = np.linspace(0, 200, max(basal_dendrites.branch_order)+1).astype(int)
+                bdcolors = np.vstack(plt.cm.Reds_r(bdcolors_idx))[:, :3]
 
-                path_id = row[0]
-                path = row[1]['path'] - soma
-                order = row[1]['branch_order']
-                bpt = path[0]     
+                for row in basal_dendrites.iterrows():
 
-                ax.plot(path[:, 0], path[:, 1], path[:, 2], color=dcolors[int(order)])
-                ax.scatter(bpt[0], bpt[1], bpt[2], color=dcolors[int(order)], zorder=1)
+                    path_id = row[0]
+                    path = row[1]['path'] - soma
+                    order = row[1]['branch_order']
+                    bpt = path[0]     
 
-            acolors_idx = np.linspace(0, 255, max(df_paths.branch_order)+1).astype(int)
-            acolors = np.vstack(plt.cm.Blues_r(dcolors_idx))[:, :3]
+                    ax.plot(path[:, 0], path[:, 1], path[:, 2], color=bdcolors[int(order)])
+                    ax.scatter(bpt[0], bpt[1], bpt[2], color=bdcolors[int(order)], zorder=1)
 
-            for row in axon.iterrows():
+            # apical dendrites
+            if len(apical_dendrites)>0:
+                adcolors_idx = np.linspace(0, 200, max(apical_dendrites.branch_order)+1).astype(int)
+                adcolors = np.vstack(plt.cm.Purples_r(adcolors_idx))[:, :3]
 
-                path_id = row[0]
-                path = row[1]['path'] - soma
-                order = row[1]['branch_order']
-                bpt = path[0]     
+                for row in apical_dendrites.iterrows():
 
-                ax.plot(path[:, 0], path[:, 1], path[:, 2], color=acolors[int(order)])
-                ax.scatter(bpt[0], bpt[1], bpt[2], color=acolors[int(order)], zorder=1)
+                    path_id = row[0]
+                    path = row[1]['path'] - soma
+                    order = row[1]['branch_order']
+                    bpt = path[0]     
+
+                    ax.plot(path[:, 0], path[:, 1], path[:, 2], color=adcolors[int(order)])
+                    ax.scatter(bpt[0], bpt[1], bpt[2], color=adcolors[int(order)], zorder=1)
+
+            # axon
+            if len(axon)>0:
+                acolors_idx = np.linspace(0, 200, max(axon.branch_order)+1).astype(int)
+                acolors = np.vstack(plt.cm.Blues_r(acolors_idx))[:, :3]
+
+                for row in axon.iterrows():
+
+                    path_id = row[0]
+                    path = row[1]['path'] - soma
+                    order = row[1]['branch_order']
+                    bpt = path[0]     
+
+                    ax.plot(path[:, 0], path[:, 1], path[:, 2], color=acolors[int(order)])
+                    ax.scatter(bpt[0], bpt[1], bpt[2], color=acolors[int(order)], zorder=1)
 
             lim_max = int(np.ceil((np.vstack(df_paths.path.as_matrix()) - soma).max() / 20) * 20)
-            # lim_min = int(np.floor(np.vstack(self.df_paths.path.as_matrix()).min() / 20) * 20)
+            lim_min = int(np.floor((np.vstack(df_paths.path.as_matrix()) - soma).min() / 20) * 20)
 
-            ax.set_xlim(-lim_max, lim_max)
-            ax.set_ylim(-lim_max, lim_max) 
-            ax.set_zlim(-lim_max, lim_max) 
+            lim = max(abs(lim_max), abs(lim_min))
+
+            ax.set_xlim(-lim, lim)
+            ax.set_ylim(-lim, lim)
+            ax.set_zlim(-lim, lim) 
             
             return fig,
         
