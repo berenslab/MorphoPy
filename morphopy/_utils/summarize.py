@@ -143,7 +143,10 @@ def get_remote_vector(path):
     e = path[-1]
     v= e-s
 
-    return v/np.linalg.norm(v)
+    if (v == 0).all():
+        return np.zeros(3)
+    else:
+        return v/np.linalg.norm(v)
 
 def get_local_vector(path):
     
@@ -166,7 +169,10 @@ def get_local_vector(path):
     e = path[1]
     v= e-s
     
-    return v/np.linalg.norm(v)
+    if (v == 0).all():
+        return np.zeros(3)
+    else:
+        return v/np.linalg.norm(v)
 
 def get_average_angles(df_paths):
     """
@@ -198,12 +204,17 @@ def get_average_angles(df_paths):
             continue
 
         path_ids = df_paths[df_paths.connect_to == i].index.tolist()
+
+        logging.debug('i: {}'.format(i))
         
         if len(path_ids) == 2:
             
             p0 = df_paths.loc[path_ids[0]].path
             p1 = df_paths.loc[path_ids[1]].path
             
+            # logging.debug('p0: {}'.format(p0))
+            # logging.debug('p1: {}'.format(p1))
+
             v00 = get_remote_vector(p0)
             v01 = get_remote_vector(p1)
             nodal_angles_rad[n], nodal_angles_deg[n] = get_angle(v00, v01)
@@ -216,11 +227,11 @@ def get_average_angles(df_paths):
         else:
             continue
 
-    average_nodal_angle_deg = np.mean(list(nodal_angles_deg.values()))
-    average_nodal_angle_rad = np.mean(list(nodal_angles_rad.values()))
+    average_nodal_angle_deg = np.nanmean(list(nodal_angles_deg.values()))
+    average_nodal_angle_rad = np.nanmean(list(nodal_angles_rad.values()))
 
-    average_local_angle_deg = np.mean(list(local_angles_deg.values()))
-    average_local_angle_rad = np.mean(list(local_angles_rad.values()))
+    average_local_angle_deg = np.nanmean(list(local_angles_deg.values()))
+    average_local_angle_rad = np.nanmean(list(local_angles_rad.values()))
 
     return average_nodal_angle_deg, average_nodal_angle_rad, average_local_angle_deg, average_local_angle_rad
 
