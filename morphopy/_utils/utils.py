@@ -356,6 +356,8 @@ def get_path_statistics(df_paths):
     
     logging.info('  Start: Calculating path statistics (e.g. real length, branching order...)')
 
+    df_paths = df_paths.copy()
+
     all_keys = df_paths.index
     
     real_length_dict = {}
@@ -378,6 +380,51 @@ def get_path_statistics(df_paths):
     logging.info('  Done. \n')
     
     return df_paths
+
+def get_summary_data(df_paths):
+
+    """
+    The summary of the cell morphology. 
+    """
+    
+    df_paths = df_paths.copy()
+    
+    soma = df_paths[df_paths.type == 1]
+    axon = df_paths[df_paths.type == 2]
+    dend_basal = df_paths[df_paths.type == 3]
+    dend_apical = df_paths[df_paths.type == 4]
+    
+    axon_summary = get_summary_of_paths(axon)
+    dend_basal_summary = get_summary_of_paths(dend_basal)
+    dend_apical_summary = get_summary_of_paths(dend_apical)
+
+    labels = [
+            'type',
+            'num_path_segments',
+            'num_branchpoints',
+            'num_irreducible_nodes',
+            'max_branch_order',
+            'average_nodal_angle_deg',
+            'average_nodal_angle_rad',
+            'average_local_angle_deg',
+            'average_local_angle_rad',
+            'average_tortuosity',
+            'real_length_sum',
+            'real_length_mean',
+            'real_length_median',
+            'real_length_min',
+            'real_length_max',
+            'euclidean_length_sum',
+            'euclidean_length_mean',
+            'euclidean_length_median',
+            'euclidean_length_min',
+            'euclidean_length_max',
+            ]
+    
+    neurites = [axon_summary,dend_basal_summary,dend_apical_summary]
+    df_summary = pd.DataFrame.from_records([n for n in neurites if n is not None], columns=labels)
+        
+    return df_summary
 
 def calculate_density(linestack, voxelsize):
     """

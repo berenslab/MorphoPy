@@ -3,6 +3,7 @@ import logging
 from ._utils.utils import *
 from ._utils.check import *
 from ._utils.visualize import *
+from ._utils.summarize import *
 
 
 __all__ = ['Morph']
@@ -64,7 +65,8 @@ class Morph(object):
         Then dendritic density is calculated based on linestack.  
         """
 
-        df_paths = get_path_statistics(self.df_paths)
+        self.df_paths = get_path_statistics(self.df_paths)
+        self.summary_data = get_summary_data(self.df_paths)
 
         # reconstruct linestack from swc.
 
@@ -77,182 +79,80 @@ class Morph(object):
         else:
             self.linestack = None
 
-    def summary(self):
-
+    def show_summary(self):
+        
         """
-        The summary of the cell morphology. 
-        """
-        
-        df_paths = self.df_paths.copy()
-        
-        soma = df_paths[df_paths.type == 1]
-        axon = df_paths[df_paths.type == 2]
-        dend_basal = df_paths[df_paths.type == 3]
-        dend_apical = df_paths[df_paths.type == 4]
-        
-        axon_summary = get_summary_of_paths(axon)
-        dend_basal_summary = get_summary_of_paths(dend_basal)
-        dend_apical_summary = get_summary_of_paths(dend_apical)
+        Print out summary statistics of the cell.
 
-        labels = [
-                'type',
-                'num_path_segments',
-                'num_branchpoints',
-                'num_irreducible_nodes',
-                'max_branch_order',
-                'average_nodal_angle_deg',
-                'average_nodal_angle_rad',
-                'average_local_angle_deg',
-                'average_local_angle_rad',
-                'average_tortuosity',
-                'real_length_sum',
-                'real_length_mean',
-                'real_length_median',
-                'real_length_min',
-                'real_length_max',
-                'euclidean_length_sum',
-                'euclidean_length_mean',
-                'euclidean_length_median',
-                'euclidean_length_min',
-                'euclidean_length_max',
-                ]
+        Parameters
+        ----------
+        summary: pd.DataFrame
+            a pandas DataFrame that contains summary of one type of neurites of the cell.
+        """
+
+        logging.info('  Summary of the cell')
+        logging.info('  ======================\n')
         
-        neurites = [axon_summary,dend_basal_summary,dend_apical_summary]
-        df_summary = pd.DataFrame.from_records([n for n in neurites if n is not None], columns=labels)
+        summary = self.summary_data.to_dict()
+        
+        for n in range(len(summary['type'])):
+
+            neurite_type = summary['type'][n]
+            num_dendritic_segments = summary['num_path_segments'][n]
+            num_branchpoints = summary['num_branchpoints'][n]
+            num_irreducible_nodes = summary['num_irreducible_nodes'][n]
+            max_branch_order = summary['max_branch_order'][n]
+            average_nodal_angle_deg = summary['average_nodal_angle_deg'][n]
+            average_nodal_angle_rad = summary['average_nodal_angle_rad'][n]
+            average_local_angle_deg = summary['average_local_angle_deg'][n]
+            average_local_angle_rad = summary['average_local_angle_rad'][n]
+            average_tortuosity = summary['average_tortuosity'][n]
+            real_length_sum = summary['real_length_sum'][n]
+            real_length_mean = summary['real_length_mean'][n]
+            real_length_median = summary['real_length_median'][n]
+            real_length_min = summary['real_length_min'][n]
+            real_length_max = summary['real_length_max'][n]
+            euclidean_length_sum = summary['euclidean_length_sum'][n]
+            euclidean_length_mean = summary['euclidean_length_mean'][n]
+            euclidean_length_median = summary['euclidean_length_median'][n]
+            euclidean_length_min = summary['euclidean_length_min'][n]
+            euclidean_length_max = summary['euclidean_length_max'][n]
+
+            logging.info('  {}\n'.format(neurite_type).upper())
+            logging.info('    Number of dendritic arbor segment: {}'.format(num_dendritic_segments))
+            logging.info('    Number of branch points: {}'.format(num_branchpoints))
+            logging.info('    Number of irreducible nodes: {}'.format(num_irreducible_nodes))
+            logging.info('    Max branching order: {}\n'.format(max_branch_order))
+            # logging.info('    Max Strahler order: {}\n\n'.format(max_strahler_order))
+
+            logging.info('  ## Angle \n')
+            logging.info('    Average nodal angle in degree: {:.3f}'.format(average_nodal_angle_deg))
+            logging.info('    Average nodal angle in radian: {:.3f}'.format(average_nodal_angle_rad))
+            logging.info('    Average local angle in degree: {:.3f}'.format(average_local_angle_deg))
+            logging.info('    Average local angle in radian: {:.3f} \n'.format(average_local_angle_rad))
+
+            logging.info('  ## Average tortuosity: {:.3f}\n'.format(average_tortuosity))
+
+            logging.info('  ## Real length (μm)\n')
+            # logging.info('  ## Dendritic length\n')
+            logging.info('    Sum: {:.3f}'.format(real_length_sum))
+            logging.info('    Mean: {:.3f}'.format(real_length_mean))
+            logging.info('    Median: {:.3f}'.format(real_length_median))
+            logging.info('    Min: {:.3f}'.format(real_length_min))
+            logging.info('    Max: {:.3f}\n'.format(real_length_max))
+
+            logging.info('  ## Euclidean length (μm)\n')
+
+            logging.info('    Sum: {:.3f}'.format(euclidean_length_sum))
+            logging.info('    Mean: {:.3f}'.format(euclidean_length_mean))
+            logging.info('    Median: {:.3f}'.format(euclidean_length_median))
+            logging.info('    Min: {:.3f}'.format(euclidean_length_min))
+            logging.info('    Max: {:.3f}\n'.format(euclidean_length_max)) 
             
-        return df_summary
+            logging.info('  ======================\n')
+            
 
-    # def summary(self, save_to=None,  print_results=True):
 
-    #     """
-    #     Print out summary of the cell morphology. 
-
-    #     Parameters
-    #     ----------
-    #     save_to: str
-    #         path and filename of the output json file. 
-
-    #     print_results: bool
-    #         if True, print out summary using logging.
-    #     """
-
-    #     # branch order / number of branch points
-
-    #     branchpoints = np.vstack(self.df_paths.connect_to_at)
-    #     branchpoints = unique_row(branchpoints)
-    #     num_branchpoints = len(branchpoints)
-
-    #     max_branch_order = max(self.df_paths.branch_order)
-
-    #     terminalpaths = self.df_paths.path[self.df_paths.connected_by.apply(len) == 0].as_matrix()
-    #     terminalpoints = np.vstack([p[-1] for p in terminalpaths])
-    #     num_terminalpoints = len(terminalpoints)
-
-    #     outerterminals = get_outer_terminals(terminalpoints)
-
-    #     num_irreducible_nodes = num_branchpoints + num_terminalpoints
-
-    #     num_dendritic_segments = len(self.df_paths)
-
-    #     # path length
-
-    #     dendritic = self.df_paths['real_length']
-    #     dendritic_sum = dendritic.sum()
-    #     dendritic_mean = dendritic.mean()
-    #     dendritic_median = dendritic.median()
-    #     dendritic_min = dendritic.min()
-    #     dendritic_max = dendritic.max()
-
-    #     euclidean = self.df_paths['euclidean_length']
-    #     euclidean_sum = euclidean.sum()
-    #     euclidean_mean = euclidean.mean()
-    #     euclidean_median = euclidean.median()
-    #     euclidean_min = euclidean.min()
-    #     euclidean_max = euclidean.max()
-
-    #     tortuosity = dendritic / euclidean
-    #     average_tortuosity = np.mean(tortuosity)      
-
-    #     # node angles
-    #     average_nodal_angle_deg, average_nodal_angle_rad, average_local_angle_deg, average_local_angle_rad = get_average_angles(self.df_paths)
-
-    #     summary = {
-    #         "general": {
-    #             "number_of_dendritic_segments": int(num_dendritic_segments),
-    #             "number_of_branch_points": int(num_branchpoints),
-    #             "number_of_irreducible_nodes": int(num_irreducible_nodes),
-    #             "max_branch_order": int(max_branch_order),
-    #             # "max_strahler_order": int(max_strahler_order),
-    #         },
-    #         "angle": {
-    #             "average_nodal_angle_in_degree": average_nodal_angle_deg,
-    #             "average_nodal_angle_in_radian": average_nodal_angle_rad,
-    #             "average_local_angle_in_degree": average_local_angle_deg,
-    #             "average_local_angle_in_radian": average_local_angle_rad,
-    #         },
-    #         "length": {
-    #             "tortuosity": average_tortuosity,
-    #             "dendritic": {
-    #                 "sum": dendritic_sum,
-    #                 "mean": dendritic_mean,
-    #                 "median": dendritic_median,
-    #                 "min": dendritic_min,
-    #                 "max": dendritic_max,
-    #             },
-    #             "euclidean":{
-    #                 "sum": euclidean_sum,
-    #                 "mean": euclidean_mean,
-    #                 "median": euclidean_median,
-    #                 "min": euclidean_min,
-    #                 "max": euclidean_max,
-    #             }
-    #         }
-
-    #     }
-
-    #     # dendritic tree density
-    #     if self.linestack is not None:
-
-    #         if self.voxelsize is None:
-    #             voxelsize = [1,1,1]
-    #         else:
-    #             voxelsize = self.voxelsize
-
-    #         dendritic_center = self.dendritic_center
-
-    #         soma_coordinates = self.soma_on_stack
-
-    #         asymmetry = np.sqrt(((soma_coordinates[:2] - dendritic_center)**2).sum())
-
-    #         all_termianls_to_dendritic_center = np.sqrt(np.sum((terminalpoints[:,:2] - dendritic_center) ** 2,  1)) * voxelsize[0]
-    #         out_terminals_to_dendritic_center = np.sqrt(np.sum((outerterminals[:, :2]- dendritic_center) **2, 1)) * voxelsize[0]
-
-    #         typical_radius = np.mean(all_termianls_to_dendritic_center)
-    #         outer_radius = np.mean(out_terminals_to_dendritic_center)
-
-    #         import cv2
-    #         dendritic_area = cv2.contourArea(outerterminals[:, :2].astype(np.float32)) * voxelsize[0]**2/1000
-
-    #         summary.update({"density": {
-    #             "asymmetry": asymmetry,
-    #             "outer_radius": outer_radius,
-    #             "typical_radius": typical_radius,
-    #             "dendritic_area": dendritic_area
-    #         }})
-
-    #     # print and save
-    #     if print_results:
-    #         print_summary(summary)
-
-    #     if save_to is not None:
-
-    #         logging.info('  Writing to {}'.format(save_to))
-
-    #         import json
-    #         with open(save_to, 'w') as f:
-    #             json.dump(summary, f)
-
-    #     # return summary
 
 
     def show_threeviews(self, save_to=None):
@@ -266,7 +166,6 @@ class Morph(object):
             Path the figure saved to. e.g. "./figure/threeviews.png"
 
         """
-
 
         import matplotlib.pyplot as plt
         from matplotlib_scalebar.scalebar import ScaleBar
