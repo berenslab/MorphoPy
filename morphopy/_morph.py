@@ -98,7 +98,7 @@ class Morph(object):
         for n in range(len(summary['type'])):
 
             neurite_type = summary['type'][n]
-            num_dendritic_segments = summary['num_path_segments'][n]
+            num_path_segments = summary['num_path_segments'][n]
             num_branchpoints = summary['num_branchpoints'][n]
             num_irreducible_nodes = summary['num_irreducible_nodes'][n]
             max_branch_order = summary['max_branch_order'][n]
@@ -119,7 +119,7 @@ class Morph(object):
             euclidean_length_max = summary['euclidean_length_max'][n]
 
             logging.info('  {}\n'.format(neurite_type).upper())
-            logging.info('    Number of dendritic arbor segment: {}'.format(num_dendritic_segments))
+            logging.info('    Number of arbor segments: {}'.format(num_path_segments))
             logging.info('    Number of branch points: {}'.format(num_branchpoints))
             logging.info('    Number of irreducible nodes: {}'.format(num_irreducible_nodes))
             logging.info('    Max branching order: {}\n'.format(max_branch_order))
@@ -171,6 +171,7 @@ class Morph(object):
     
     def show_animation(self):
         
+        from mpl_toolkits.mplot3d import Axes3D
         import matplotlib.animation as animation
         from IPython.display import HTML
         

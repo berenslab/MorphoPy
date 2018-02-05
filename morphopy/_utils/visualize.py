@@ -21,7 +21,7 @@ def plot_morph(ax, df_paths, view, plot_axon, plot_dendrites):
 
     ax.scatter(0, 0, s=280, color='grey')
     
-    if plot_dendrites:
+    if plot_dendrites and len(dendrites)>0:
         
         dcolors_idx = np.linspace(0, 255, max(dendrites.branch_order)+1).astype(int)
         dcolors = np.vstack(plt.cm.Reds_r(dcolors_idx))[:, :3]
@@ -35,10 +35,8 @@ def plot_morph(ax, df_paths, view, plot_axon, plot_dendrites):
 
             dend_plot = ax.plot(path[:, axis0], path[:, axis1], color=dcolors[int(order)])
             ax.scatter(bpt[axis0], bpt[axis1], color=dcolors[int(order)], zorder=1)
-
-
     
-    if plot_axon:
+    if plot_axon and len(axon)>0:
         
         acolors_idx = np.linspace(0, 255, max(axon.branch_order)+1).astype(int)
         acolors = np.vstack(plt.cm.Blues_r(acolors_idx))[:, :3]
