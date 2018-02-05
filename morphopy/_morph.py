@@ -150,47 +150,128 @@ class Morph(object):
             logging.info('    Max: {:.3f}\n'.format(euclidean_length_max)) 
             
             logging.info('  ======================\n')
-            
 
+    def show_morph(self, view='xy', plot_axon=True, plot_dendrites=True):
+        
+        df_paths = self.df_paths.copy()
+        fig, ax = plt.subplots(1, 1, figsize=(12,12))
+        ax = plot_morph(ax, df_paths, view, plot_axon, plot_dendrites)
 
-
-
-    def show_threeviews(self, save_to=None):
-
-        """
-        Plot cell morphology in three views (Top and two sides).
-
-        Parameters
-        ----------
-        save_to: str
-            Path the figure saved to. e.g. "./figure/threeviews.png"
-
-        """
-
-        import matplotlib.pyplot as plt
-        from matplotlib_scalebar.scalebar import ScaleBar
-
-        plt.figure(figsize=(16,16))
-        ax1 = plt.subplot2grid((4,4), (0,1), rowspan=3, colspan=3)
-        ax2 = plt.subplot2grid((4,4), (0,0), rowspan=3, colspan=1)
-        ax3 = plt.subplot2grid((4,4), (3,1), rowspan=1, colspan=3)
-        ax4 = plt.subplot2grid((4,4), (3,0), rowspan=1, colspan=1)  
-
+        return fig, ax
+    
+    def show_threeviews(self, plot_axon=True, plot_dendrites=True):
+        
         df_paths = self.df_paths
-        dendrites = df_paths[df_paths.type != 1]
+        
+        fig, ax = plt.subplots(1, 3, figsize=(18,6))
+        
+        ax0 = plot_morph(ax[0], df_paths, 'xy', plot_axon, plot_dendrites)
+        ax1 = plot_morph(ax[1], df_paths, 'xz', plot_axon, plot_dendrites)
+        ax2 = plot_morph(ax[2], df_paths, 'yz', plot_axon, plot_dendrites)
+    
+    def show_animation(self):
+        
+        import matplotlib.animation as animation
+        from IPython.display import HTML
+        
+        df_paths = self.df_paths
+        
         soma = df_paths[df_paths.type == 1].path[0][0]
+        axon = df_paths[df_paths.type == 2]
+        dendrites = df_paths[df_paths.type == 3]
+            
+        fig = plt.figure(figsize=(12,12))
+        ax = fig.add_subplot(111, projection='3d')
 
-        lims = find_lims(dendrites)
+        def init():
+            
+            ax.scatter(0,0,0, s=280, color='grey')
 
-        plot_skeleton(ax2, dendrites, soma, 2, 0, lims)
-        plot_skeleton(ax3, dendrites, soma, 1, 2, lims)
-        plot_skeleton(ax1, dendrites, soma, 1, 0, lims)
-        scalebar = ScaleBar(1, units=self.unit, location='lower left', box_alpha=0)
-        ax1.add_artist(scalebar)    
-        ax4.axis('off')
+            dcolors_idx = np.linspace(0, 255, max(df_paths.branch_order)+1).astype(int)
+            dcolors = np.vstack(plt.cm.Reds_r(dcolors_idx))[:, :3]
 
-        if save_to is not None:
-            plt.savefig(save_to)
+            for row in dendrites.iterrows():
+
+                path_id = row[0]
+                path = row[1]['path'] - soma
+                order = row[1]['branch_order']
+                bpt = path[0]     
+
+                ax.plot(path[:, 0], path[:, 1], path[:, 2], color=dcolors[int(order)])
+                ax.scatter(bpt[0], bpt[1], bpt[2], color=dcolors[int(order)], zorder=1)
+
+            acolors_idx = np.linspace(0, 255, max(df_paths.branch_order)+1).astype(int)
+            acolors = np.vstack(plt.cm.Blues_r(dcolors_idx))[:, :3]
+
+            for row in axon.iterrows():
+
+                path_id = row[0]
+                path = row[1]['path'] - soma
+                order = row[1]['branch_order']
+                bpt = path[0]     
+
+                ax.plot(path[:, 0], path[:, 1], path[:, 2], color=acolors[int(order)])
+                ax.scatter(bpt[0], bpt[1], bpt[2], color=acolors[int(order)], zorder=1)
+
+            lim_max = int(np.ceil((np.vstack(df_paths.path.as_matrix()) - soma).max() / 20) * 20)
+            # lim_min = int(np.floor(np.vstack(self.df_paths.path.as_matrix()).min() / 20) * 20)
+
+            ax.set_xlim(-lim_max, lim_max)
+            ax.set_ylim(-lim_max, lim_max) 
+            ax.set_zlim(-lim_max, lim_max) 
+            
+            return fig,
+        
+        def animate(i):
+            # azimuth angle : 0 deg to 360 deg
+            ax.view_init(elev=10, azim=i*4)
+            return fig,
+        
+        logging.info('  Generating animation. It might take some time...')
+
+        ani = animation.FuncAnimation(fig, animate, init_func=init,
+                                   frames=90, interval=150, blit=True)
+        
+        plt.close()
+        
+        return HTML(ani.to_html5_video())
+
+    # def show_threeviews(self, save_to=None):
+
+    #     """
+    #     Plot cell morphology in three views (Top and two sides).
+
+    #     Parameters
+    #     ----------
+    #     save_to: str
+    #         Path the figure saved to. e.g. "./figure/threeviews.png"
+
+    #     """
+
+    #     import matplotlib.pyplot as plt
+    #     from matplotlib_scalebar.scalebar import ScaleBar
+
+    #     plt.figure(figsize=(16,16))
+    #     ax1 = plt.subplot2grid((4,4), (0,1), rowspan=3, colspan=3)
+    #     ax2 = plt.subplot2grid((4,4), (0,0), rowspan=3, colspan=1)
+    #     ax3 = plt.subplot2grid((4,4), (3,1), rowspan=1, colspan=3)
+    #     ax4 = plt.subplot2grid((4,4), (3,0), rowspan=1, colspan=1)  
+
+    #     df_paths = self.df_paths
+    #     dendrites = df_paths[df_paths.type != 1]
+    #     soma = df_paths[df_paths.type == 1].path[0][0]
+
+    #     lims = find_lims(dendrites)
+
+    #     plot_skeleton(ax2, dendrites, soma, 2, 0, lims)
+    #     plot_skeleton(ax3, dendrites, soma, 1, 2, lims)
+    #     plot_skeleton(ax1, dendrites, soma, 1, 0, lims)
+    #     scalebar = ScaleBar(1, units=self.unit, location='lower left', box_alpha=0)
+    #     ax1.add_artist(scalebar)    
+    #     ax4.axis('off')
+
+    #     if save_to is not None:
+    #         plt.savefig(save_to)
     
     # def show_density(self): 
 

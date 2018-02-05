@@ -293,7 +293,7 @@ def get_summary_of_type(df_paths):
     average_nodal_angle_deg, average_nodal_angle_rad, average_local_angle_deg, average_local_angle_rad = get_average_angles(df_paths)    
 
     if df_paths.iloc[0].type == 2:
-        t = 'qxon'
+        t = 'axon'
     elif df_paths.iloc[0].type == 3:
         t = 'basal_dendrites'
     elif df_paths.iloc[0].type == 4:
@@ -384,7 +384,7 @@ def pretty_log(df_summary, type):
     num_irreducible_nodes = summary['general']['number_of_irreducible_nodes']
     max_branch_order = summary['general']['max_branch_order']
     # max_strahler_order = summary['general'] ['max_strahler_order']
-    average_nodal_angle_deg = summary['angle']['average_nodal_angle_in_degree']
+    average_nodal_angle_deg = summary['angle']['average_nodal_angle_in_deg']
     average_nodal_angle_rad = summary['angle']['average_nodal_angle_in_radian']
     average_local_angle_deg = summary['angle']['average_local_angle_in_degree']
     average_local_angle_rad = summary['angle']['average_local_angle_in_radian']
