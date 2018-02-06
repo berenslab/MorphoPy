@@ -3,6 +3,7 @@ import logging
 from ._utils.utils import *
 from ._utils.check import *
 from ._utils.visualize import *
+from ._utils.summarize import *
 
 
 __all__ = ['Morph']
@@ -64,7 +65,8 @@ class Morph(object):
         Then dendritic density is calculated based on linestack.  
         """
 
-        df_paths = get_path_statistics(self.df_paths)
+        self.df_paths = get_path_statistics(self.df_paths)
+        self.summary_data = get_summary_data(self.df_paths)
 
         # reconstruct linestack from swc.
 
@@ -77,211 +79,258 @@ class Morph(object):
         else:
             self.linestack = None
 
-
-    def summary(self, save_to=None,  print_results=True):
-
+    def show_summary(self):
+        
         """
-        Print out summary of the cell morphology. 
+        Print out summary statistics of the cell.
 
         Parameters
         ----------
-        save_to: str
-            path and filename of the output json file. 
-
-        print_results: bool
-            if True, print out summary using logging.
+        summary: pd.DataFrame
+            a pandas DataFrame that contains summary of one type of neurites of the cell.
         """
 
-        # branch order / number of branch points
+        logging.info('  Summary of the cell')
+        logging.info('  ======================\n')
+        
+        summary = self.summary_data.to_dict()
+        
+        for n in range(len(summary['type'])):
 
-        branchpoints = np.vstack(self.df_paths.connect_to_at)
-        branchpoints = unique_row(branchpoints)
-        num_branchpoints = len(branchpoints)
+            neurite_type = summary['type'][n]
+            num_path_segments = summary['num_path_segments'][n]
+            num_branchpoints = summary['num_branchpoints'][n]
+            num_irreducible_nodes = summary['num_irreducible_nodes'][n]
+            max_branch_order = summary['max_branch_order'][n]
+            average_nodal_angle_deg = summary['average_nodal_angle_deg'][n]
+            average_nodal_angle_rad = summary['average_nodal_angle_rad'][n]
+            average_local_angle_deg = summary['average_local_angle_deg'][n]
+            average_local_angle_rad = summary['average_local_angle_rad'][n]
+            average_tortuosity = summary['average_tortuosity'][n]
+            real_length_sum = summary['real_length_sum'][n]
+            real_length_mean = summary['real_length_mean'][n]
+            real_length_median = summary['real_length_median'][n]
+            real_length_min = summary['real_length_min'][n]
+            real_length_max = summary['real_length_max'][n]
+            euclidean_length_sum = summary['euclidean_length_sum'][n]
+            euclidean_length_mean = summary['euclidean_length_mean'][n]
+            euclidean_length_median = summary['euclidean_length_median'][n]
+            euclidean_length_min = summary['euclidean_length_min'][n]
+            euclidean_length_max = summary['euclidean_length_max'][n]
 
-        max_branch_order = max(self.df_paths.branch_order)
+            logging.info('  {}\n'.format(neurite_type).upper())
+            logging.info('    Number of arbor segments: {}'.format(num_path_segments))
+            logging.info('    Number of branch points: {}'.format(num_branchpoints))
+            logging.info('    Number of irreducible nodes: {}'.format(num_irreducible_nodes))
+            logging.info('    Max branching order: {}\n'.format(max_branch_order))
+            # logging.info('    Max Strahler order: {}\n\n'.format(max_strahler_order))
 
-        terminalpaths = self.df_paths.path[self.df_paths.connected_by.apply(len) == 0].as_matrix()
-        terminalpoints = np.vstack([p[-1] for p in terminalpaths])
-        num_terminalpoints = len(terminalpoints)
+            logging.info('  ## Angle \n')
+            logging.info('    Average nodal angle in degree: {:.3f}'.format(average_nodal_angle_deg))
+            logging.info('    Average nodal angle in radian: {:.3f}'.format(average_nodal_angle_rad))
+            logging.info('    Average local angle in degree: {:.3f}'.format(average_local_angle_deg))
+            logging.info('    Average local angle in radian: {:.3f} \n'.format(average_local_angle_rad))
 
-        outerterminals = get_outer_terminals(terminalpoints)
+            logging.info('  ## Average tortuosity: {:.3f}\n'.format(average_tortuosity))
 
-        num_irreducible_nodes = num_branchpoints + num_terminalpoints
+            logging.info('  ## Real length (μm)\n')
+            # logging.info('  ## Dendritic length\n')
+            logging.info('    Sum: {:.3f}'.format(real_length_sum))
+            logging.info('    Mean: {:.3f}'.format(real_length_mean))
+            logging.info('    Median: {:.3f}'.format(real_length_median))
+            logging.info('    Min: {:.3f}'.format(real_length_min))
+            logging.info('    Max: {:.3f}\n'.format(real_length_max))
 
-        num_dendritic_segments = len(self.df_paths)
+            logging.info('  ## Euclidean length (μm)\n')
 
-        # path length
+            logging.info('    Sum: {:.3f}'.format(euclidean_length_sum))
+            logging.info('    Mean: {:.3f}'.format(euclidean_length_mean))
+            logging.info('    Median: {:.3f}'.format(euclidean_length_median))
+            logging.info('    Min: {:.3f}'.format(euclidean_length_min))
+            logging.info('    Max: {:.3f}\n'.format(euclidean_length_max)) 
+            
+            logging.info('  ======================\n')
 
-        dendritic = self.df_paths['real_length']
-        dendritic_sum = dendritic.sum()
-        dendritic_mean = dendritic.mean()
-        dendritic_median = dendritic.median()
-        dendritic_min = dendritic.min()
-        dendritic_max = dendritic.max()
+    def show_morph(self, view='xy', plot_axon=True, plot_basal_dendrites=True, plot_apical_dendrites=True):
+        
+        df_paths = self.df_paths.copy()
+        fig, ax = plt.subplots(1, 1, figsize=(12,12))
+        ax = plot_morph(ax, df_paths, view, plot_axon, plot_basal_dendrites, plot_apical_dendrites)
 
-        euclidean = self.df_paths['euclidean_length']
-        euclidean_sum = euclidean.sum()
-        euclidean_mean = euclidean.mean()
-        euclidean_median = euclidean.median()
-        euclidean_min = euclidean.min()
-        euclidean_max = euclidean.max()
-
-        tortuosity = dendritic / euclidean
-        average_tortuosity = np.mean(tortuosity)      
-
-        # node angles
-        average_nodal_angle_deg, average_nodal_angle_rad, average_local_angle_deg, average_local_angle_rad = get_average_angles(self.df_paths)
-
-        summary = {
-            "general": {
-                "number_of_dendritic_segments": int(num_dendritic_segments),
-                "number_of_branch_points": int(num_branchpoints),
-                "number_of_irreducible_nodes": int(num_irreducible_nodes),
-                "max_branch_order": int(max_branch_order),
-                # "max_strahler_order": int(max_strahler_order),
-            },
-            "angle": {
-                "average_nodal_angle_in_degree": average_nodal_angle_deg,
-                "average_nodal_angle_in_radian": average_nodal_angle_rad,
-                "average_local_angle_in_degree": average_local_angle_deg,
-                "average_local_angle_in_radian": average_local_angle_rad,
-            },
-            "length": {
-                "tortuosity": average_tortuosity,
-                "dendritic": {
-                    "sum": dendritic_sum,
-                    "mean": dendritic_mean,
-                    "median": dendritic_median,
-                    "min": dendritic_min,
-                    "max": dendritic_max,
-                },
-                "euclidean":{
-                    "sum": euclidean_sum,
-                    "mean": euclidean_mean,
-                    "median": euclidean_median,
-                    "min": euclidean_min,
-                    "max": euclidean_max,
-                }
-            }
-
-        }
-
-        # dendritic tree density
-        if self.linestack is not None:
-
-            if self.voxelsize is None:
-                voxelsize = [1,1,1]
-            else:
-                voxelsize = self.voxelsize
-
-            dendritic_center = self.dendritic_center
-
-            soma_coordinates = self.soma_on_stack
-
-            asymmetry = np.sqrt(((soma_coordinates[:2] - dendritic_center)**2).sum())
-
-            all_termianls_to_dendritic_center = np.sqrt(np.sum((terminalpoints[:,:2] - dendritic_center) ** 2,  1)) * voxelsize[0]
-            out_terminals_to_dendritic_center = np.sqrt(np.sum((outerterminals[:, :2]- dendritic_center) **2, 1)) * voxelsize[0]
-
-            typical_radius = np.mean(all_termianls_to_dendritic_center)
-            outer_radius = np.mean(out_terminals_to_dendritic_center)
-
-            import cv2
-            dendritic_area = cv2.contourArea(outerterminals[:, :2].astype(np.float32)) * voxelsize[0]**2/1000
-
-            summary.update({"density": {
-                "asymmetry": asymmetry,
-                "outer_radius": outer_radius,
-                "typical_radius": typical_radius,
-                "dendritic_area": dendritic_area
-            }})
-
-        # print and save
-        if print_results:
-            print_summary(summary)
-
-        if save_to is not None:
-
-            logging.info('  Writing to {}'.format(save_to))
-
-            import json
-            with open(save_to, 'w') as f:
-                json.dump(summary, f)
-
-        # return summary
-
-
-    def show_threeviews(self, save_to=None):
-
-        """
-        Plot cell morphology in three views (Top and two sides).
-
-        Parameters
-        ----------
-        save_to: str
-            Path the figure saved to. e.g. "./figure/threeviews.png"
-
-        """
-
-
-        import matplotlib.pyplot as plt
-        from matplotlib_scalebar.scalebar import ScaleBar
-
-        plt.figure(figsize=(16,16))
-        ax1 = plt.subplot2grid((4,4), (0,1), rowspan=3, colspan=3)
-        ax2 = plt.subplot2grid((4,4), (0,0), rowspan=3, colspan=1)
-        ax3 = plt.subplot2grid((4,4), (3,1), rowspan=1, colspan=3)
-        ax4 = plt.subplot2grid((4,4), (3,0), rowspan=1, colspan=1)  
-
-        df_paths = self.df_paths
-        dendrites = df_paths[df_paths.type != 1]
-        soma = df_paths[df_paths.type == 1].path[0][0]
-
-        lims = find_lims(dendrites)
-
-        plot_skeleton(ax2, dendrites, soma, 2, 0, lims)
-        plot_skeleton(ax3, dendrites, soma, 1, 2, lims)
-        plot_skeleton(ax1, dendrites, soma, 1, 0, lims)
-        scalebar = ScaleBar(1, units=self.unit, location='lower left', box_alpha=0)
-        ax1.add_artist(scalebar)    
-        ax4.axis('off')
-
-        if save_to is not None:
-            plt.savefig(save_to)
+        return fig, ax
     
-    def show_density(self):
+    def show_threeviews(self, plot_axon=True, plot_basal_dendrites=True, plot_apical_dendrites=True):
+        
+        df_paths = self.df_paths.copy()
+        
+        fig, ax = plt.subplots(1, 3, figsize=(18,6))
+        
+        ax0 = plot_morph(ax[0], df_paths, 'xy', plot_axon, plot_basal_dendrites, plot_apical_dendrites)
+        ax1 = plot_morph(ax[1], df_paths, 'xz', plot_axon, plot_basal_dendrites, plot_apical_dendrites)
+        ax2 = plot_morph(ax[2], df_paths, 'yz', plot_axon, plot_basal_dendrites, plot_apical_dendrites)
+    
+    def show_animation(self):
+        
+        from mpl_toolkits.mplot3d import Axes3D
+        import matplotlib.animation as animation
+        from IPython.display import HTML
+        
+        df_paths = self.df_paths.copy()
+        
+        soma = df_paths[df_paths.type == 1].path[0][0]
+        axon = df_paths[df_paths.type == 2]
+        basal_dendrites = df_paths[df_paths.type == 3]
+        apical_dendrites = df_paths[df_paths.type == 4] 
+            
+        fig = plt.figure(figsize=(12,12))
+        ax = fig.add_subplot(111, projection='3d')
 
-        """
-        Plot cell morphology on dendritic density map.
-        """
+        def init():
 
-        try:
-            density_stack = self.density_stack
-            voxelsize = self.voxelsize
-        except:
-            logging.info('No density stack. Please provide the voxel sizes of the `.swc` file.')
-            return None
-        
-        import matplotlib.pyplot as plt
-        from matplotlib_scalebar.scalebar import ScaleBar
+            # soma            
+            ax.scatter(0,0,0, s=280, color='grey')
 
-        linestack = self.linestack
-        dendritic_center = self.dendritic_center
-        soma_on_stack = self.soma_on_stack
-        
-        plt.figure(figsize=(16, 16))
-        plt.imshow(density_stack.sum(2), cmap=plt.cm.gnuplot2_r, origin='lower')
-        plt.scatter(dendritic_center[1], dendritic_center[0], color='g', marker='*', s=180, label='Dendritic Center')
-        plt.scatter(soma_on_stack[1], soma_on_stack[0], color='r',  marker='*', s=180, label='Soma')
-        
-        linestack_xy = linestack.sum(2)
-        linestack_xy[linestack_xy !=0] = 1
-        linestack_xy = np.ma.masked_array(linestack_xy, ~linestack.any(2))
-        plt.imshow(linestack_xy, origin='lower', cmap=plt.cm.binary)
-        
-        plt.legend(frameon=False)
+            # basal dendrites
 
-        scalebar = ScaleBar(voxelsize[0], units=self.unit, location='lower left', box_alpha=0)
-        plt.gca().add_artist(scalebar)   
+            if len(basal_dendrites)>0:
+                bdcolors_idx = np.linspace(0, 200, max(basal_dendrites.branch_order)+1).astype(int)
+                bdcolors = np.vstack(plt.cm.Reds_r(bdcolors_idx))[:, :3]
+
+                for row in basal_dendrites.iterrows():
+
+                    path_id = row[0]
+                    path = row[1]['path'] - soma
+                    order = row[1]['branch_order']
+                    bpt = path[0]     
+
+                    ax.plot(path[:, 0], path[:, 1], path[:, 2], color=bdcolors[int(order)])
+                    ax.scatter(bpt[0], bpt[1], bpt[2], color=bdcolors[int(order)], zorder=1)
+
+            # apical dendrites
+            if len(apical_dendrites)>0:
+                adcolors_idx = np.linspace(0, 200, max(apical_dendrites.branch_order)+1).astype(int)
+                adcolors = np.vstack(plt.cm.Purples_r(adcolors_idx))[:, :3]
+
+                for row in apical_dendrites.iterrows():
+
+                    path_id = row[0]
+                    path = row[1]['path'] - soma
+                    order = row[1]['branch_order']
+                    bpt = path[0]     
+
+                    ax.plot(path[:, 0], path[:, 1], path[:, 2], color=adcolors[int(order)])
+                    ax.scatter(bpt[0], bpt[1], bpt[2], color=adcolors[int(order)], zorder=1)
+
+            # axon
+            if len(axon)>0:
+                acolors_idx = np.linspace(0, 200, max(axon.branch_order)+1).astype(int)
+                acolors = np.vstack(plt.cm.Blues_r(acolors_idx))[:, :3]
+
+                for row in axon.iterrows():
+
+                    path_id = row[0]
+                    path = row[1]['path'] - soma
+                    order = row[1]['branch_order']
+                    bpt = path[0]     
+
+                    ax.plot(path[:, 0], path[:, 1], path[:, 2], color=acolors[int(order)])
+                    ax.scatter(bpt[0], bpt[1], bpt[2], color=acolors[int(order)], zorder=1)
+
+            lim_max = int(np.ceil((np.vstack(df_paths.path.as_matrix()) - soma).max() / 20) * 20)
+            lim_min = int(np.floor((np.vstack(df_paths.path.as_matrix()) - soma).min() / 20) * 20)
+
+            lim = max(abs(lim_max), abs(lim_min))
+
+            ax.set_xlim(-lim, lim)
+            ax.set_ylim(-lim, lim)
+            ax.set_zlim(-lim, lim) 
+            
+            return fig,
         
-        plt.axis('off')
+        def animate(i):
+            # azimuth angle : 0 deg to 360 deg
+            ax.view_init(elev=10, azim=i*4)
+            return fig,
+        
+        logging.info('  Generating animation. It might take some time...')
+
+        ani = animation.FuncAnimation(fig, animate, init_func=init,
+                                   frames=90, interval=150, blit=True)
+        
+        plt.close()
+        
+        return HTML(ani.to_html5_video())
+
+    # def show_threeviews(self, save_to=None):
+
+    #     """
+    #     Plot cell morphology in three views (Top and two sides).
+
+    #     Parameters
+    #     ----------
+    #     save_to: str
+    #         Path the figure saved to. e.g. "./figure/threeviews.png"
+
+    #     """
+
+    #     import matplotlib.pyplot as plt
+    #     from matplotlib_scalebar.scalebar import ScaleBar
+
+    #     plt.figure(figsize=(16,16))
+    #     ax1 = plt.subplot2grid((4,4), (0,1), rowspan=3, colspan=3)
+    #     ax2 = plt.subplot2grid((4,4), (0,0), rowspan=3, colspan=1)
+    #     ax3 = plt.subplot2grid((4,4), (3,1), rowspan=1, colspan=3)
+    #     ax4 = plt.subplot2grid((4,4), (3,0), rowspan=1, colspan=1)  
+
+    #     df_paths = self.df_paths
+    #     dendrites = df_paths[df_paths.type != 1]
+    #     soma = df_paths[df_paths.type == 1].path[0][0]
+
+    #     lims = find_lims(dendrites)
+
+    #     plot_skeleton(ax2, dendrites, soma, 2, 0, lims)
+    #     plot_skeleton(ax3, dendrites, soma, 1, 2, lims)
+    #     plot_skeleton(ax1, dendrites, soma, 1, 0, lims)
+    #     scalebar = ScaleBar(1, units=self.unit, location='lower left', box_alpha=0)
+    #     ax1.add_artist(scalebar)    
+    #     ax4.axis('off')
+
+    #     if save_to is not None:
+    #         plt.savefig(save_to)
+    
+    # def show_density(self): 
+
+    #     """
+    #     Plot cell morphology on dendritic density map.
+    #     """
+
+    #     try:
+    #         density_stack = self.density_stack
+    #         voxelsize = self.voxelsize
+    #     except:
+    #         logging.info('No density stack. Please provide the voxel sizes of the `.swc` file.')
+    #         return None
+        
+    #     import matplotlib.pyplot as plt
+    #     from matplotlib_scalebar.scalebar import ScaleBar
+
+    #     linestack = self.linestack
+    #     dendritic_center = self.dendritic_center
+    #     soma_on_stack = self.soma_on_stack
+        
+    #     plt.figure(figsize=(16, 16))
+    #     plt.imshow(density_stack.sum(2), cmap=plt.cm.gnuplot2_r, origin='lower')
+    #     plt.scatter(dendritic_center[1], dendritic_center[0], color='g', marker='*', s=180, label='Dendritic Center')
+    #     plt.scatter(soma_on_stack[1], soma_on_stack[0], color='r',  marker='*', s=180, label='Soma')
+        
+    #     linestack_xy = linestack.sum(2)
+    #     linestack_xy[linestack_xy !=0] = 1
+    #     linestack_xy = np.ma.masked_array(linestack_xy, ~linestack.any(2))
+    #     plt.imshow(linestack_xy, origin='lower', cmap=plt.cm.binary)
+        
+    #     plt.legend(frameon=False)
+
+    #     scalebar = ScaleBar(voxelsize[0], units=self.unit, location='lower left', box_alpha=0)
+    #     plt.gca().add_artist(scalebar)   
+        
+    #     plt.axis('off')
