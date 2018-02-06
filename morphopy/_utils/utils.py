@@ -14,23 +14,23 @@ def get_logger(loglevel):
     Parameters
     ---------
     loglevel: str
-        'debug', 'info', 'warning', 'error', 'critical'. 
+        'debug', 'info', 'warning', 'error', 'critical'.
 
     Returns
     -------
     logger: logging.RootLogger
-        a logging object for turning on and off the log.    
-    
+        a logging object for turning on and off the log.
+
     """
-    
+
     logger = logging.getLogger()
-    
+
     LEVELS = {'debug': logging.DEBUG,
               'info': logging.INFO,
               'warning': logging.WARNING,
               'error': logging.ERROR,
               'critical': logging.CRITICAL}
-    
+
     try:
         LEVEL = LEVELS[loglevel]
         logger.setLevel(LEVEL)
@@ -38,7 +38,7 @@ def get_logger(loglevel):
         logger.setLevel(logging.INFO)
         logging.info('  Please enter a valid logging mode (DEBUG, INFO, WARNING, ERROR, CRITICAL).')
         logger.setLevel(logging.ERROR)
-        
+
     return logger
 
 def read_swc(filepath):
@@ -49,18 +49,18 @@ def read_swc(filepath):
     ----------
     filepath: str
         path to swc file
-    
+
     Returns
     -------
     G: networkx Graph object.
     """
-    
+
     swc =  pd.read_csv(filepath, delim_whitespace=True, comment='#',
                           names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
     swc.index = swc.n.as_matrix()
-    
+
     G = nx.DiGraph()
-    
+
     # raw data
     n = swc['n'].tolist()
     pos = np.array([swc['x'].tolist(), swc['y'].tolist(), swc['z'].tolist()]).T
@@ -68,7 +68,7 @@ def read_swc(filepath):
     t = swc['type'].tolist()
     pid = swc['parent'].tolist()
     t[pid == -1] = 1 # if soma is missing, the first point is soma
-    
+
     # node
     node_keys = ['pos', 'type', 'radius']
     node_data = list(zip(n,
@@ -76,27 +76,27 @@ def read_swc(filepath):
     parent_idx = np.array([n.index(pid[ix]) for ix in range(1, len(pid))])
 
     # edge
-    ec = np.sqrt(np.sum((pos[parent_idx] - pos[1:]) ** 2, axis=1)) 
+    ec = np.sqrt(np.sum((pos[parent_idx] - pos[1:]) ** 2, axis=1))
     edge_keys =['euclidean_dist', 'path_length']
     edge_data = list(zip(pid[1:], n[1:],
                         [dict(zip(edge_keys, [ec[ix], ec[ix]])) for ix in range(ec.shape[0])]))
 
     G.add_nodes_from(node_data)
     G.add_edges_from(edge_data)
-    
+
     return G, swc
 
 def graph_to_path(G):
-    
+
     edges_all = G.edge
     nodes_all = np.array(list(G.node.keys()))
-    
+
     num_branch = np.array(list(G.out_degree().values()))
     branchpoints = nodes_all[np.logical_and(num_branch != 1, num_branch !=0)]
-    
+
     path_all = {}
     i = 1
-    for current_key in branchpoints: 
+    for current_key in branchpoints:
         next_keys = list(edges_all[current_key].keys())
         path = [current_key]
         for next_key in next_keys:
@@ -108,28 +108,28 @@ def graph_to_path(G):
                 path_all[i] = np.array(path)
                 path = [current_key]
             i+=1
-            
+
     return path_all
 
 def get_df_paths(G):
-    
+
     """
-    Split the original swc into paths (Soma, Dendrites, Axon, etc..). 
-    
+    Split the original swc into paths (Soma, Dendrites, Axon, etc..).
+
     Parameters
     ----------
     G : networkx Graph object.
-    
+
     Returns
     -------
     df_paths: pandas.DataFrame
         A DataFrame with columns ['type', 'path', 'radius', 'n_index']
-        * the first row (df.iloc[0]) is soma. 
+        * the first row (df.iloc[0]) is soma.
         * the first point of each path should be the branch point.
-    """ 
+    """
 
     path_idx_dict = graph_to_path(G)
-    
+
     path_dict = {}
     type_dict = {}
     radius_dict = {}
@@ -137,23 +137,23 @@ def get_df_paths(G):
         path_dict[key] = np.vstack([G.node[key]['pos'] for key in path_idx_dict[key]])
         type_dict[key] = np.vstack([G.node[key]['type'] for key in path_idx_dict[key]])[1][0]
         radius_dict[key] = np.vstack([G.node[key]['radius'] for key in path_idx_dict[key]])
-    
+
     type_dict[0] = G.node[1]['type']
     path_dict[0] = G.node[1]['pos'].reshape(1,3)
     radius_dict[0] = [G.node[1]['radius']]
     path_idx_dict[0] = [1]
-    
-    
+
+
     df_paths = pd.DataFrame()
     df_paths['type'] = pd.Series(type_dict)
     df_paths['path'] = pd.Series(path_dict)
     df_paths['radius'] = pd.Series(radius_dict)
     df_paths['n_index'] = pd.Series(path_idx_dict)
-    
+
     return df_paths
 
 def swc_to_linestack(df_swc, voxelsize=None):
-    
+
     """
     Convert SWC to Line Stack (from real length to voxel coordinates).
     :param df_swc:
@@ -171,17 +171,17 @@ def swc_to_linestack(df_swc, voxelsize=None):
         # coords = np.round(coords / voxelsize).astype(int) # not able to handle the soma-centered swc.
         logging.debug('  Real length coordindates are converted back to pixel.')
         coords = coords - coords.min(0)
-        coords = np.round(coords / voxelsize).astype(int)   
+        coords = np.round(coords / voxelsize).astype(int)
 
     imagesize = coords.max(0) + 1
     logging.debug('  Start: Creating linestack...')
     linestack = np.zeros(imagesize)
     for c in coords:
         linestack[tuple(c)] = 1
-    
+
     reset_neg = coords.min(0)
     reset_neg[reset_neg > 0] = 0
-    
+
     xyz = (coords - reset_neg).max(0) + 1
     xy = max(xyz[:2])
     xy = np.ceil(xy/100) * 100
@@ -191,10 +191,10 @@ def swc_to_linestack(df_swc, voxelsize=None):
     padding_cp = np.ceil((np.array([xy, xy, z]) - linestack.shape) / 2).astype(int)
     padding_x = padding_cp.copy()
     padding_y = padding_cp.copy()
-    
+
     odd = np.array(linestack.shape) % 2 == 1
     padding_y[odd] = padding_y[odd] - 1
-    
+
     padding = np.vstack([padding_x, padding_y]).T
 
     npad = ((padding[0]), (padding[1]), (padding[2]))
@@ -202,7 +202,7 @@ def swc_to_linestack(df_swc, voxelsize=None):
     soma_on_stack = coords[0] + padding_x
 
     logging.debug('  Finished.\n')
-    
+
     return linestack, soma_on_stack, padding_x
 
 
@@ -225,37 +225,37 @@ def find_connection(all_paths, soma, path_id, paths_to_ignore=[]):
     :param paths_to_ignore:
     :return:
     """
-    
+
     current_path = all_paths[path_id]
-    
-    
+
+
     if connect_to_soma(current_path, soma):
 
         connect_to = -1
         connect_to_at = soma
-        
+
         return connect_to, connect_to_at
-        
+
     sub_paths = deepcopy(all_paths)
     sub_paths.pop(path_id)
-    
+
     for key in sub_paths.keys():
-        
-        
+
+
         if key in paths_to_ignore: continue
-        
+
         target_path = sub_paths[key]
-        connect_to_at_loc = np.where((current_path[0] == target_path).all(1))[0] 
-        
+        connect_to_at_loc = np.where((current_path[0] == target_path).all(1))[0]
+
         if len(connect_to_at_loc) != 0:
             connect_to = key
             connect_to_at = target_path[connect_to_at_loc[0]]
             return connect_to, connect_to_at
-    
+
     logging.info("Path {} connects to no other path. Try fix it.".format(path_id))
-    connect_to = -99 
+    connect_to = -99
     connect_to_at = np.nan
-    
+
     return connect_to, connect_to_at
 
 def back2soma(df_paths, path_id):
@@ -267,11 +267,11 @@ def back2soma(df_paths, path_id):
     """
 
     path_id_original = path_id
-    
+
     paths_to_soma = []
-    
+
     counter = 0
-        
+
     while df_paths.loc[path_id].connect_to != -1:
         if path_id in paths_to_soma:
             # logging.info("\tPath {} cannot trace back to soma: {}".format(path_id_original, paths_to_soma))
@@ -279,12 +279,12 @@ def back2soma(df_paths, path_id):
             break
         else:
             paths_to_soma.append(path_id)
-            path_id = df_paths.loc[path_id].connect_to   
+            path_id = df_paths.loc[path_id].connect_to
 
         if path_id == -99:
             break
 
-    paths_to_soma.append(path_id)  
+    paths_to_soma.append(path_id)
 
     return paths_to_soma
 
@@ -301,7 +301,7 @@ def check_path_connection(df_paths):
     """
 
     soma = df_paths[df_paths.type == 1]['path'][0]
-    
+
     logging.debug(soma)
 
     all_paths = df_paths.path.to_dict()
@@ -315,7 +315,7 @@ def check_path_connection(df_paths):
     df_paths['connect_to'] = pd.Series(connect_to_dict)
     df_paths['connect_to_at'] = pd.Series(connect_to_at_dict)
 
-    # find all paths connect to current path.  
+    # find all paths connect to current path.
     connected_by_dict = {}
     connected_by_at_dict = {}
     for path_id in all_keys:
@@ -332,7 +332,7 @@ def check_path_connection(df_paths):
     back_to_soma_dict = {}
     for path_id in all_keys:
         back_to_soma_dict[path_id] = back2soma(df_paths, path_id)
-    
+
         # logging.info('  All paths can be traced back to soma. It is a single tree.')
 
     df_paths['back_to_soma'] = pd.Series(back_to_soma_dict)
@@ -353,22 +353,22 @@ def get_path_statistics(df_paths):
     =======
     a updated df_paths
     """
-    
+
     logging.info('  Calculating path statistics (e.g. real length, branching order...)')
 
     df_paths = df_paths.copy()
 
     all_keys = df_paths.index
-    
+
     real_length_dict = {}
     euclidean_length_dict = {}
     back_to_soma_dict = {}
     branch_order_dict = {}
-    
+
     for path_id in all_keys:
-        
+
         path = df_paths.loc[path_id].path
-        
+
         real_length_dict[path_id] = get_path_real_length(path)
         euclidean_length_dict[path_id] = get_path_euclidean_length(path)
         branch_order_dict[path_id] = len(df_paths.loc[path_id].back_to_soma) - 1
@@ -376,7 +376,7 @@ def get_path_statistics(df_paths):
     df_paths['real_length'] = pd.Series(real_length_dict)
     df_paths['euclidean_length'] = pd.Series(euclidean_length_dict)
     df_paths['branch_order'] = pd.Series(branch_order_dict)
-    
+
     return df_paths
 
 
@@ -425,13 +425,13 @@ def get_path_on_stack(df_paths, voxelsize, coordinate_padding):
 
     coords = np.vstack(df_paths.path)
     reset_neg = coords.min(0)
-    reset_neg[reset_neg > 0] = 3 
-    
+    reset_neg[reset_neg > 0] = 3
+
     for path_id in all_keys:
 
         path = path_dict[path_id]
         path = path - reset_neg
-        path = np.round(path / voxelsize).astype(int)    
+        path = np.round(path / voxelsize).astype(int)
 
         path_stack_dict[path_id] = path + coordinate_padding
 
@@ -440,8 +440,5 @@ def get_path_on_stack(df_paths, voxelsize, coordinate_padding):
     cols = list(df_paths.columns)
     cols.remove('path_stack')
     cols.insert(1, 'path_stack')
-    
+
     return df_paths[cols]
-
-
-
