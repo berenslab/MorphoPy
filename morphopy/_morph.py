@@ -17,16 +17,16 @@ class Morph(object):
         df_paths, related information (connection, path length, branch order etc.) are calculated. Other meta data are
         also saved into Morph Object. If voxelszie is provided, a linestack is constructed and dendritic tree density
         is computed.
-        
+
         Parameters
         ----------
         data: str
             path to the `.swc` file.
         voxelsize: list or array-like
-            specify the voxel separation. e.g. [0.665, 0.665, 1]. 
+            specify the voxel separation. e.g. [0.665, 0.665, 1].
             If provided, linestack is reconstructed and dendritic tree density map will be computed.
         loglevel: str
-            'debug', 'info', 'warning', 'error', 'critical'.     
+            'debug', 'info', 'warning', 'error', 'critical'.
         """
 
         # logging
@@ -35,7 +35,7 @@ class Morph(object):
         # meta data
         self.unit = 'um'
         self.voxelsize = voxelsize
-        
+
         logging.info('  SWC file: {}\n'.format(data))
         logging.info('  unit: {}'.format(self.unit))
         logging.info('  voxel size: {}\n'.format(self.voxelsize))
@@ -46,7 +46,7 @@ class Morph(object):
         # check data
         logging.info('  ===================  ')
         logging.info('  Checking `.swc`...   \n')
-        
+
         check_swc(df_swc)
 
         # split swc into soma, dendrites, axon, etc..
@@ -61,8 +61,8 @@ class Morph(object):
         """
         Further processing df_paths and get statistics info such as path lengths, branching order into DataFrame.
 
-        Linestack is reconstructed if needed data is given (voxel size of the original image). 
-        Then dendritic density is calculated based on linestack.  
+        Linestack is reconstructed if needed data is given (voxel size of the original image).
+        Then dendritic density is calculated based on linestack.
         """
 
         self.df_paths = get_path_statistics(self.df_paths)
@@ -80,7 +80,7 @@ class Morph(object):
             self.linestack = None
 
     def show_summary(self):
-        
+
         """
         Print out summary statistics of the cell.
 
@@ -92,9 +92,9 @@ class Morph(object):
 
         logging.info('  Summary of the cell')
         logging.info('  ======================\n')
-        
+
         summary = self.summary_data.to_dict()
-        
+
         for n in range(len(summary['type'])):
 
             neurite_type = summary['type'][n]
@@ -147,47 +147,47 @@ class Morph(object):
             logging.info('    Mean: {:.3f}'.format(euclidean_length_mean))
             logging.info('    Median: {:.3f}'.format(euclidean_length_median))
             logging.info('    Min: {:.3f}'.format(euclidean_length_min))
-            logging.info('    Max: {:.3f}\n'.format(euclidean_length_max)) 
-            
+            logging.info('    Max: {:.3f}\n'.format(euclidean_length_max))
+
             logging.info('  ======================\n')
 
     def show_morph(self, view='xy', plot_axon=True, plot_basal_dendrites=True, plot_apical_dendrites=True):
-        
+
         df_paths = self.df_paths.copy()
         fig, ax = plt.subplots(1, 1, figsize=(12,12))
         ax = plot_morph(ax, df_paths, view, plot_axon, plot_basal_dendrites, plot_apical_dendrites)
 
         return fig, ax
-    
+
     def show_threeviews(self, plot_axon=True, plot_basal_dendrites=True, plot_apical_dendrites=True):
-        
+
         df_paths = self.df_paths.copy()
-        
+
         fig, ax = plt.subplots(1, 3, figsize=(18,6))
-        
+
         ax0 = plot_morph(ax[0], df_paths, 'xy', plot_axon, plot_basal_dendrites, plot_apical_dendrites)
         ax1 = plot_morph(ax[1], df_paths, 'xz', plot_axon, plot_basal_dendrites, plot_apical_dendrites)
         ax2 = plot_morph(ax[2], df_paths, 'yz', plot_axon, plot_basal_dendrites, plot_apical_dendrites)
-    
+
     def show_animation(self):
-        
+
         from mpl_toolkits.mplot3d import Axes3D
         import matplotlib.animation as animation
         from IPython.display import HTML
-        
+
         df_paths = self.df_paths.copy()
-        
+
         soma = df_paths[df_paths.type == 1].path[0][0]
         axon = df_paths[df_paths.type == 2]
         basal_dendrites = df_paths[df_paths.type == 3]
-        apical_dendrites = df_paths[df_paths.type == 4] 
-            
+        apical_dendrites = df_paths[df_paths.type == 4]
+
         fig = plt.figure(figsize=(12,12))
         ax = fig.add_subplot(111, projection='3d')
 
         def init():
 
-            # soma            
+            # soma
             ax.scatter(0,0,0, s=280, color='grey')
 
             # basal dendrites
@@ -201,7 +201,7 @@ class Morph(object):
                     path_id = row[0]
                     path = row[1]['path'] - soma
                     order = row[1]['branch_order']
-                    bpt = path[0]     
+                    bpt = path[0]
 
                     ax.plot(path[:, 0], path[:, 1], path[:, 2], color=bdcolors[int(order)])
                     ax.scatter(bpt[0], bpt[1], bpt[2], color=bdcolors[int(order)], zorder=1)
@@ -216,7 +216,7 @@ class Morph(object):
                     path_id = row[0]
                     path = row[1]['path'] - soma
                     order = row[1]['branch_order']
-                    bpt = path[0]     
+                    bpt = path[0]
 
                     ax.plot(path[:, 0], path[:, 1], path[:, 2], color=adcolors[int(order)])
                     ax.scatter(bpt[0], bpt[1], bpt[2], color=adcolors[int(order)], zorder=1)
@@ -231,7 +231,7 @@ class Morph(object):
                     path_id = row[0]
                     path = row[1]['path'] - soma
                     order = row[1]['branch_order']
-                    bpt = path[0]     
+                    bpt = path[0]
 
                     ax.plot(path[:, 0], path[:, 1], path[:, 2], color=acolors[int(order)])
                     ax.scatter(bpt[0], bpt[1], bpt[2], color=acolors[int(order)], zorder=1)
@@ -243,22 +243,22 @@ class Morph(object):
 
             ax.set_xlim(-lim, lim)
             ax.set_ylim(-lim, lim)
-            ax.set_zlim(-lim, lim) 
-            
+            ax.set_zlim(-lim, lim)
+
             return fig,
-        
+
         def animate(i):
             # azimuth angle : 0 deg to 360 deg
             ax.view_init(elev=10, azim=i*4)
             return fig,
-        
+
         logging.info('  Generating animation. It might take some time...')
 
         ani = animation.FuncAnimation(fig, animate, init_func=init,
                                    frames=90, interval=150, blit=True)
-        
+
         plt.close()
-        
+
         return HTML(ani.to_html5_video())
 
     # def show_threeviews(self, save_to=None):
@@ -280,7 +280,7 @@ class Morph(object):
     #     ax1 = plt.subplot2grid((4,4), (0,1), rowspan=3, colspan=3)
     #     ax2 = plt.subplot2grid((4,4), (0,0), rowspan=3, colspan=1)
     #     ax3 = plt.subplot2grid((4,4), (3,1), rowspan=1, colspan=3)
-    #     ax4 = plt.subplot2grid((4,4), (3,0), rowspan=1, colspan=1)  
+    #     ax4 = plt.subplot2grid((4,4), (3,0), rowspan=1, colspan=1)
 
     #     df_paths = self.df_paths
     #     dendrites = df_paths[df_paths.type != 1]
@@ -292,13 +292,13 @@ class Morph(object):
     #     plot_skeleton(ax3, dendrites, soma, 1, 2, lims)
     #     plot_skeleton(ax1, dendrites, soma, 1, 0, lims)
     #     scalebar = ScaleBar(1, units=self.unit, location='lower left', box_alpha=0)
-    #     ax1.add_artist(scalebar)    
+    #     ax1.add_artist(scalebar)
     #     ax4.axis('off')
 
     #     if save_to is not None:
     #         plt.savefig(save_to)
-    
-    # def show_density(self): 
+
+    # def show_density(self):
 
     #     """
     #     Plot cell morphology on dendritic density map.
@@ -310,27 +310,27 @@ class Morph(object):
     #     except:
     #         logging.info('No density stack. Please provide the voxel sizes of the `.swc` file.')
     #         return None
-        
+
     #     import matplotlib.pyplot as plt
     #     from matplotlib_scalebar.scalebar import ScaleBar
 
     #     linestack = self.linestack
     #     dendritic_center = self.dendritic_center
     #     soma_on_stack = self.soma_on_stack
-        
+
     #     plt.figure(figsize=(16, 16))
     #     plt.imshow(density_stack.sum(2), cmap=plt.cm.gnuplot2_r, origin='lower')
     #     plt.scatter(dendritic_center[1], dendritic_center[0], color='g', marker='*', s=180, label='Dendritic Center')
     #     plt.scatter(soma_on_stack[1], soma_on_stack[0], color='r',  marker='*', s=180, label='Soma')
-        
+
     #     linestack_xy = linestack.sum(2)
     #     linestack_xy[linestack_xy !=0] = 1
     #     linestack_xy = np.ma.masked_array(linestack_xy, ~linestack.any(2))
     #     plt.imshow(linestack_xy, origin='lower', cmap=plt.cm.binary)
-        
+
     #     plt.legend(frameon=False)
 
     #     scalebar = ScaleBar(voxelsize[0], units=self.unit, location='lower left', box_alpha=0)
-    #     plt.gca().add_artist(scalebar)   
-        
+    #     plt.gca().add_artist(scalebar)
+
     #     plt.axis('off')
