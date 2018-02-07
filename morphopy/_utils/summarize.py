@@ -239,7 +239,7 @@ def get_average_angles(df_paths):
 def get_summary_of_type(df_paths):
 
     """
-    A helper function to gether all summarized infomation
+    A helper function to gather all summarized infomation
 
     Parameters
     ----------
@@ -368,6 +368,7 @@ def get_summary_data(df_paths):
     df_summary = pd.DataFrame.from_records([n for n in neurites if n is not None], columns=labels)
 
     return df_summary
+    
 
 # def pretty_log(df_summary, type):
 
