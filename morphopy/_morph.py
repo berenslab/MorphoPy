@@ -66,8 +66,8 @@ class Morph(object):
         """
 
         self.df_paths = get_path_statistics(self.df_paths)
-        self.summary_data = get_summary_data(self.df_paths)
-        self.density_data, self.density_maps = get_density_data(self.df_paths)
+        self.df_summary = get_summary_data(self.df_paths)
+        self.df_density, self.density_maps = get_density_data(self.df_paths)
 
 
     def show_summary(self):
@@ -84,8 +84,8 @@ class Morph(object):
         logging.info('  Summary of the cell')
         logging.info('  ======================\n')
 
-        summary = self.summary_data.to_dict()
-        density = self.density_data.to_dict()
+        summary = self.df_summary.to_dict()
+        density = self.df_density.to_dict()
 
         for n in range(len(summary['type'])):
 
