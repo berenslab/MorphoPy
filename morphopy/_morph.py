@@ -4,7 +4,7 @@ from ._utils.utils import *
 from ._utils.check import *
 from ._utils.visualize import *
 from ._utils.summarize import *
-
+from ._utils.representation import get_persistence_barcode
 
 __all__ = ['Morph']
 
@@ -16,6 +16,7 @@ class Morph(object):
         Initialize Morph object. Load swc as Pandas DataFrame (df_swc). Split all paths on branch point and save as
         df_paths, related information (connection, path length, branch order etc.) are calculated. Other meta data are
         also saved into Morph Object.
+
 
         Parameters
         ----------
@@ -50,6 +51,8 @@ class Morph(object):
 
         self.df_swc = df_swc
         self.df_paths = df_paths
+        self.G = G
+        self.df_persistence_barcode = None
 
     def processing(self):
 
@@ -205,6 +208,9 @@ class Morph(object):
 
         if save_fig is not None:
             fig.savefig(save_fig + '{}.png'.format(self.filename))
+        
+        return fig, [ax0, ax1, ax2]
+
 
     def show_animation(self):
         """
@@ -300,3 +306,42 @@ class Morph(object):
         plt.close()
 
         return HTML(ani.to_html5_video())
+
+    def show_persistence_diagram(self, axon=True, basal_dendrites=True, apical_dendrites=True):
+        """
+        Plots the persistence diagram of the neuron. Persistence is a concept from topology that defines invariant
+        structures. Its clearer definition can be found in
+         - S. Chepushtanova, T. Emerson, E.M. Hanson, M. Kirby, F.C. Motta, R. Neville, C. Peterson, P.D. Shipman, and
+           L. Ziegelmeier. Persistence images: An alternative persistent homology representation. CoRR, abs/1507.06217, 2015.
+         - 	arXiv:1603.08432
+         - Li, Yanjie, et al.
+        "Metrics for comparing neuronal tree shapes based on persistent homology." PloS one 12.8 (2017): e0182184.
+
+
+        :param axon: boolean (default True). When set to False the axonal branches are excluded.
+        :param basal_dendrites: boolean (default True). When set to False the basal dendritic branches are excluded.
+        :param apical_dendrites: boolean (default True). When set to False the apical dendritic branches are excluded.
+        :return: fig, ax
+        """
+
+        if self.df_persistence_barcode is None:
+            self.df_persistence_barcode = get_persistence_barcode(self.G)
+
+        index = (self.df_persistence_barcode.type == 1)
+
+        if axon:
+            index |= self.df_persistence_barcode.type == 2
+        if basal_dendrites:
+            index |= self.df_persistence_barcode.type == 3
+        if apical_dendrites:
+            index |= self.df_persistence_barcode.type == 4
+
+        plotting_data = self.df_persistence_barcode[index]
+
+        fig, ax = plt.subplots(1, 3, figsize=(12, 4))
+
+        plot_persistence_diagram(plotting_data, ax[0])
+        plot_persistence_image_2d(plotting_data, ax[1])
+        plot_persistence_image_1d(plotting_data, ax[2])
+
+        return fig, ax
