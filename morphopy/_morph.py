@@ -10,21 +10,18 @@ __all__ = ['Morph']
 
 class Morph(object):
 
-    def __init__(self, data, voxelsize=None, loglevel='info'):
+    def __init__(self, data, loglevel='info'):
 
         """
         Initialize Morph object. Load swc as Pandas DataFrame (df_swc). Split all paths on branch point and save as
         df_paths, related information (connection, path length, branch order etc.) are calculated. Other meta data are
-        also saved into Morph Object. If voxelsize is provided, a linestack is constructed and dendritic tree density
-        is computed.
+        also saved into Morph Object.
+
 
         Parameters
         ----------
         data: str
             path to the `.swc` file.
-        voxelsize: list or array-like
-            specify the voxel separation. e.g. [0.665, 0.665, 1].
-            If provided, linestack is reconstructed and dendritic tree density map will be computed.
         loglevel: str
             'debug', 'info', 'warning', 'error', 'critical'.
         """
@@ -34,11 +31,10 @@ class Morph(object):
 
         # meta data
         self.unit = 'um'
-        self.voxelsize = voxelsize
+        self.filename = data.split('/')[-1]
 
         logging.info('  SWC file: {}\n'.format(data))
         logging.info('  unit: {}'.format(self.unit))
-        logging.info('  voxel size: {}\n'.format(self.voxelsize))
 
         # load data
         G, df_swc = read_swc(data)
@@ -62,24 +58,13 @@ class Morph(object):
 
         """
         Further processing df_paths and get statistics info such as path lengths, branching order into DataFrame.
-
-        Linestack is reconstructed if needed data is given (voxel size of the original image).
-        Then dendritic density is calculated based on linestack.
+        A summary of all single value morph statistics is calculatd. 
         """
 
         self.df_paths = get_path_statistics(self.df_paths)
-        self.summary_data = get_summary_data(self.df_paths)
+        self.df_summary = get_summary_data(self.df_paths)
+        self.df_density, self.density_maps = get_density_data(self.df_paths)
 
-        # reconstruct linestack from swc.
-
-        linestack_output = swc_to_linestack(self.df_swc, self.voxelsize)
-
-        if linestack_output is not None:
-            self.linestack, self.soma_on_stack, self.coordindate_padding = linestack_output
-            self.df_paths = get_path_on_stack(self.df_paths, self.voxelsize, self.coordindate_padding)
-            self.density_stack, self.dendritic_center = calculate_density(self.linestack, self.voxelsize)
-        else:
-            self.linestack = None
 
     def show_summary(self):
 
@@ -95,7 +80,8 @@ class Morph(object):
         logging.info('  Summary of the cell')
         logging.info('  ======================\n')
 
-        summary = self.summary_data.to_dict()
+        summary = self.df_summary.to_dict()
+        density = self.df_density.to_dict()
 
         for n in range(len(summary['type'])):
 
@@ -120,12 +106,24 @@ class Morph(object):
             euclidean_length_min = summary['euclidean_length_min'][n]
             euclidean_length_max = summary['euclidean_length_max'][n]
 
+
+
             logging.info('  {}\n'.format(neurite_type).upper())
             logging.info('    Number of arbor segments: {}'.format(num_path_segments))
             logging.info('    Number of branch points: {}'.format(num_branchpoints))
             logging.info('    Number of irreducible nodes: {}'.format(num_irreducible_nodes))
             logging.info('    Max branching order: {}\n'.format(max_branch_order))
-            # logging.info('    Max Strahler order: {}\n\n'.format(max_strahler_order))
+
+            if density is not None:
+
+                asymmetry = density['asymmetry'][n]
+                radius = density['radius'][n]
+                fieldsize = density['size'][n]
+
+                logging.info('    Asymmetry: {:.3f}'.format(asymmetry))
+                logging.info('    Radius: {:.3f}'.format(radius))
+                logging.info('    Field Area: {:.3f} ×10\u00b3 um\u00b2\n'.format(fieldsize / 1000))
+
 
             logging.info('  ## Angle \n')
             logging.info('    Average nodal angle in degree: {:.3f}'.format(average_nodal_angle_deg))
@@ -136,7 +134,7 @@ class Morph(object):
             logging.info('  ## Average tortuosity: {:.3f}\n'.format(average_tortuosity))
 
             logging.info('  ## Real length (μm)\n')
-            # logging.info('  ## Dendritic length\n')
+
             logging.info('    Sum: {:.3f}'.format(real_length_sum))
             logging.info('    Mean: {:.3f}'.format(real_length_mean))
             logging.info('    Median: {:.3f}'.format(real_length_median))
@@ -153,15 +151,52 @@ class Morph(object):
 
             logging.info('  ======================\n')
 
-    def show_morph(self, view='xy', plot_axon=True, plot_basal_dendrites=True, plot_apical_dendrites=True):
+
+    ##################
+    #### Plotting ####
+    ##################
+
+    def show_morph(self, view='xy', plot_axon=True, plot_basal_dendrites=True, plot_apical_dendrites=True, save_fig=None):
+
+        """
+        Plot cell morphology in one view.
+
+        Parameters
+        ----------
+        view: str
+            * top view: 'xy'
+            * front view: 'xz'
+            * side view: 'yz'
+        plot_axon: bool
+        plot_basal_dendrites: bool
+        plot_apical_dendrites: bool
+        save_fig: str or None
+            If None, no figure is saved. 
+            Otherwiese, figure is saved to the specified path.
+        """
 
         df_paths = self.df_paths.copy()
         fig, ax = plt.subplots(1, 1, figsize=(12,12))
         ax = plot_morph(ax, df_paths, view, plot_axon, plot_basal_dendrites, plot_apical_dendrites)
 
+        if save_fig:
+            fig.savefig(save_fig + '/{}.png'.format(self.filename))
+
         return fig, ax
 
-    def show_threeviews(self, plot_axon=True, plot_basal_dendrites=True, plot_apical_dendrites=True):
+    def show_threeviews(self, plot_axon=True, plot_basal_dendrites=True, plot_apical_dendrites=True, save_fig=None):
+        """
+        Plot cell morphology in three views.
+
+        Parameters
+        ----------
+        plot_axon: bool
+        plot_basal_dendrites: bool
+        plot_apical_dendrites: bool
+        save_fig: str or None
+            If None, no figure is saved. 
+            Otherwiese, figure is saved to the specified path.
+        """
 
         df_paths = self.df_paths.copy()
 
@@ -171,9 +206,16 @@ class Morph(object):
         ax1 = plot_morph(ax[1], df_paths, 'xz', plot_axon, plot_basal_dendrites, plot_apical_dendrites)
         ax2 = plot_morph(ax[2], df_paths, 'yz', plot_axon, plot_basal_dendrites, plot_apical_dendrites)
 
+        if save_fig is not None:
+            fig.savefig(save_fig + '{}.png'.format(self.filename))
+        
         return fig, [ax0, ax1, ax2]
 
+
     def show_animation(self):
+        """
+        Show cell morphology in 3D vedio. Only works in Jupyter notebook.
+        """
 
         from mpl_toolkits.mplot3d import Axes3D
         import matplotlib.animation as animation
@@ -270,7 +312,7 @@ class Morph(object):
         Plots the persistence diagram of the neuron. Persistence is a concept from topology that defines invariant
         structures. Its clearer definition can be found in
          - S. Chepushtanova, T. Emerson, E.M. Hanson, M. Kirby, F.C. Motta, R. Neville, C. Peterson, P.D. Shipman, and
-L. Ziegelmeier. Persistence images: An alternative persistent homology representation. CoRR, abs/1507.06217, 2015.
+           L. Ziegelmeier. Persistence images: An alternative persistent homology representation. CoRR, abs/1507.06217, 2015.
          - 	arXiv:1603.08432
          - Li, Yanjie, et al.
         "Metrics for comparing neuronal tree shapes based on persistent homology." PloS one 12.8 (2017): e0182184.
@@ -303,5 +345,3 @@ L. Ziegelmeier. Persistence images: An alternative persistent homology represent
         plot_persistence_image_1d(plotting_data, ax[2])
 
         return fig, ax
-
-

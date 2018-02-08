@@ -201,30 +201,27 @@ def get_average_angles(df_paths):
     n = 0
     for i in np.unique(df_paths.connect_to):
 
-        if i == -1:
-            continue
-
         path_ids = df_paths[df_paths.connect_to == i].index.tolist()
 
-        logging.debug('i: {}'.format(i))
+        if len(path_ids) >= 2:
 
-        if len(path_ids) == 2:
+            from itertools import combinations
+            path_id_combs = combinations(path_ids, 2)
+            
+            for path_id_pair in path_id_combs:
 
-            p0 = df_paths.loc[path_ids[0]].path
-            p1 = df_paths.loc[path_ids[1]].path
+                p0 = df_paths.loc[path_id_pair[0]].path
+                p1 = df_paths.loc[path_id_pair[1]].path
 
-            # logging.debug('p0: {}'.format(p0))
-            # logging.debug('p1: {}'.format(p1))
+                v00 = get_remote_vector(p0)
+                v01 = get_remote_vector(p1)
+                nodal_angles_rad[n], nodal_angles_deg[n] = get_angle(v00, v01)
 
-            v00 = get_remote_vector(p0)
-            v01 = get_remote_vector(p1)
-            nodal_angles_rad[n], nodal_angles_deg[n] = get_angle(v00, v01)
+                v10 = get_local_vector(p0)
+                v11 = get_local_vector(p1)
+                local_angles_rad[n], local_angles_deg[n] = get_angle(v10, v11)
 
-            v10 = get_local_vector(p0)
-            v11 = get_local_vector(p1)
-            local_angles_rad[n], local_angles_deg[n] = get_angle(v10, v11)
-
-            n+=1
+                n+=1
         else:
             continue
 
@@ -239,7 +236,7 @@ def get_average_angles(df_paths):
 def get_summary_of_type(df_paths):
 
     """
-    A helper function to gether all summarized infomation
+    A helper function to gather all summarized infomation
 
     Parameters
     ----------
@@ -368,6 +365,7 @@ def get_summary_data(df_paths):
     df_summary = pd.DataFrame.from_records([n for n in neurites if n is not None], columns=labels)
 
     return df_summary
+    
 
 # def pretty_log(df_summary, type):
 

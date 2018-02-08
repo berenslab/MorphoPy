@@ -11,7 +11,8 @@ def check_soma(types):
         logging.info('\tYes\n')
         return True
     else:
-        logging.info('\tNo\n')
+        logging.info('\tNo. The first point in .swc file is used as soma.')
+        logging.info('\tThis is not always accurate, please check the file.\n')
         return False
 
 def check_axon(types):

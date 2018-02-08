@@ -88,11 +88,28 @@ def read_swc(filepath):
 
 def graph_to_path(G):
 
+    """
+    Turning graph into vectors for paths
+
+    Parameters
+    ----------
+    G: nx.Graph()
+        the graph representation of the cell morphology
+
+    Returns
+    -------
+    path_all: dict
+        a dict holding all paths, 
+        which is the segment between two branchpoitns. 
+    """
+
     edges_all = G.edge
     nodes_all = np.array(list(G.node.keys()))
 
     num_branch = np.array(list(G.out_degree().values()))
     branchpoints = nodes_all[np.logical_and(num_branch != 1, num_branch !=0)]
+    if 1 not in branchpoints:
+        branchpoints = np.hstack([1, branchpoints])
 
     path_all = {}
     i = 1
@@ -151,60 +168,6 @@ def get_df_paths(G):
     df_paths['n_index'] = pd.Series(path_idx_dict)
 
     return df_paths
-
-def swc_to_linestack(df_swc, voxelsize=None):
-
-    """
-    Convert SWC to Line Stack (from real length to voxel coordinates).
-    :param df_swc:
-    :param unit:
-    :param voxelsize:
-    :return:
-    """
-
-    coords = df_swc[['x', 'y', 'z']].as_matrix()
-
-    if voxelsize is None:
-        logging.debug('  Not able to build linestack from real length coordinates.')
-        return None
-    else:
-        # coords = np.round(coords / voxelsize).astype(int) # not able to handle the soma-centered swc.
-        logging.debug('  Real length coordindates are converted back to pixel.')
-        coords = coords - coords.min(0)
-        coords = np.round(coords / voxelsize).astype(int)
-
-    imagesize = coords.max(0) + 1
-    logging.debug('  Start: Creating linestack...')
-    linestack = np.zeros(imagesize)
-    for c in coords:
-        linestack[tuple(c)] = 1
-
-    reset_neg = coords.min(0)
-    reset_neg[reset_neg > 0] = 0
-
-    xyz = (coords - reset_neg).max(0) + 1
-    xy = max(xyz[:2])
-    xy = np.ceil(xy/100) * 100
-    z = xyz[2]
-    z = np.ceil(z / 10) * 10
-    logging.debug("{}, {}".format([xy, xy, z], linestack.shape))
-    padding_cp = np.ceil((np.array([xy, xy, z]) - linestack.shape) / 2).astype(int)
-    padding_x = padding_cp.copy()
-    padding_y = padding_cp.copy()
-
-    odd = np.array(linestack.shape) % 2 == 1
-    padding_y[odd] = padding_y[odd] - 1
-
-    padding = np.vstack([padding_x, padding_y]).T
-
-    npad = ((padding[0]), (padding[1]), (padding[2]))
-    linestack = np.pad(linestack, pad_width=npad, mode='constant')
-    soma_on_stack = coords[0] + padding_x
-
-    logging.debug('  Finished.\n')
-
-    return linestack, soma_on_stack, padding_x
-
 
 def connect_to_soma(current_path, soma):
     """
@@ -379,66 +342,107 @@ def get_path_statistics(df_paths):
 
     return df_paths
 
+def get_density_data_of_type(neurites, soma):
 
-
-def calculate_density(linestack, voxelsize):
     """
-    reference: A. Stepanyantsa & D.B. Chklovskiib (2005). Neurogeometry and potential synaptic connectivity. Trends in Neuroscience.
-    :param linestack:
-    :param voxelsize:
-    :return:
+    A helper function to gether all summarized infomation
+
+    Parameters
+    ----------
+    neurites: pandas.DataFrame
+    soma: pandas.DataFrame
+
+    Returns
+    -------
+    result tuple: 
+        (type, asymmetry, neurites_radius, neurites_size)
+
+    Z: numpy.array
+        the density map of neurites, a (100, 100) matrix
+        
+    """
+    
+    if len(neurites) < 2:
+        return None, None
+    
+    import cv2
+    from scipy.stats import gaussian_kde
+    from scipy.spatial import ConvexHull
+    from scipy.ndimage.measurements import center_of_mass
+    
+    soma_coords = soma.path.as_matrix()[0].flatten()
+    xy = (np.vstack(neurites.path)[:, :2] - soma_coords[:2]).T
+    kernel = gaussian_kde(xy, bw_method='silverman')
+
+    lim_max = int(np.ceil((xy.T).max() / 20) * 20)
+    lim_min = int(np.floor((xy.T).min() / 20) * 20)
+    lim = max(abs(lim_max), abs(lim_min))
+    X, Y = np.mgrid[-lim:lim:100j, -lim:lim:100j]
+    positions = np.vstack([X.ravel(), Y.ravel()])
+
+    Z = np.flipud(np.rot90(np.reshape(kernel(positions).T, X.shape)))
+
+    density_center = np.array(center_of_mass(Z))
+    density_center = density_center * (2 * lim) / Z.shape[0] - lim
+    
+    asymmetry = np.sqrt(np.sum(density_center ** 2))
+
+    hull = ConvexHull(xy.T)
+    outer_terminals = xy.T[hull.vertices]
+    outer_terminals = np.vstack([outer_terminals, outer_terminals[0]])
+    neurites_radius = np.mean(np.sqrt(np.sum((outer_terminals - density_center)**2, 1)))
+    neurites_size = cv2.contourArea(outer_terminals.astype(np.float32))
+
+    if neurites.iloc[0].type == 2:
+        t = 'axon'
+    elif neurites.iloc[0].type == 3:
+        t = 'basal_dendrites'
+    elif neurites.iloc[0].type == 4:
+        t = 'apical_dendrites'
+    else:
+        t = 'undefined'
+
+    return (t, asymmetry, neurites_radius, neurites_size), Z
+
+def get_density_data(df_paths):
+
+    """
+    A helper function to gether all summarized infomation
+
+    Parameters
+    ----------
+    df_paths: pandas.DataFrame
+
+    Returns
+    -------
+    df_density: pandas.DataFrame
+
+    density_maps: numpy.array
+        a (3, 100, 100) matrix, each layer is a density map of one neurites type 
+        (0: axon; 1: basal dendrites; 2: apical dendrites)
+
     """
 
-    import scipy.ndimage as ndimage
+    logging.info('  Calculating density data...')
 
-    logging.debug('  Start: Calculating dendritic density...')
+    df_paths = df_paths.copy()
 
-    smoothed_layer_stack = []
-    for i in range(linestack.shape[2]):
+    soma = df_paths[df_paths.type == 1]
+    axon = df_paths[df_paths.type == 2]
+    dend_basal = df_paths[df_paths.type == 3]
+    dend_apical = df_paths[df_paths.type == 4]
 
-        layer = linestack[:,:,i]
-        smoothed_layer_stack.append(ndimage.gaussian_filter(layer, sigma=25/voxelsize[0], order=0))
+    axon_density_summary, axon_density_map = get_density_data_of_type(axon, soma)
+    dend_basal_density_data, dend_basal_density_map = get_density_data_of_type(dend_basal, soma)
+    dend_apical_density_data, dend_apical_density_map = get_density_data_of_type(dend_apical, soma)
 
-    density_stack = np.dstack(smoothed_layer_stack)
-    center_of_mass = np.array(ndimage.measurements.center_of_mass(density_stack.sum(2)))
+    density_maps = np.zeros([3, 100, 100])
+    density_maps[0] = axon_density_map
+    density_maps[1] = dend_basal_density_map
+    density_maps[2] = dend_apical_density_map
 
-    logging.debug('  Finished. \n')
+    labels = ['type', 'asymmetry', 'radius', 'size']
+    neurites = [axon_density_summary,dend_basal_density_data,dend_apical_density_data]
+    df_density = pd.DataFrame.from_records([n for n in neurites if n is not None], columns=labels)
 
-    return density_stack, center_of_mass
-
-def get_path_on_stack(df_paths, voxelsize, coordinate_padding):
-    """
-
-    :param df_paths:
-    :param voxelsize:
-    :param coordinate_padding:
-    :return:
-    """
-
-    if voxelsize is None:
-        voxelsize = np.array([1,1,1])
-
-    path_dict = df_paths.path.to_dict()
-    path_stack_dict = {}
-
-    all_keys = path_dict.keys()
-
-    coords = np.vstack(df_paths.path)
-    reset_neg = coords.min(0)
-    reset_neg[reset_neg > 0] = 3
-
-    for path_id in all_keys:
-
-        path = path_dict[path_id]
-        path = path - reset_neg
-        path = np.round(path / voxelsize).astype(int)
-
-        path_stack_dict[path_id] = path + coordinate_padding
-
-    df_paths['path_stack'] = pd.Series(path_stack_dict)
-
-    cols = list(df_paths.columns)
-    cols.remove('path_stack')
-    cols.insert(1, 'path_stack')
-
-    return df_paths[cols]
+    return df_density, density_maps
