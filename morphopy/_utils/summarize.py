@@ -201,46 +201,35 @@ def get_average_angles(df_paths):
     n = 0
     for i in np.unique(df_paths.connect_to):
 
-        if i == -1:
-            continue
-
         path_ids = df_paths[df_paths.connect_to == i].index.tolist()
-
-        logging.debug('i: {}'.format(i))
 
         if len(path_ids) >= 2:
 
-            # This is a shitty hack and 
-            # should refactor into something that 
-            # could handle three-ways branching
-            # currently one branch is ignored. 
+            from itertools import combinations
+            path_id_combs = combinations(path_ids, 2)
+            
+            for path_id_pair in path_id_combs:
 
-            p0 = df_paths.loc[path_ids[0]].path
-            p1 = df_paths.loc[path_ids[1]].path
+                p0 = df_paths.loc[path_id_pair[0]].path
+                p1 = df_paths.loc[path_id_pair[1]].path
 
-            v00 = get_remote_vector(p0)
-            v01 = get_remote_vector(p1)
-            nodal_angles_rad[n], nodal_angles_deg[n] = get_angle(v00, v01)
+                v00 = get_remote_vector(p0)
+                v01 = get_remote_vector(p1)
+                nodal_angles_rad[n], nodal_angles_deg[n] = get_angle(v00, v01)
 
-            v10 = get_local_vector(p0)
-            v11 = get_local_vector(p1)
-            local_angles_rad[n], local_angles_deg[n] = get_angle(v10, v11)
+                v10 = get_local_vector(p0)
+                v11 = get_local_vector(p1)
+                local_angles_rad[n], local_angles_deg[n] = get_angle(v10, v11)
 
-            n+=1
+                n+=1
         else:
             continue
 
-    if len(nodal_angles_deg) > 0:
-        average_nodal_angle_deg = np.nanmean(list(nodal_angles_deg.values()))
-        average_nodal_angle_rad = np.nanmean(list(nodal_angles_rad.values()))
-    else:
-        average_nodal_angle_deg, average_nodal_angle_rad = 0, 0
+    average_nodal_angle_deg = np.nanmean(list(nodal_angles_deg.values()))
+    average_nodal_angle_rad = np.nanmean(list(nodal_angles_rad.values()))
 
-    if len(local_angles_deg) > 0:
-        average_local_angle_deg = np.nanmean(list(local_angles_deg.values()))
-        average_local_angle_rad = np.nanmean(list(local_angles_rad.values()))
-    else:
-        average_local_angle_deg, average_local_angle_rad = 0, 0
+    average_local_angle_deg = np.nanmean(list(local_angles_deg.values()))
+    average_local_angle_rad = np.nanmean(list(local_angles_rad.values()))
 
     return average_nodal_angle_deg, average_nodal_angle_rad, average_local_angle_deg, average_local_angle_rad
 
