@@ -83,6 +83,12 @@ def plot_morph(ax, df_paths, view, plot_axon, plot_basal_dendrites, plot_apical_
 
 
 def plot_persistence_diagram(data, ax):
+    """
+    Plots the persistence diagram defined in data as a scatter plot.
+    :param data: pandas.DataFrame holding the persistence data.
+    :param ax: axis for the data to be plotted on.
+    :return: axis ax of the plot
+    """
 
     ax.scatter(data['birth'], data['death'], s=4, c='k', alpha=.4)
     ax.plot([0, np.max(data['birth'])], [0, np.max(data['death'])])
@@ -106,7 +112,8 @@ def plot_persistence_image_1d(data, ax):
         where $K_t(x,x_i)$ denotes a Gaussian kernel centered at $x_i$ with width $t$. Here $t$ is chosen to be $50$ as
         in the original paper.
     :param data: pandas.DataFrame holding the persistence data.
-    :return: figure and axis of the plot
+    :param ax: axis for the data to be plotted on.
+    :return: axis ax of the plot
     """
     steps = 100
     y = np.zeros((steps,))
@@ -127,6 +134,12 @@ def plot_persistence_image_1d(data, ax):
 
 
 def plot_persistence_image_2d(data, ax):
+    """
+    Plots a 2d Gaussian kernel density estimate of the persistence diagram.
+    :param data: pandas.DataFrame holding the persistence data.
+    :param ax: axis for the data to be plotted on.
+    :return: ax
+    """
     sns.kdeplot(data['birth'], data['death'], ax=ax)
     ax.scatter(data['birth'], data['death'], s=4, c='k', alpha=.4)
     ax.set_xlabel('birth [dist from soma in um]')
