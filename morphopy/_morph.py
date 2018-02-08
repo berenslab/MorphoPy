@@ -56,6 +56,7 @@ class Morph(object):
         self.df_swc = df_swc
         self.df_paths = df_paths
         self.G = G
+        self.df_persistence_barcode = None
 
     def processing(self):
 
@@ -170,6 +171,8 @@ class Morph(object):
         ax1 = plot_morph(ax[1], df_paths, 'xz', plot_axon, plot_basal_dendrites, plot_apical_dendrites)
         ax2 = plot_morph(ax[2], df_paths, 'yz', plot_axon, plot_basal_dendrites, plot_apical_dendrites)
 
+        return fig, [ax0, ax1, ax2]
+
     def show_animation(self):
 
         from mpl_toolkits.mplot3d import Axes3D
@@ -262,8 +265,21 @@ class Morph(object):
 
         return HTML(ani.to_html5_video())
 
-    def get_persistence_barcode(self, dist='radDist', axon=True, basal_dendrites=True, apical_dendrites=True):
+    def show_persistence_diagram(self, dist='radDist', axon=True, basal_dendrites=True, apical_dendrites=True):
 
-        return get_persistence_barcode(self.G, dist=dist, axon=axon, basal_dendrites=basal_dendrites,
-                                       apical_dendrites=apical_dendrites)
+        persistence_data = get_persistence_barcode(self.G, dist=dist)
+
+        index = (pd.type == 1)
+
+        if axon:
+            index |= pd.type == 2
+        if basal_dendrites:
+            index |= pd.type == 3
+        if apical_dendrites:
+            index |= pd.type == 4
+
+        plotting_data = persistence_data[index]
+
+        return plot_persistence_diagram(plotting_data)
+
 

@@ -2,29 +2,18 @@
 import copy
 import random
 import numpy as np
-import networkx as nx
-from .graph_utils import get_tips, get_nodes
+import pandas as pd
+
+from .graph_utils import get_tips, get_root
 
 
-def get_persistence_barcode(G, dist='radDist', axon=True, basal_dendrites=True, apical_dendrites=True):
+def get_persistence_barcode(G, dist='radDist'):
 
     if dist == 'radDist':
         f = _radial_dist_to_soma
     else:
         raise NotImplementedError
-
-    nodes = get_nodes(G, type_ix=1)
-    if axon:
-        nodes += get_nodes(G,type_ix=2)
-
-    if basal_dendrites:
-        nodes += get_nodes(G, type_ix=3)
-
-    if apical_dendrites:
-        nodes += get_nodes(G, type_ix=4)
-
-    graph = nx.subgraph(G, nodes)
-    return _get_persistence_barcode(graph, f)
+    return _get_persistence_barcode(G, f)
 
 
 def _get_persistence_barcode(G, f):
@@ -36,14 +25,14 @@ def _get_persistence_barcode(G, f):
 
     :param G: networkx.DiGraph
     :param f: A real-valued function defined over the set of nodes in G.
-    :return: numpy.array(Nx2) persistence bar code, holding the birth time and the death time for each leaf and
-    branch point in G.
+    :return: pandas.DataFrame with entries node_id | type | birth | death . Where birth and death are defined in
+    distance from soma according to the distance function f.
     """
     # Initialization
     L = get_tips(G)
-    R = 1
+    R = get_root(G)
 
-    D = []  # holds persistence barcode
+    D = dict(node_id=[], type=[], birth=[], death=[])   # holds persistence barcode
     v = dict()  # holds 'aging' function of visited nodes defined by f
 
     # active nodes
@@ -61,33 +50,27 @@ def _get_persistence_barcode(G, f):
             # if all children are active
             if all(c in A for c in C):
                 # choose randomly from the oldest children
-                c_m = _get_oldest_children(v, C)
+                age = np.array([v[c] for c in C])
+                indices = np.where(age == age[np.argmax(age)])[0]
+                c_m = C[random.choice(indices)]
 
                 A.append(p)
 
                 for c_i in C:
                     A.remove(c_i)
                     if c_i != c_m:
-                        D.append([v[c_i], f(G, p)])
+                        D['node_id'].append(c_i)
+                        D['type'].append(G.node[c_i]['type'])
+                        D['birth'].append(v[c_i])
+                        D['death'].append(f(G, p))
                 v[p] = v[c_m]
-    D.append([v[R], f(G, R)])
-    return np.array(D)
+    D['node_id'].append(R)
+    D['type'].append(1)
+    D['birth'].append(v[R])
+    D['death'].append(f(G, R))
+    return pd.DataFrame(D)
 
 
-def _radial_dist_to_soma(G,n):
+def _radial_dist_to_soma(G, n):
     root_pos = G.node[1]['pos']
     return np.sqrt(np.dot(G.node[n]['pos'] - root_pos, G.node[n]['pos'] - root_pos))
-
-
-def _get_oldest_children(v, C):
-    """
-
-    :param v: dict
-    :param C: list. Holds the children ids whose values are evaluated.
-    :return: id of oldest child according to dictionary v. If there is no clear maximum the id is chosen randomly across
-    the set of oldest.
-    """
-    age = np.array([v[c] for c in C])
-    indices = np.where(age == age[np.argmax(age)])[0]
-
-    return C[random.choice(indices)]

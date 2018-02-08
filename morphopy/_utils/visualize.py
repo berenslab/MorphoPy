@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
+
 
 def plot_morph(ax, df_paths, view, plot_axon, plot_basal_dendrites, plot_apical_dendrites):
 
@@ -79,69 +81,15 @@ def plot_morph(ax, df_paths, view, plot_axon, plot_basal_dendrites, plot_apical_
 
     return ax
 
-# def find_lims(df_paths):
-#     """
 
-#     :param df_paths:
-#     :return:
-#     """
-#     points = np.vstack(df_paths.path)
-#     maxlims = np.max(points, 0)
-#     minlims = np.min(points, 0)
-#     xylims = np.hstack([maxlims[:2], minlims[:2]])
-#     zlims = np.hstack([maxlims[2], minlims[2]])
-#     if (xylims >= 0).all():
-#         xylims = np.array([0, max(xylims).astype(int) + 30])
-#     else:
-#         xylims = np.array([-max(abs(xylims)).astype(int) - 30, max(abs(xylims)).astype(int) + 30])
+def plot_persistence_diagram(data):
 
-#     if (zlims >= 0).all():
-#         zlims = np.array([-10, max(zlims).astype(int) + 30])
-#     else:
-#         zlims = np.array([-max(abs(zlims)).astype(int) - 30, max(abs(zlims)).astype(int) + 30])
+    fig = plt.figure()
+    ax = fig.gca()
+    ax.scatter(data['birth'], data['death'], s=4, c='k', alpha=.4)
+    ax.plot([0, np.max(data['birth'])], [0, np.max(data['death'])])
+    sns.despine()
+    ax.xlabel('birth [dist from soma in um]')
+    ax.ylabel('death [dist from soma in um]')
 
-#     return xylims, zlims
-
-# def plot_skeleton(ax, df_paths, soma, axis0, axis1, lims):
-#     """
-
-#     :param ax:
-#     :param df_paths:
-#     :param soma:
-#     :param axis0:
-#     :param axis1:
-#     :param lims:
-#     :return:
-#     """
-
-#     colors = plt.cm.viridis.colors
-#     colors_idx = np.linspace(0, 255, max(df_paths.branch_order)+1).astype(int)
-
-#     ax.scatter(soma[axis0], soma[axis1], s=280, color='grey')
-#     for row in df_paths.iterrows():
-
-#         path_id = row[0]
-
-#         path = row[1]['path']
-#         bpt = path[0]
-
-#         order = row[1]['branch_order']
-#         ax.plot(path[:, axis0], path[:, axis1], color=colors[colors_idx[int(order)]])
-#         ax.scatter(bpt[axis0], bpt[axis1], color=colors[colors_idx[int(order)]], zorder=1)
-
-#     xylims, zlim = lims
-
-#     if axis0 == 2 and axis1 == 0: # ax2
-#         ax.set_xlim(zlim[0], zlim[1])
-#         ax.set_ylim(xylims[0], xylims[1])
-
-#     elif axis0 == 1 and axis1 == 2: # ax3
-#         ax.set_xlim(xylims[0], xylims[1])
-#         ax.set_ylim(zlim[0], zlim[1])
-
-
-#     elif axis0 == 1 and axis1 == 0: # ax1
-#         ax.set_xlim(xylims[0], xylims[1])
-#         ax.set_ylim(xylims[0], xylims[1])
-
-#     ax.axis('off')
+    return fig, ax

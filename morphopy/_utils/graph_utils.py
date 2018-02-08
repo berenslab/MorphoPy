@@ -23,6 +23,13 @@ def get_branchpoints(G):
 
 
 def get_nodes(G, type_ix=None, data=False):
+    """
+
+    :param G: networkx.DiGraph
+    :param type_ix: int [0,1,2,3,4,5] or None.
+    :param data: boolean
+    :return:
+    """
 
     if type_ix is None:
         nodes = G.nodes(data=data)
@@ -32,6 +39,11 @@ def get_nodes(G, type_ix=None, data=False):
 
 
 def get_root(G):
+    """
+    Returns the root of the graph G.
+    :param G: networkx.DiGraph
+    :return: int . Id of root node.
+    """
     try:
         root = np.min(get_nodes(G, type_ix=1))
     except (ValueError, KeyError):
