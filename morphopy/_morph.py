@@ -117,7 +117,7 @@ class Morph(object):
             logging.info('    Number of branch points: {}'.format(num_branchpoints))
             logging.info('    Number of irreducible nodes: {}'.format(num_irreducible_nodes))
             logging.info('    Max branching order: {}\n'.format(max_branch_order))
-            
+
             if density is not None:
 
                 asymmetry = density['asymmetry'][n]
@@ -138,7 +138,7 @@ class Morph(object):
             logging.info('  ## Average tortuosity: {:.3f}\n'.format(average_tortuosity))
 
             logging.info('  ## Real length (μm)\n')
-            
+
             logging.info('    Sum: {:.3f}'.format(real_length_sum))
             logging.info('    Mean: {:.3f}'.format(real_length_mean))
             logging.info('    Median: {:.3f}'.format(real_length_median))
