@@ -22,9 +22,6 @@ class Morph(object):
         ----------
         data: str
             path to the `.swc` file.
-        voxelsize: list or array-like
-            specify the voxel separation. e.g. [0.665, 0.665, 1].
-            If provided, linestack is reconstructed and dendritic tree density map will be computed.
         loglevel: str
             'debug', 'info', 'warning', 'error', 'critical'.
         """
@@ -38,7 +35,6 @@ class Morph(object):
 
         logging.info('  SWC file: {}\n'.format(data))
         logging.info('  unit: {}'.format(self.unit))
-        logging.info('  voxel size: {}\n'.format(self.voxelsize))
 
         # load data
         G, df_swc = read_swc(data)

@@ -208,13 +208,15 @@ def get_average_angles(df_paths):
 
         logging.debug('i: {}'.format(i))
 
-        if len(path_ids) == 2:
+        if len(path_ids) > 2:
+
+            # This is a shitty hack and 
+            # should refactor into something that 
+            # could handle three-ways branching
+            # currently one branch is ignored. 
 
             p0 = df_paths.loc[path_ids[0]].path
             p1 = df_paths.loc[path_ids[1]].path
-
-            # logging.debug('p0: {}'.format(p0))
-            # logging.debug('p1: {}'.format(p1))
 
             v00 = get_remote_vector(p0)
             v01 = get_remote_vector(p1)
