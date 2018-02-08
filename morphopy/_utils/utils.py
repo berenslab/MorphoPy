@@ -88,6 +88,21 @@ def read_swc(filepath):
 
 def graph_to_path(G):
 
+    """
+    Turning graph into vectors for paths
+
+    Parameters
+    ----------
+    G: nx.Graph()
+        the graph representation of the cell morphology
+
+    Returns
+    -------
+    path_all: dict
+        a dict holding all paths, 
+        which is the segment between two branchpoitns. 
+    """
+
     edges_all = G.edge
     nodes_all = np.array(list(G.node.keys()))
 
@@ -153,60 +168,6 @@ def get_df_paths(G):
     df_paths['n_index'] = pd.Series(path_idx_dict)
 
     return df_paths
-
-# def swc_to_linestack(df_swc, voxelsize=None):
-
-#     """
-#     Convert SWC to Line Stack (from real length to voxel coordinates).
-#     :param df_swc:
-#     :param unit:
-#     :param voxelsize:
-#     :return:
-#     """
-
-#     coords = df_swc[['x', 'y', 'z']].as_matrix()
-
-#     if voxelsize is None:
-#         logging.debug('  Not able to build linestack from real length coordinates.')
-#         return None
-#     else:
-#         # coords = np.round(coords / voxelsize).astype(int) # not able to handle the soma-centered swc.
-#         logging.debug('  Real length coordindates are converted back to pixel.')
-#         coords = coords - coords.min(0)
-#         coords = np.round(coords / voxelsize).astype(int)
-
-#     imagesize = coords.max(0) + 1
-#     logging.debug('  Start: Creating linestack...')
-#     linestack = np.zeros(imagesize)
-#     for c in coords:
-#         linestack[tuple(c)] = 1
-
-#     reset_neg = coords.min(0)
-#     reset_neg[reset_neg > 0] = 0
-
-#     xyz = (coords - reset_neg).max(0) + 1
-#     xy = max(xyz[:2])
-#     xy = np.ceil(xy/100) * 100
-#     z = xyz[2]
-#     z = np.ceil(z / 10) * 10
-#     logging.debug("{}, {}".format([xy, xy, z], linestack.shape))
-#     padding_cp = np.ceil((np.array([xy, xy, z]) - linestack.shape) / 2).astype(int)
-#     padding_x = padding_cp.copy()
-#     padding_y = padding_cp.copy()
-
-#     odd = np.array(linestack.shape) % 2 == 1
-#     padding_y[odd] = padding_y[odd] - 1
-
-#     padding = np.vstack([padding_x, padding_y]).T
-
-#     npad = ((padding[0]), (padding[1]), (padding[2]))
-#     linestack = np.pad(linestack, pad_width=npad, mode='constant')
-#     soma_on_stack = coords[0] + padding_x
-
-#     logging.debug('  Finished.\n')
-
-#     return linestack, soma_on_stack, padding_x
-
 
 def connect_to_soma(current_path, soma):
     """
