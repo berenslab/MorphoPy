@@ -153,15 +153,47 @@ class Morph(object):
     #### Plotting ####
     ##################
 
-    def show_morph(self, view='xy', plot_axon=True, plot_basal_dendrites=True, plot_apical_dendrites=True):
+    def show_morph(self, view='xy', plot_axon=True, plot_basal_dendrites=True, plot_apical_dendrites=True, save_fig=None):
+
+        """
+        Plot cell morphology in one view.
+
+        Parameters
+        ----------
+        view: str
+            * top view: 'xy'
+            * front view: 'xz'
+            * side view: 'yz'
+        plot_axon: bool
+        plot_basal_dendrites: bool
+        plot_apical_dendrites: bool
+        save_fig: str or None
+            If None, no figure is saved. 
+            Otherwiese, figure is saved to the specified path.
+        """
 
         df_paths = self.df_paths.copy()
         fig, ax = plt.subplots(1, 1, figsize=(12,12))
         ax = plot_morph(ax, df_paths, view, plot_axon, plot_basal_dendrites, plot_apical_dendrites)
 
+        if save_fig:
+            fig.savefig(save_fig + '/{}.png'.format(self.filename))
+
         return fig, ax
 
-    def show_threeviews(self, plot_axon=True, plot_basal_dendrites=True, plot_apical_dendrites=True):
+    def show_threeviews(self, plot_axon=True, plot_basal_dendrites=True, plot_apical_dendrites=True, save_fig=None):
+        """
+        Plot cell morphology in three views.
+
+        Parameters
+        ----------
+        plot_axon: bool
+        plot_basal_dendrites: bool
+        plot_apical_dendrites: bool
+        save_fig: str or None
+            If None, no figure is saved. 
+            Otherwiese, figure is saved to the specified path.
+        """
 
         df_paths = self.df_paths.copy()
 
@@ -171,7 +203,13 @@ class Morph(object):
         ax1 = plot_morph(ax[1], df_paths, 'xz', plot_axon, plot_basal_dendrites, plot_apical_dendrites)
         ax2 = plot_morph(ax[2], df_paths, 'yz', plot_axon, plot_basal_dendrites, plot_apical_dendrites)
 
+        if save_fig is not None:
+            fig.savefig(save_fig + '{}.png'.format(self.filename))
+
     def show_animation(self):
+        """
+        Show cell morphology in 3D vedio. Only works in Jupyter notebook.
+        """
 
         from mpl_toolkits.mplot3d import Axes3D
         import matplotlib.animation as animation
