@@ -230,11 +230,17 @@ def get_average_angles(df_paths):
         else:
             continue
 
-    average_nodal_angle_deg = np.nanmean(list(nodal_angles_deg.values()))
-    average_nodal_angle_rad = np.nanmean(list(nodal_angles_rad.values()))
+    if len(nodal_angles_deg) > 1:
+        average_nodal_angle_deg = np.nanmean(list(nodal_angles_deg.values()))
+        average_nodal_angle_rad = np.nanmean(list(nodal_angles_rad.values()))
+    else:
+        average_nodal_angle_deg, average_nodal_angle_rad = 0, 0
 
-    average_local_angle_deg = np.nanmean(list(local_angles_deg.values()))
-    average_local_angle_rad = np.nanmean(list(local_angles_rad.values()))
+    if len(local_angles_deg) > 1:
+        average_local_angle_deg = np.nanmean(list(local_angles_deg.values()))
+        average_local_angle_rad = np.nanmean(list(local_angles_rad.values()))
+    else:
+        average_local_angle_deg, average_local_angle_rad = 0, 0
 
     return average_nodal_angle_deg, average_nodal_angle_rad, average_local_angle_deg, average_local_angle_rad
 
