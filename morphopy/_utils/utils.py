@@ -93,6 +93,8 @@ def graph_to_path(G):
 
     num_branch = np.array(list(G.out_degree().values()))
     branchpoints = nodes_all[np.logical_and(num_branch != 1, num_branch !=0)]
+    if 1 not in branchpoints:
+        branchpoints = np.hstack([1, branchpoints])
 
     path_all = {}
     i = 1
