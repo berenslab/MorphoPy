@@ -208,7 +208,7 @@ def get_average_angles(df_paths):
 
         logging.debug('i: {}'.format(i))
 
-        if len(path_ids) > 2:
+        if len(path_ids) >= 2:
 
             # This is a shitty hack and 
             # should refactor into something that 
