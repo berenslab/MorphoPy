@@ -265,21 +265,26 @@ class Morph(object):
 
         return HTML(ani.to_html5_video())
 
-    def show_persistence_diagram(self, dist='radDist', axon=True, basal_dendrites=True, apical_dendrites=True):
+    def show_persistence_diagram(self, axon=True, basal_dendrites=True, apical_dendrites=True):
 
-        persistence_data = get_persistence_barcode(self.G, dist=dist)
+        if self.df_persistence_barcode is None:
+            self.df_persistence_barcode = get_persistence_barcode(self.G)
 
-        index = (pd.type == 1)
+        index = (self.df_persistence_barcode.type == 1)
 
         if axon:
-            index |= pd.type == 2
+            index |= self.df_persistence_barcode.type == 2
         if basal_dendrites:
-            index |= pd.type == 3
+            index |= self.df_persistence_barcode.type == 3
         if apical_dendrites:
-            index |= pd.type == 4
+            index |= self.df_persistence_barcode.type == 4
 
-        plotting_data = persistence_data[index]
+        plotting_data = self.df_persistence_barcode[index]
 
-        return plot_persistence_diagram(plotting_data)
+        fig, ax = plt.subplots(1, 3, figsize=(12, 4))
+
+        ax0 = plot_persistence_diagram(plotting_data, ax[0])
+        ax1 = plot_persistence_image_2d(plotting_data, ax[1])
+        ax2 = plot_persistence_image_1d(plotting_data, ax[2])
 
 

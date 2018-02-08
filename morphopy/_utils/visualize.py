@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+from scipy.stats import norm
 
 def plot_morph(ax, df_paths, view, plot_axon, plot_basal_dendrites, plot_apical_dendrites):
 
@@ -82,14 +82,55 @@ def plot_morph(ax, df_paths, view, plot_axon, plot_basal_dendrites, plot_apical_
     return ax
 
 
-def plot_persistence_diagram(data):
+def plot_persistence_diagram(data, ax):
 
-    fig = plt.figure()
-    ax = fig.gca()
     ax.scatter(data['birth'], data['death'], s=4, c='k', alpha=.4)
     ax.plot([0, np.max(data['birth'])], [0, np.max(data['death'])])
     sns.despine()
-    ax.xlabel('birth [dist from soma in um]')
-    ax.ylabel('death [dist from soma in um]')
+    ax.set_xlabel('birth [dist from soma in um]')
+    ax.set_ylabel('death [dist from soma in um]')
+    ax.set_title('persistence diagram')
 
-    return fig, ax
+    return ax
+
+
+def plot_persistence_image_1d(data, ax):
+    """
+    Plots the persistence as a 1 dimensional persistence image as defined in _Metrics for comparing neuronal tree
+    shapes based on persistent homology_ Y. Li, D. Wang, G. Ascoli et al. , 2017.
+
+    The 1D persistence image is defined as a sum of Gaussian kernels located at the time of birth of each branch and
+    weighted by its lifetime (|birth - death|).
+    Formally:
+        $p_D(x) = \sum_{i=1}^{k} |y_i - x_i|\cdot K_t(x,x_i)$
+        where $K_t(x,x_i)$ denotes a Gaussian kernel centered at $x_i$ with width $t$. Here $t$ is chosen to be $50$ as
+        in the original paper.
+    :param data: pandas.DataFrame holding the persistence data.
+    :return: figure and axis of the plot
+    """
+    steps = 100
+    y = np.zeros((steps,))
+    x = np.linspace(0, np.max(data['birth']), steps)
+    t = 50
+
+    for k, p in data.iterrows():
+        m = np.abs(p['birth'] - p['death'])
+        y += m * norm.pdf(x, loc=p['birth'], scale=t)
+
+    ax.plot(x, y)
+    ax.set_xlabel('birth [dist from soma in um]')
+    ax.set_ylabel('persistence p_D(x)')
+    sns.despine()
+    ax.set_title('persistence image 1D \n (Wang et al., 2017)')
+
+    return ax
+
+
+def plot_persistence_image_2d(data, ax):
+    sns.kdeplot(data['birth'], data['death'], ax=ax)
+    ax.scatter(data['birth'], data['death'], s=4, c='k', alpha=.4)
+    ax.set_xlabel('birth [dist from soma in um]')
+    ax.set_ylabel('death [dist from soma in um]')
+    sns.despine()
+    ax.set_title('persistence image 2D \n(Kanari et al., 2016) \n https://arxiv.org/abs/1603.08432')
+    return ax
