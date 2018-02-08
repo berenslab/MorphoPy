@@ -10,7 +10,7 @@ __all__ = ['Morph']
 
 class Morph(object):
 
-    def __init__(self, data, voxelsize=None, loglevel='info'):
+    def __init__(self, data, loglevel='info'):
 
         """
         Initialize Morph object. Load swc as Pandas DataFrame (df_swc). Split all paths on branch point and save as
@@ -34,7 +34,7 @@ class Morph(object):
 
         # meta data
         self.unit = 'um'
-        self.voxelsize = voxelsize
+        self.filename = data.split('/')[-1]
 
         logging.info('  SWC file: {}\n'.format(data))
         logging.info('  unit: {}'.format(self.unit))
