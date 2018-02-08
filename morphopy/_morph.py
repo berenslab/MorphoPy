@@ -15,8 +15,7 @@ class Morph(object):
         """
         Initialize Morph object. Load swc as Pandas DataFrame (df_swc). Split all paths on branch point and save as
         df_paths, related information (connection, path length, branch order etc.) are calculated. Other meta data are
-        also saved into Morph Object. If voxelszie is provided, a linestack is constructed and dendritic tree density
-        is computed.
+        also saved into Morph Object.
 
         Parameters
         ----------
@@ -56,9 +55,7 @@ class Morph(object):
 
         """
         Further processing df_paths and get statistics info such as path lengths, branching order into DataFrame.
-
-        Linestack is reconstructed if needed data is given (voxel size of the original image).
-        Then dendritic density is calculated based on linestack.
+        A summary of all single value morph statistics is calculatd. 
         """
 
         self.df_paths = get_path_statistics(self.df_paths)
