@@ -4,7 +4,7 @@ from ._utils.utils import *
 from ._utils.check import *
 from ._utils.visualize import *
 from ._utils.summarize import *
-
+from ._utils.representation import get_persistence_barcode
 
 __all__ = ['Morph']
 
@@ -15,7 +15,7 @@ class Morph(object):
         """
         Initialize Morph object. Load swc as Pandas DataFrame (df_swc). Split all paths on branch point and save as
         df_paths, related information (connection, path length, branch order etc.) are calculated. Other meta data are
-        also saved into Morph Object. If voxelszie is provided, a linestack is constructed and dendritic tree density
+        also saved into Morph Object. If voxelsize is provided, a linestack is constructed and dendritic tree density
         is computed.
 
         Parameters
@@ -55,6 +55,8 @@ class Morph(object):
 
         self.df_swc = df_swc
         self.df_paths = df_paths
+        self.G = G
+        self.df_persistence_barcode = None
 
     def processing(self):
 
@@ -169,6 +171,8 @@ class Morph(object):
         ax1 = plot_morph(ax[1], df_paths, 'xz', plot_axon, plot_basal_dendrites, plot_apical_dendrites)
         ax2 = plot_morph(ax[2], df_paths, 'yz', plot_axon, plot_basal_dendrites, plot_apical_dendrites)
 
+        return fig, [ax0, ax1, ax2]
+
     def show_animation(self):
 
         from mpl_toolkits.mplot3d import Axes3D
@@ -261,76 +265,43 @@ class Morph(object):
 
         return HTML(ani.to_html5_video())
 
-    # def show_threeviews(self, save_to=None):
+    def show_persistence_diagram(self, axon=True, basal_dendrites=True, apical_dendrites=True):
+        """
+        Plots the persistence diagram of the neuron. Persistence is a concept from topology that defines invariant
+        structures. Its clearer definition can be found in
+         - S. Chepushtanova, T. Emerson, E.M. Hanson, M. Kirby, F.C. Motta, R. Neville, C. Peterson, P.D. Shipman, and
+L. Ziegelmeier. Persistence images: An alternative persistent homology representation. CoRR, abs/1507.06217, 2015.
+         - 	arXiv:1603.08432
+         - Li, Yanjie, et al.
+        "Metrics for comparing neuronal tree shapes based on persistent homology." PloS one 12.8 (2017): e0182184.
 
-    #     """
-    #     Plot cell morphology in three views (Top and two sides).
 
-    #     Parameters
-    #     ----------
-    #     save_to: str
-    #         Path the figure saved to. e.g. "./figure/threeviews.png"
+        :param axon: boolean (default True). When set to False the axonal branches are excluded.
+        :param basal_dendrites: boolean (default True). When set to False the basal dendritic branches are excluded.
+        :param apical_dendrites: boolean (default True). When set to False the apical dendritic branches are excluded.
+        :return: fig, ax
+        """
 
-    #     """
+        if self.df_persistence_barcode is None:
+            self.df_persistence_barcode = get_persistence_barcode(self.G)
 
-    #     import matplotlib.pyplot as plt
-    #     from matplotlib_scalebar.scalebar import ScaleBar
+        index = (self.df_persistence_barcode.type == 1)
 
-    #     plt.figure(figsize=(16,16))
-    #     ax1 = plt.subplot2grid((4,4), (0,1), rowspan=3, colspan=3)
-    #     ax2 = plt.subplot2grid((4,4), (0,0), rowspan=3, colspan=1)
-    #     ax3 = plt.subplot2grid((4,4), (3,1), rowspan=1, colspan=3)
-    #     ax4 = plt.subplot2grid((4,4), (3,0), rowspan=1, colspan=1)
+        if axon:
+            index |= self.df_persistence_barcode.type == 2
+        if basal_dendrites:
+            index |= self.df_persistence_barcode.type == 3
+        if apical_dendrites:
+            index |= self.df_persistence_barcode.type == 4
 
-    #     df_paths = self.df_paths
-    #     dendrites = df_paths[df_paths.type != 1]
-    #     soma = df_paths[df_paths.type == 1].path[0][0]
+        plotting_data = self.df_persistence_barcode[index]
 
-    #     lims = find_lims(dendrites)
+        fig, ax = plt.subplots(1, 3, figsize=(12, 4))
 
-    #     plot_skeleton(ax2, dendrites, soma, 2, 0, lims)
-    #     plot_skeleton(ax3, dendrites, soma, 1, 2, lims)
-    #     plot_skeleton(ax1, dendrites, soma, 1, 0, lims)
-    #     scalebar = ScaleBar(1, units=self.unit, location='lower left', box_alpha=0)
-    #     ax1.add_artist(scalebar)
-    #     ax4.axis('off')
+        plot_persistence_diagram(plotting_data, ax[0])
+        plot_persistence_image_2d(plotting_data, ax[1])
+        plot_persistence_image_1d(plotting_data, ax[2])
 
-    #     if save_to is not None:
-    #         plt.savefig(save_to)
+        return fig, ax
 
-    # def show_density(self):
 
-    #     """
-    #     Plot cell morphology on dendritic density map.
-    #     """
-
-    #     try:
-    #         density_stack = self.density_stack
-    #         voxelsize = self.voxelsize
-    #     except:
-    #         logging.info('No density stack. Please provide the voxel sizes of the `.swc` file.')
-    #         return None
-
-    #     import matplotlib.pyplot as plt
-    #     from matplotlib_scalebar.scalebar import ScaleBar
-
-    #     linestack = self.linestack
-    #     dendritic_center = self.dendritic_center
-    #     soma_on_stack = self.soma_on_stack
-
-    #     plt.figure(figsize=(16, 16))
-    #     plt.imshow(density_stack.sum(2), cmap=plt.cm.gnuplot2_r, origin='lower')
-    #     plt.scatter(dendritic_center[1], dendritic_center[0], color='g', marker='*', s=180, label='Dendritic Center')
-    #     plt.scatter(soma_on_stack[1], soma_on_stack[0], color='r',  marker='*', s=180, label='Soma')
-
-    #     linestack_xy = linestack.sum(2)
-    #     linestack_xy[linestack_xy !=0] = 1
-    #     linestack_xy = np.ma.masked_array(linestack_xy, ~linestack.any(2))
-    #     plt.imshow(linestack_xy, origin='lower', cmap=plt.cm.binary)
-
-    #     plt.legend(frameon=False)
-
-    #     scalebar = ScaleBar(voxelsize[0], units=self.unit, location='lower left', box_alpha=0)
-    #     plt.gca().add_artist(scalebar)
-
-    #     plt.axis('off')
