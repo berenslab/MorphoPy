@@ -169,139 +169,231 @@ def get_df_paths(G):
 
     return df_paths
 
-def connect_to_soma(current_path, soma):
-    """
+# def connect_to_soma(current_path, soma):
+#     """
 
-    :param current_path:
-    :param soma:
-    :return:
-    """
+#     :param current_path:
+#     :param soma:
+#     :return:
+#     """
 
-    return (current_path == soma).all(1).any()
+#     return (current_path == soma).all(1).any()
 
-def find_connection(all_paths, soma, path_id, paths_to_ignore=[]):
-    """
+# def find_connection(all_paths, soma, path_id, paths_to_ignore=[]):
+#     """
 
-    :param all_paths:
-    :param soma:
-    :param path_id:
-    :param paths_to_ignore:
-    :return:
-    """
+#     :param all_paths:
+#     :param soma:
+#     :param path_id:
+#     :param paths_to_ignore:
+#     :return:
+#     """
 
-    current_path = all_paths[path_id]
-
-
-    if connect_to_soma(current_path, soma):
-
-        connect_to = -1
-        connect_to_at = soma
-
-        return connect_to, connect_to_at
-
-    sub_paths = deepcopy(all_paths)
-    sub_paths.pop(path_id)
-
-    for key in sub_paths.keys():
+#     current_path = all_paths[path_id]
 
 
-        if key in paths_to_ignore: continue
+#     if connect_to_soma(current_path, soma):
 
-        target_path = sub_paths[key]
-        connect_to_at_loc = np.where((current_path[0] == target_path).all(1))[0]
+#         connect_to = -1
+#         connect_to_at = soma
 
-        if len(connect_to_at_loc) != 0:
-            connect_to = key
-            connect_to_at = target_path[connect_to_at_loc[0]]
-            return connect_to, connect_to_at
+#         return connect_to, connect_to_at
 
-    logging.info("Path {} connects to no other path. Try fix it.".format(path_id))
-    connect_to = -99
-    connect_to_at = np.nan
+#     sub_paths = deepcopy(all_paths)
+#     sub_paths.pop(path_id)
 
-    return connect_to, connect_to_at
+#     for key in sub_paths.keys():
 
-def back2soma(df_paths, path_id):
-    """
-    Given a path_id, find all the other paths which lead back to the soma.
-    :param df_paths:
-    :param path_id:
-    :return:
-    """
 
-    path_id_original = path_id
+#         if key in paths_to_ignore: continue
 
-    paths_to_soma = []
+#         target_path = sub_paths[key]
+#         connect_to_at_loc = np.where((current_path[0] == target_path).all(1))[0]
 
-    counter = 0
+#         if len(connect_to_at_loc) != 0:
+#             connect_to = key
+#             connect_to_at = target_path[connect_to_at_loc[0]]
+#             return connect_to, connect_to_at
 
-    while df_paths.loc[path_id].connect_to != -1:
-        if path_id in paths_to_soma:
-            # logging.info("\tPath {} cannot trace back to soma: {}".format(path_id_original, paths_to_soma))
-            logging.info("\tPath {} cannot trace back to soma.".format(path_id_original))
+#     logging.info("Path {} connects to no other path. Try fix it.".format(path_id))
+#     connect_to = -99
+#     connect_to_at = np.nan
+
+#     return connect_to, connect_to_at
+
+# def back2soma(df_paths, path_id):
+#     """
+#     Given a path_id, find all the other paths which lead back to the soma.
+#     :param df_paths:
+#     :param path_id:
+#     :return:
+#     """
+
+#     path_id_original = path_id
+
+#     paths_to_soma = []
+
+#     counter = 0
+
+#     while df_paths.loc[path_id].connect_to != -1:
+#         if path_id in paths_to_soma:
+#             # logging.info("\tPath {} cannot trace back to soma: {}".format(path_id_original, paths_to_soma))
+#             logging.info("\tPath {} cannot trace back to soma.".format(path_id_original))
+#             break
+#         else:
+#             paths_to_soma.append(path_id)
+#             path_id = df_paths.loc[path_id].connect_to
+
+#         if path_id == -99:
+#             break
+
+#     paths_to_soma.append(path_id)
+
+#     return paths_to_soma
+
+# def check_path_connection(df_paths):
+#     """
+#     This function updates the df_paths object. It loops through all paths and adds the fours columns
+#     ['connect_to', 'connect_to_at', 'connected_by', 'connected_by_at'] to df_paths.
+
+#     :param df_paths: pandas.DataFrame containing paths.
+#     :return:
+#         df_paths: pandas.DataFrame
+#         Updated df_paths with added columns ['connect_to', 'connect_to_at', 'connected_by', 'connected_by_at'] for
+#         each path.
+#     """
+
+#     soma = df_paths[df_paths.type == 1]['path'][0]
+
+#     logging.debug(soma)
+
+#     all_paths = df_paths.path.to_dict()
+#     all_keys = list(all_paths.keys())
+
+#     # find which path the current path connects to.
+#     connect_to_dict = {}
+#     connect_to_at_dict = {}
+#     for path_id in all_keys:
+#         connect_to_dict[path_id], connect_to_at_dict[path_id] = find_connection(all_paths, soma, path_id, paths_to_ignore=[])
+#     df_paths['connect_to'] = pd.Series(connect_to_dict)
+#     df_paths['connect_to_at'] = pd.Series(connect_to_at_dict)
+
+#     # find all paths connect to current path.
+#     connected_by_dict = {}
+#     connected_by_at_dict = {}
+#     for path_id in all_keys:
+#         connected_by_dict[path_id]    = df_paths[df_paths.connect_to == path_id].index.tolist()
+#         connected_by_at_dict[path_id] = df_paths[df_paths.connect_to == path_id].connect_to_at.tolist()
+#     df_paths['connected_by'] = pd.Series(connected_by_dict)
+#     df_paths['connected_by_at'] = pd.Series(connected_by_at_dict)
+
+
+#     # fix unexpected broken paths (e.g. branch points exist when there are no branching.)
+#     df_paths[df_paths.connected_by.apply(len) == 1].index
+
+#     # check if all paths can goes back to soma.
+#     back_to_soma_dict = {}
+#     for path_id in all_keys:
+#         back_to_soma_dict[path_id] = back2soma(df_paths, path_id)
+
+#         # logging.info('  All paths can be traced back to soma. It is a single tree.')
+
+#     df_paths['back_to_soma'] = pd.Series(back_to_soma_dict)
+
+#     return df_paths
+def sort_path_direction(df_paths):
+    
+    df_paths = df_paths.copy()
+    soma = df_paths.loc[0].path.flatten()    
+    
+        
+    df_paths['connect_to'] = np.nan
+    df_paths['connect_to_at'] = ''
+    df_paths['connect_to_at'] = df_paths['connect_to_at'].apply(np.array)
+
+    for row in df_paths.iterrows():
+
+        path_id = row[0]
+        path = row[1]['path']
+
+        if (path[0] == soma).all():
+            df_paths.set_value(path_id, 'connect_to', -1)
+            df_paths.set_value(path_id, 'connect_to_at', soma)
+            continue
+
+        if (path[-1] == soma).all():
+            df_paths.set_value(path_id, 'path', path[::-1])
+            df_paths.set_value(path_id, 'connect_to', -1)
+            df_paths.set_value(path_id, 'connect_to_at', soma)
+    
+    new_target_paths = list(df_paths[~np.isnan(df_paths.connect_to)].index) # seed the first round of paths to check
+    
+    logging.info('  num of paths connected to soma: {}'.format(len(new_target_paths)))
+    
+    while np.count_nonzero(~np.isnan(df_paths.connect_to)) != len(df_paths):
+        
+        all_checked_paths = list(df_paths[~np.isnan(df_paths.connect_to)].index)
+        num_check_paths_before = len(all_checked_paths)
+        logging.info("  num of paths checked: {}".format(num_check_paths_before))
+
+        target_paths = new_target_paths
+        new_target_paths = [] # empty the list to hold new target paths for next round
+        
+        for target_path_id in target_paths:
+
+            target_path = df_paths.loc[target_path_id].path
+            
+            for row in df_paths.iterrows():
+
+                path_id = row[0]
+                path = row[1]['path']
+
+                if path_id in all_checked_paths:
+                    continue
+                else:
+    #                 print(path_id)
+                    if (path[0] == target_path).all(1).any():
+
+                        df_paths.set_value(path_id, 'connect_to', target_path_id)
+                        df_paths.set_value(path_id, 'connect_to_at', target_path[np.where((path[0] == target_path).all(1))[0]])
+                        new_target_paths.append(path_id)
+                        continue
+                    
+                    if (path[-1] == target_path).all(1).any(): 
+                        df_paths.set_value(path_id, 'path', path[::-1])
+                        df_paths.set_value(path_id, 'connect_to', target_path_id)
+                        df_paths.set_value(path_id, 'connect_to_at', target_path[np.where((path[-1] == target_path).all(1))[0]])
+                        new_target_paths.append(path_id)
+             
+        num_check_paths_after = len(list(df_paths[~np.isnan(df_paths.connect_to)].index))
+        
+        if num_check_paths_before == num_check_paths_after:
+            num_disconneted = len(df_paths) - num_check_paths_after
+            logging.info('\tNumber of disconnected path(s): {}'.format(num_disconneted))
             break
-        else:
-            paths_to_soma.append(path_id)
-            path_id = df_paths.loc[path_id].connect_to
-
-        if path_id == -99:
-            break
-
-    paths_to_soma.append(path_id)
-
-    return paths_to_soma
-
-def check_path_connection(df_paths):
-    """
-    This function updates the df_paths object. It loops through all paths and adds the fours columns
-    ['connect_to', 'connect_to_at', 'connected_by', 'connected_by_at'] to df_paths.
-
-    :param df_paths: pandas.DataFrame containing paths.
-    :return:
-        df_paths: pandas.DataFrame
-        Updated df_paths with added columns ['connect_to', 'connect_to_at', 'connected_by', 'connected_by_at'] for
-        each path.
-    """
-
-    soma = df_paths[df_paths.type == 1]['path'][0]
-
-    logging.debug(soma)
-
-    all_paths = df_paths.path.to_dict()
-    all_keys = list(all_paths.keys())
-
-    # find which path the current path connects to.
-    connect_to_dict = {}
-    connect_to_at_dict = {}
-    for path_id in all_keys:
-        connect_to_dict[path_id], connect_to_at_dict[path_id] = find_connection(all_paths, soma, path_id, paths_to_ignore=[])
-    df_paths['connect_to'] = pd.Series(connect_to_dict)
-    df_paths['connect_to_at'] = pd.Series(connect_to_at_dict)
-
+    
+    df_paths = df_paths.drop(df_paths[np.isnan(df_paths.connect_to)].index)
+        
     # find all paths connect to current path.
     connected_by_dict = {}
     connected_by_at_dict = {}
-    for path_id in all_keys:
+    for path_id in df_paths.index:
         connected_by_dict[path_id]    = df_paths[df_paths.connect_to == path_id].index.tolist()
         connected_by_at_dict[path_id] = df_paths[df_paths.connect_to == path_id].connect_to_at.tolist()
     df_paths['connected_by'] = pd.Series(connected_by_dict)
     df_paths['connected_by_at'] = pd.Series(connected_by_at_dict)
-
-
-    # fix unexpected broken paths (e.g. branch points exist when there are no branching.)
-    df_paths[df_paths.connected_by.apply(len) == 1].index
-
-    # check if all paths can goes back to soma.
+    
     back_to_soma_dict = {}
-    for path_id in all_keys:
-        back_to_soma_dict[path_id] = back2soma(df_paths, path_id)
-
-        # logging.info('  All paths can be traced back to soma. It is a single tree.')
-
+    for path_id in df_paths.index:
+        list_to_soma = [path_id]
+        next_path_id = df_paths.loc[path_id].connect_to
+        while next_path_id != -1:
+            list_to_soma.append(next_path_id)
+            next_path_id = df_paths.loc[next_path_id].connect_to
+        back_to_soma_dict[path_id] = list_to_soma
     df_paths['back_to_soma'] = pd.Series(back_to_soma_dict)
-
+    
     return df_paths
-
 
 def get_path_statistics(df_paths):
     """

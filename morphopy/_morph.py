@@ -47,7 +47,7 @@ class Morph(object):
 
         # split swc into soma, dendrites, axon, etc..
         df_paths = get_df_paths(G)
-        df_paths = check_path_connection(df_paths) # find which paths connect to which
+        df_paths = sort_path_direction(df_paths) # find which paths connect to which
 
         self.df_swc = df_swc
         self.df_paths = df_paths
