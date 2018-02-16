@@ -1,4 +1,3 @@
-import logging
 import numpy as np
 import pandas as pd
 
@@ -324,9 +323,6 @@ def get_summary_data(df_paths):
     The summary of the cell morphology.
     """
 
-    logging.info('  Calculating summary data...')
-
-
     df_paths = df_paths.copy()
 
     soma = df_paths[df_paths.type == 1]
@@ -366,86 +362,3 @@ def get_summary_data(df_paths):
 
     return df_summary
     
-
-# def pretty_log(df_summary, type):
-
-#     """
-#     Print out summary statistics of the cell.
-
-#     Parameters
-#     ----------
-#     summary: dict
-#         a nested dict that contains summary of the cell.
-#     """
-
-#     import logging
-
-#     num_dendritic_segments = summary['general']['number_of_dendritic_segments']
-#     num_branchpoints = summary['general']['number_of_branch_points']
-#     num_irreducible_nodes = summary['general']['number_of_irreducible_nodes']
-#     max_branch_order = summary['general']['max_branch_order']
-#     # max_strahler_order = summary['general'] ['max_strahler_order']
-#     average_nodal_angle_deg = summary['angle']['average_nodal_angle_in_deg']
-#     average_nodal_angle_rad = summary['angle']['average_nodal_angle_in_radian']
-#     average_local_angle_deg = summary['angle']['average_local_angle_in_degree']
-#     average_local_angle_rad = summary['angle']['average_local_angle_in_radian']
-#     average_tortuosity = summary['length']['tortuosity']
-#     dendritic_sum = summary['length']['dendritic']['sum']
-#     dendritic_mean = summary['length']['dendritic']['mean']
-#     dendritic_median = summary['length']['dendritic']['median']
-#     dendritic_min = summary['length']['dendritic']['min']
-#     dendritic_max = summary['length']['dendritic']['max']
-#     euclidean_sum = summary['length']['euclidean']['sum']
-#     euclidean_mean = summary['length']['euclidean']['mean']
-#     euclidean_median = summary['length']['euclidean']['median']
-#     euclidean_min = summary['length']['euclidean']['min']
-#     euclidean_max = summary['length']['euclidean']['max']
-
-#     logging.info('  Summary of the cell')
-#     logging.info('  ======================\n')
-
-#     logging.info('  # General Infomation\n')
-#     logging.info('    Number of dendritic arbor segment: {}'.format(num_dendritic_segments))
-#     logging.info('    Number of branch points: {}'.format(num_branchpoints))
-#     logging.info('    Number of irreducible nodes: {}\n'.format(num_irreducible_nodes))
-
-#     logging.info('    Max branching order: {}'.format(max_branch_order))
-#     # logging.info('    Max Strahler order: {}\n\n'.format(max_strahler_order))
-
-#     logging.info('  # Angle \n')
-#     logging.info('    Average nodal angle in degree: {:.3f}'.format(average_nodal_angle_deg))
-#     logging.info('    Average nodal angle in radian: {:.3f} \n'.format(average_nodal_angle_rad))
-#     logging.info('    Average local angle in degree: {:.3f}'.format(average_local_angle_deg))
-#     logging.info('    Average local angle in radian: {:.3f} \n'.format(average_local_angle_rad))
-
-#     logging.info('  # Average tortuosity: {:.3f}\n'.format(average_tortuosity))
-
-#     logging.info('  # Dendritic length (μm)\n')
-#     # logging.info('  ## Dendritic length\n')
-#     logging.info('    Sum: {:.3f}'.format(dendritic_sum))
-#     logging.info('    Mean: {:.3f}'.format(dendritic_mean))
-#     logging.info('    Median: {:.3f}'.format(dendritic_median))
-#     logging.info('    Min: {:.3f}'.format(dendritic_min))
-#     logging.info('    Max: {:.3f}\n'.format(dendritic_max))
-
-#     logging.info('  # Euclidean length (μm)\n')
-#     # logging.info('  ## Euclidean length\n')
-
-#     logging.info('    Sum: {:.3f}'.format(euclidean_sum))
-#     logging.info('    Mean: {:.3f}'.format(euclidean_mean))
-#     logging.info('    Median: {:.3f}'.format(euclidean_median))
-#     logging.info('    Min: {:.3f}'.format(euclidean_min))
-#     logging.info('    Max: {:.3f}\n'.format(euclidean_max))
-
-#     if 'density' in summary.keys():
-
-#         asymmetry = summary['density']['asymmetry']
-#         outer_radius = summary['density']['outer_radius']
-#         typical_radius = summary['density']['typical_radius']
-#         dendritic_area = summary['density']['dendritic_area']
-
-#         logging.info('  # Density related (μm)\n')
-#         logging.info('    Asymmetry: {:.3f}'.format(asymmetry))
-#         logging.info('    Outer Radius: {:.3f}'.format(outer_radius))
-#         logging.info('    Typical Radius : {:.3f}\n'.format(typical_radius))
-#         logging.info('    Dendritic Area: {:.3f} ×10\u00b3 um\u00b2\n\n'.format(dendritic_area))

@@ -2,23 +2,19 @@ import numpy as np
 import pandas as pd
 import logging
 
-from ._morph import *
+# from ._morph import *
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-
-
-
-# __all__ = ['Preprocessing']
+def swc_to_df(filepath):
+    df_swc =  pd.read_csv(filepath, delim_whitespace=True, comment='#',
+                          names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
+    df_swc.index = df_swc.n.as_matrix()
+    return df_swc
 
 def read_swc(filepath):
 
     logging.info('  Reading {}\n'.format(filepath))
     
-    swc =  pd.read_csv(filepath, delim_whitespace=True, comment='#',
-                          names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
-    swc.index = swc.n.as_matrix()
-
+    swc = swc_to_df(filepath)
     # raw data
     n = np.array(swc['n'].tolist())
     pos = np.array([swc['x'].tolist(), swc['y'].tolist(), swc['z'].tolist()]).T
@@ -119,7 +115,7 @@ def remove_duplicate(pos, e):
 
 def get_edge_dict(n, e, soma_loc):
 
-    logging.info("  Creating path arrays from voxel data points.")
+    logging.info("  Creating path arrays from voxel data points.\n")
 
     def _point_already_in_dict(point, edge_dict):
     
@@ -147,7 +143,7 @@ def get_edge_dict(n, e, soma_loc):
             a_list = [current_point]
             
             if _point_already_in_dict(next_point, edge_dict):
-                logging.info('\tPoint {} is already used by other paths. Skip.'.format(next_point))
+                logging.debug('\tPoint {} is already used by other paths. Skip.'.format(next_point))
             else:   
                 a_list.append(next_point)# a list for holding the index of point of one paths
             
@@ -157,13 +153,13 @@ def get_edge_dict(n, e, soma_loc):
                 
                 next_point = e[next_point_locs_on_e[0]][1]
                 if _point_already_in_dict(next_point, edge_dict):
-                    logging.info('\tPoint {} is already used by other paths. Skip.'.format(next_point))
+                    logging.debug('\tPoint {} is already used by other paths. Skip.'.format(next_point))
                 else:   
                     a_list.append(next_point)# a list for holding the index of point of one paths
                 next_point_locs_on_e = np.where(e[:, 0] == next_point)[0]
                 
             if len(a_list) < 2:
-                logging.info('\t\tCurrent path has fewer than two points, skipped.')
+                logging.debug('\t\tCurrent path has fewer than two points, skipped.')
                 continue
             
             edge_dict[path_id] = np.array(a_list)
@@ -181,7 +177,7 @@ def get_edge_dict(n, e, soma_loc):
             edge_dict[path_id] = path_0
             edge_dict[len(edge_dict)] = path_1
 
-    logging.info('  Done.\n')
+    logging.debug('  Done.\n')
             
     return edge_dict
 
@@ -233,8 +229,8 @@ def sort_path_direction(df_paths):
     new_target_paths = list(df_paths[~np.isnan(df_paths.connect_to)].index) # seed the first round of paths to check
 
     logging.info('  Checking path connection.')
-    logging.info('\tTotal num of paths to check: {}'.format(len(df_paths)))    
-    logging.info('\tNumber of paths connected to soma: {}'.format(len(new_target_paths)-1))
+    logging.info('\tTotal num of paths to check: {}\n'.format(len(df_paths)))    
+    logging.debug('\tNumber of paths connected to soma: {}'.format(len(new_target_paths)-1))
     
     while np.count_nonzero(~np.isnan(df_paths.connect_to)) != len(df_paths):
         
@@ -275,12 +271,13 @@ def sort_path_direction(df_paths):
         logging.debug('  Next target paths is: {}'.format(new_target_paths))
                 
         num_check_paths_after = len(list(df_paths[~np.isnan(df_paths.connect_to)].index))
-        logging.info("\tNumber of paths checked: {}".format(num_check_paths_after))
+        logging.debug("\tNumber of paths checked: {}".format(num_check_paths_after))
         
         if num_check_paths_before == num_check_paths_after:
             num_disconneted = len(df_paths) - num_check_paths_after
             logging.info('\tNumber of disconnected path(s): {}'.format(num_disconneted))
             break
+
     
     df_paths_drop = df_paths[np.isnan(df_paths.connect_to)] 
     df_paths = df_paths.drop(df_paths[np.isnan(df_paths.connect_to)].index)
@@ -395,7 +392,7 @@ def get_paths_nearest_to_tree(df_paths, df_drops, num_all_paths):
                                     'type': t}
     
     if distance_between > 0:
-        logging.info("Path {} appended point {} at the end".format(path_id_tree, point_connect))
+        logging.debug("\tPath {} appended point {} at the end".format(path_id_tree, point_connect))
         path_tree = np.vstack([path_tree, point_connect])
         radius_tree = np.hstack([radius_tree, radius_connect])
     
@@ -409,12 +406,17 @@ def get_paths_nearest_to_tree(df_paths, df_drops, num_all_paths):
 
 def reconnect_dropped_paths(df_paths, df_drops):
     
+    if len(df_drops) > 0:
+        logging.info('  Connecting disconnected paths.\n')
+    else:
+        logging.info('  No disconnected paths.\n')
+
     df_paths = df_paths.copy()
     df_drops = df_drops.copy()
     num_dropped_paths = len(df_drops)
     
     while len(df_drops) > 0:
-        logging.info('Lenght of df_paths: {}; df_drops: {}'.format(len(df_paths), len(df_drops)))
+        logging.debug('Lenght of df_paths: {}; df_drops: {}'.format(len(df_paths), len(df_drops)))
         num_all_paths = num_dropped_paths + len(df_paths)
         paths_data = get_paths_nearest_to_tree(df_paths, df_drops, num_all_paths)
 
@@ -435,7 +437,7 @@ def reconnect_dropped_paths(df_paths, df_drops):
             path_drop = p['path']
             radius_drop = p['radius']
             t = p['type']
-            logging.info('  Append {} to {}'.format(path_id_drop, path_id_tree))
+            logging.debug('  Append {} to {}'.format(path_id_drop, path_id_tree))
             df_paths.at[int(path_id_tree), 'path'] = np.vstack([path_tree[:-1], path_drop]) 
             df_paths.at[int(path_id_tree), 'radius'] = np.hstack([radius_tree[:-1], radius_drop] ) 
             df_drops.drop(path_id_drop, inplace=True)
@@ -447,13 +449,13 @@ def reconnect_dropped_paths(df_paths, df_drops):
 
                 path_id_drop = p['path_id']
                 path_drop = p['path']
-                logging.info('  Add row: {}, len: {}'.format(int(path_id_drop), len(path_drop)))
+                logging.debug('  Add row: {}, len: {}'.format(int(path_id_drop), len(path_drop)))
                 radius_drop = p['radius']
                 t = p['type']
                 df_paths.loc[int(path_id_drop)] = [t, path_drop, radius_drop, path_id_tree, tail_path_tree]            
 
                 try:
-                    logging.info('\tdrop {}'.format(int(path_id_drop)))
+                    logging.debug('\tdrop {}'.format(int(path_id_drop)))
                     df_drops.drop(path_id_drop, inplace=True)
                 except:
                     pass
@@ -483,7 +485,7 @@ def find_connection(df_paths):
         back_to_soma_dict[path_id] = list_to_soma
     df_paths['back_to_soma'] = pd.Series(back_to_soma_dict)
     
-    logging.info('  Done.\n')
+    logging.debug('  Done.\n')
     
     return df_paths
 
@@ -536,45 +538,74 @@ def write_swc(df_paths):
             
     df_swc = pd.DataFrame(swc_arr)
     df_swc.index = np.arange(1, len(df_swc)+1)
-    df_swc.columns = [['ID', 'Type', 'x', 'y', 'z', 'Raidus', 'PID']]
-    df_swc[['ID', 'Type', 'PID']] = df_swc[['ID', 'Type', 'PID']].astype(int)
+    df_swc.columns = ['n', 'type', 'x', 'y', 'z', 'radius', 'parent']
+    df_swc[['n', 'type', 'parent']] = df_swc[['n', 'type', 'parent']].astype(int)
     
     return df_swc
 
-class Preprocessing(Morph):
+def data_preprocessing(filepath):
 
-    def __init__(self, filepath):
+    filetype = filepath.split('/')[-1].split('.')[-1].lower()
+    filename = filepath.split('/')[-1].split('.')[0].lower()
 
-        filetype = filepath.split('/')[-1].split('.')[-1].lower()
-        filename = filepath.split('/')[-1].split('.')[0].lower()
+    if filetype == 'swc':
+        data = read_swc(filepath)
+    elif filetype == 'imx':
+        data = read_imx(filepath)
+    else:
+        logging.info('  `.{}` is not supported yet.'.format(filetype))
+        raise NotImplementedError
 
-        if filetype == 'swc':
-            data = read_swc(filepath)
-        elif filetype == 'imx':
-            data = read_imx(filepath)
-        else:
-            logging.info('  `.{}` is not supported yet.'.format(filetype))
-            raise NotImplementedError
+    e = data['e']
+    n = data['n']
+    t = data['t']
+    pos = data['pos']
+    radius = data['radius']
+    soma_loc = data['soma_loc']
+    
+    edge_dict = get_edge_dict(n, e, soma_loc)
+    df_paths = get_path_dict(pos, radius, t, edge_dict, soma_loc)
+    df_paths, df_paths_drop = sort_path_direction(df_paths)
+    df_paths = reconnect_dropped_paths(df_paths, df_paths_drop)
+    df_paths = find_connection(df_paths)
+    df_swc = write_swc(df_paths)
 
-        e = data['e']
-        n = data['n']
-        t = data['t']
-        pos = data['pos']
-        radius = data['radius']
-        soma_loc = data['soma_loc']
+    return df_swc, df_paths
+
+# class Preprocessing(Morph):
+
+#     def __init__(self, filepath):
+
+#         filetype = filepath.split('/')[-1].split('.')[-1].lower()
+#         filename = filepath.split('/')[-1].split('.')[0].lower()
+
+#         if filetype == 'swc':
+#             data = read_swc(filepath)
+#         elif filetype == 'imx':
+#             data = read_imx(filepath)
+#         else:
+#             logging.info('  `.{}` is not supported yet.'.format(filetype))
+#             raise NotImplementedError
+
+#         e = data['e']
+#         n = data['n']
+#         t = data['t']
+#         pos = data['pos']
+#         radius = data['radius']
+#         soma_loc = data['soma_loc']
         
-        edge_dict = get_edge_dict(n, e, soma_loc)
-        df_paths = get_path_dict(pos, radius, t, edge_dict, soma_loc)
-        df_paths, df_paths_drop = sort_path_direction(df_paths)
-        df_paths = reconnect_dropped_paths(df_paths, df_paths_drop)
-        df_paths = find_connection(df_paths)
-        df_swc = write_swc(df_paths)
+#         edge_dict = get_edge_dict(n, e, soma_loc)
+#         df_paths = get_path_dict(pos, radius, t, edge_dict, soma_loc)
+#         df_paths, df_paths_drop = sort_path_direction(df_paths)
+#         df_paths = reconnect_dropped_paths(df_paths, df_paths_drop)
+#         df_paths = find_connection(df_paths)
+#         df_swc = write_swc(df_paths)
         
-        self.df_paths = df_paths
-        self.df_paths_drop = df_paths_drop
-        self.df_swc = df_swc
-        self.filename = filename
+#         self.df_paths = df_paths
+#         self.df_paths_drop = df_paths_drop
+#         self.df_swc = df_swc
+#         self.filename = filename
 
-    def save_as_swc(self, save_to='./'):
+#     def save_as_swc(self, save_to='./'):
 
-        self.df_swc.to_csv(save_to + '{}.swc'.format(self.filename), sep=' ', index=None, header=None)
+#         self.df_swc.to_csv(save_to + '{}.swc'.format(self.filename), sep=' ', index=None, header=None)
