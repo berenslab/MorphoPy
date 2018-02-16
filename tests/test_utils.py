@@ -90,19 +90,19 @@ def test_get_angle_returns_float():
 
 
 
-### TEST FUNCTIONAL METHODS ###
+# ### TEST FUNCTIONAL METHODS ###
 
 
-from morphopy._utils.utils import get_df_paths
+# from morphopy._utils.utils import get_df_paths
 
 
-def test_get_df_paths_creates_dataFrame():
-    import pandas as pd
-    filepath = 'data/Image001-005-01.CNG.swc'
-    G, swc = read_swc(filepath)
+# def test_get_df_paths_creates_dataFrame():
+#     import pandas as pd
+#     filepath = 'data/Image001-005-01.CNG.swc'
+#     G, swc = read_swc(filepath)
 
-    paths = get_df_paths(G)
-    assert (isinstance(paths, pd.DataFrame)), "get_df_paths() should return a pandas.DataFrame"
+#     paths = get_df_paths(G)
+#     assert (isinstance(paths, pd.DataFrame)), "get_df_paths() should return a pandas.DataFrame"
 
 
 
