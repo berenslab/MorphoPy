@@ -351,7 +351,7 @@ class Morph(object):
 
         return HTML(ani.to_html5_video())
 
-    def show_persistence_diagram(self, axon=True, basal_dendrites=True, apical_dendrites=True):
+    def show_persistence_diagram(self, axon=True, basal_dendrites=True, apical_dendrites=True, savefig=False, save_to='./output/img/'):
         """
         Plots the persistence diagram of the neuron. Persistence is a concept from topology that defines invariant
         structures. Its clearer definition can be found in
@@ -418,3 +418,25 @@ class Morph(object):
         else:
             logging.info('  Writing {}.swc to {}'.format(self.filename, save_to))
             self.df_swc.to_csv(save_to + output_filename, sep=' ', index=None, header=None)
+
+    def save_summary(self, save_to='./output/json/', overwrite=False):
+
+        output_filename = '{}.json'.format(self.filename)
+
+        df_summary = self.df_summary.copy()
+        df_summary = df_summary.set_index('type').T
+
+        if not os.path.exists(save_to):
+            os.makedirs(save_to)
+
+        if os.path.exists(save_to + output_filename) and not overwrite:
+            logging.info('  {} existed. Use `overwrite=True` to overwrite.'.format(output_filename))
+        
+        elif os.path.exists(save_to + output_filename) and not overwrite:
+            logging.info('  Overwriting {}.'.format(output_filename))
+            df_summary.to_json(save_to + output_filename)
+        
+        else:
+            logging.info('  Writing {}.json to {}'.format(self.filename, save_to))
+            df_summary.to_json(save_to + output_filename)
+

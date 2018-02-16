@@ -460,7 +460,7 @@ def reconnect_dropped_paths(df_paths, df_drops):
                 except:
                     pass
 
-            logging.info('Lenght of df_drops: {}'.format(len(df_drops)))
+            logging.debug('  Length of df_drops: {}'.format(len(df_drops)))
     
     return df_paths.sort_index()
 
