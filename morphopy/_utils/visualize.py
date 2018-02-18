@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import norm
+from matplotlib_scalebar.scalebar import ScaleBar
 
 def plot_morph(ax, df_paths, view, plot_axon, plot_basal_dendrites, plot_apical_dendrites):
 
@@ -74,6 +75,9 @@ def plot_morph(ax, df_paths, view, plot_axon, plot_basal_dendrites, plot_apical_
 
     ax.set_xlim(-lim, lim)
     ax.set_ylim(-lim, lim)
+
+    scalebar = ScaleBar(1, units='um', location='lower left', box_alpha=0)
+    ax.add_artist(scalebar)
 
     ax.set_title('{}'.format(view))
 

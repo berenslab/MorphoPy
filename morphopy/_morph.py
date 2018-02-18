@@ -96,8 +96,10 @@ class Morph(object):
         self.df_summary = get_summary_data(self.df_paths)
         
         logging.info('  Calculating density data...')
-        self.df_density, self.density_maps = get_density_data(self.df_paths)
-        
+        df_density, density_maps = get_density_data(self.df_paths)
+        self.df_summary = pd.concat([self.df_summary, df_density[['asymmetry', 'radius', 'size']]], axis=1)
+        self.density_maps = density_maps
+
         logging.info('  Calculating persistance barcode...')
         self.df_persistence_barcode = get_persistence_barcode(self.G)
 
@@ -117,7 +119,7 @@ class Morph(object):
         logging.info('  ======================\n')
 
         summary = self.df_summary.to_dict()
-        density = self.df_density.to_dict()
+        # density = self.df_density.to_dict()
 
         for n in range(len(summary['type'])):
 
@@ -150,15 +152,14 @@ class Morph(object):
             logging.info('    Number of irreducible nodes: {}'.format(num_irreducible_nodes))
             logging.info('    Max branching order: {}\n'.format(max_branch_order))
 
-            if density is not None:
 
-                asymmetry = density['asymmetry'][n]
-                radius = density['radius'][n]
-                fieldsize = density['size'][n]
+            asymmetry = summary['asymmetry'][n]
+            radius = summary['radius'][n]
+            fieldsize = summary['size'][n]
 
-                logging.info('    Asymmetry: {:.3f}'.format(asymmetry))
-                logging.info('    Radius: {:.3f}'.format(radius))
-                logging.info('    Field Area: {:.3f} ×10\u00b3 um\u00b2\n'.format(fieldsize / 1000))
+            logging.info('    Asymmetry: {:.3f}'.format(asymmetry))
+            logging.info('    Radius: {:.3f}'.format(radius))
+            logging.info('    Field Area: {:.3f} ×10\u00b3 um\u00b2\n'.format(fieldsize / 1000))
 
 
             logging.info('  ## Angle \n')

@@ -41,9 +41,6 @@ def get_logger(loglevel):
 
     return logger
 
-
-
-
 def swc_to_graph(df_swc):
 
     n = df_swc['n'].tolist()
