@@ -1,16 +1,18 @@
+import os
 import logging
 
 from ._utils.utils import *
 from ._utils.check import *
 from ._utils.visualize import *
 from ._utils.summarize import *
+from ._utils.preprocessing import *
 from ._utils.representation import get_persistence_barcode
 
 __all__ = ['Morph']
 
 class Morph(object):
 
-    def __init__(self, data, loglevel='info'):
+    def __init__(self, filepath, preprocess=True, loglevel='info'):
 
         """
         Initialize Morph object. Load swc as Pandas DataFrame (df_swc). Split all paths on branch point and save as
@@ -30,40 +32,76 @@ class Morph(object):
         self._logger = get_logger(loglevel)
 
         # meta data
-        self.unit = 'um'
-        self.filename = data.split('/')[-1]
 
-        logging.info('  SWC file: {}\n'.format(data))
+        self.unit = 'um'
+        self.filename = filepath.split('/')[-1].split('.')[0].lower()
+        self.filetype = filepath.split('/')[-1].split('.')[-1].lower()
+        
+        logging.info('  Data: {}'.format(filepath))
         logging.info('  unit: {}'.format(self.unit))
+        logging.info('  ===================  \n')
 
         # load data
-        G, df_swc = read_swc(data)
+        if preprocess:
+            # preprocessing data before gather morph info
+            # including:
+            #   * .swc and .imx format supported
+            #   * remove duplicate points both in raw data and overlap point between paths
+            #   * connect subtrees.
+
+            df_swc, df_paths = data_preprocessing(filepath)
+            G = swc_to_graph(df_swc)
+        
+        else:
+            # read data without preprocessing. .swc only.
+
+            if self.filetype != 'swc':
+                logging.info('  Input data is not .swc file.')
+                logging.info('  Please set `preprocess=True` to read other formats.')
+                raise NotImplementedError
+
+            df_swc = swc_to_df(filepath)
+            G = swc_to_graph(df_swc)
+            df_paths = get_df_paths(G)
+            df_paths, df_paths_drop = sort_path_direction(df_paths)
+            df_paths = reconnect_dropped_paths(df_paths, df_paths_drop)
+            df_paths = find_connection(df_paths)
+
 
         # check data
         logging.info('  ===================  ')
-        logging.info('  Checking `.swc`...   \n')
+        logging.info('  Checking neurites...   \n')
 
         check_swc(df_swc)
 
         # split swc into soma, dendrites, axon, etc..
-        df_paths = get_df_paths(G)
-        df_paths = check_path_connection(df_paths) # find which paths connect to which
+        # df_paths = get_df_paths(G)
+        # df_paths = sort_path_direction(df_paths) # find which paths connect to which
 
         self.df_swc = df_swc
         self.df_paths = df_paths
         self.G = G
         self.df_persistence_barcode = None
 
-    def processing(self):
+    def summarize(self):
 
         """
         Further processing df_paths and get statistics info such as path lengths, branching order into DataFrame.
         A summary of all single value morph statistics is calculatd. 
         """
-
+        logging.info('  Calculating path statistics (e.g. real length, branching order...)')
         self.df_paths = get_path_statistics(self.df_paths)
+        
+        logging.info('  Calculating summary data...')
         self.df_summary = get_summary_data(self.df_paths)
-        self.df_density, self.density_maps = get_density_data(self.df_paths)
+        
+        logging.info('  Calculating density data...')
+        df_density, density_maps = get_density_data(self.df_paths)
+        self.df_summary = pd.concat([self.df_summary, df_density[['asymmetry', 'radius', 'size']]], axis=1)
+        self.density_maps = density_maps
+
+        logging.info('  Calculating persistance barcode...')
+        self.df_persistence_barcode = get_persistence_barcode(self.G)
 
 
     def show_summary(self):
@@ -81,7 +119,7 @@ class Morph(object):
         logging.info('  ======================\n')
 
         summary = self.df_summary.to_dict()
-        density = self.df_density.to_dict()
+        # density = self.df_density.to_dict()
 
         for n in range(len(summary['type'])):
 
@@ -114,15 +152,14 @@ class Morph(object):
             logging.info('    Number of irreducible nodes: {}'.format(num_irreducible_nodes))
             logging.info('    Max branching order: {}\n'.format(max_branch_order))
 
-            if density is not None:
 
-                asymmetry = density['asymmetry'][n]
-                radius = density['radius'][n]
-                fieldsize = density['size'][n]
+            asymmetry = summary['asymmetry'][n]
+            radius = summary['radius'][n]
+            fieldsize = summary['size'][n]
 
-                logging.info('    Asymmetry: {:.3f}'.format(asymmetry))
-                logging.info('    Radius: {:.3f}'.format(radius))
-                logging.info('    Field Area: {:.3f} ×10\u00b3 um\u00b2\n'.format(fieldsize / 1000))
+            logging.info('    Asymmetry: {:.3f}'.format(asymmetry))
+            logging.info('    Radius: {:.3f}'.format(radius))
+            logging.info('    Field Area: {:.3f} ×10\u00b3 um\u00b2\n'.format(fieldsize / 1000))
 
 
             logging.info('  ## Angle \n')
@@ -156,7 +193,7 @@ class Morph(object):
     #### Plotting ####
     ##################
 
-    def show_morph(self, view='xy', plot_axon=True, plot_basal_dendrites=True, plot_apical_dendrites=True, save_fig=None):
+    def show_morph(self, view='xy', plot_axon=True, plot_basal_dendrites=True, plot_apical_dendrites=True, savefig=False, save_to='./output/img/'):
 
         """
         Plot cell morphology in one view.
@@ -178,13 +215,17 @@ class Morph(object):
         df_paths = self.df_paths.copy()
         fig, ax = plt.subplots(1, 1, figsize=(12,12))
         ax = plot_morph(ax, df_paths, view, plot_axon, plot_basal_dendrites, plot_apical_dendrites)
-
-        if save_fig:
-            fig.savefig(save_fig + '/{}.png'.format(self.filename))
+        
+        if savefig:
+            figname = '{}_oneview.png'.format(self.filename)
+            logging.info('  Saving {} to {}'.format(figname, save_to))
+            if not os.path.exists(save_to):
+                os.makedirs(save_to)
+            fig.savefig(save_to + figname)
 
         return fig, ax
 
-    def show_threeviews(self, plot_axon=True, plot_basal_dendrites=True, plot_apical_dendrites=True, save_fig=None):
+    def show_threeviews(self, plot_axon=True, plot_basal_dendrites=True, plot_apical_dendrites=True, savefig=False, save_to='./output/img/'):
         """
         Plot cell morphology in three views.
 
@@ -205,11 +246,15 @@ class Morph(object):
         ax0 = plot_morph(ax[0], df_paths, 'xy', plot_axon, plot_basal_dendrites, plot_apical_dendrites)
         ax1 = plot_morph(ax[1], df_paths, 'xz', plot_axon, plot_basal_dendrites, plot_apical_dendrites)
         ax2 = plot_morph(ax[2], df_paths, 'yz', plot_axon, plot_basal_dendrites, plot_apical_dendrites)
-
-        if save_fig is not None:
-            fig.savefig(save_fig + '{}.png'.format(self.filename))
         
-        return fig, [ax0, ax1, ax2]
+        if savefig:
+            figname = '{}_threeviews.png'.format(self.filename)
+            logging.info('  Saving {} to {}'.format(figname, save_to))
+            if not os.path.exists(save_to):
+                os.makedirs(save_to)
+            fig.savefig(save_to + figname)
+
+        return fig, ax
 
 
     def show_animation(self):
@@ -307,7 +352,7 @@ class Morph(object):
 
         return HTML(ani.to_html5_video())
 
-    def show_persistence_diagram(self, axon=True, basal_dendrites=True, apical_dendrites=True):
+    def show_persistence_diagram(self, axon=True, basal_dendrites=True, apical_dendrites=True, savefig=False, save_to='./output/img/'):
         """
         Plots the persistence diagram of the neuron. Persistence is a concept from topology that defines invariant
         structures. Its clearer definition can be found in
@@ -344,4 +389,55 @@ class Morph(object):
         plot_persistence_image_2d(plotting_data, ax[1])
         plot_persistence_image_1d(plotting_data, ax[2])
 
+        if savefig:
+            figname = '{}_persistence_diagram.png'.format(self.filename)
+            logging.info('  Saving {} to {}'.format(figname, save_to))
+            if not os.path.exists(save_to):
+                os.makedirs(save_to)
+            fig.savefig(save_to + figname)
+
         return fig, ax
+
+    ###############
+    ## Save data ##
+    ###############
+
+    def save_swc(self, save_to='./output/swc/', overwrite=False):
+
+        output_filename = '{}.swc'.format(self.filename)
+
+        if not os.path.exists(save_to):
+            os.makedirs(save_to)
+
+        if os.path.exists(save_to + output_filename) and not overwrite:
+            logging.info('  {} existed. Use `overwrite=True` to overwrite.'.format(output_filename))
+        
+        elif os.path.exists(save_to + output_filename) and not overwrite:
+            logging.info('  Overwriting {}.'.format(output_filename))
+            self.df_swc.to_csv(save_to + output_filename, sep=' ', index=None, header=None)
+        
+        else:
+            logging.info('  Writing {}.swc to {}'.format(self.filename, save_to))
+            self.df_swc.to_csv(save_to + output_filename, sep=' ', index=None, header=None)
+
+    def save_summary(self, save_to='./output/json/', overwrite=False):
+
+        output_filename = '{}.json'.format(self.filename)
+
+        df_summary = self.df_summary.copy()
+        df_summary = df_summary.set_index('type').T
+
+        if not os.path.exists(save_to):
+            os.makedirs(save_to)
+
+        if os.path.exists(save_to + output_filename) and not overwrite:
+            logging.info('  {} existed. Use `overwrite=True` to overwrite.'.format(output_filename))
+        
+        elif os.path.exists(save_to + output_filename) and not overwrite:
+            logging.info('  Overwriting {}.'.format(output_filename))
+            df_summary.to_json(save_to + output_filename)
+        
+        else:
+            logging.info('  Writing {}.json to {}'.format(self.filename, save_to))
+            df_summary.to_json(save_to + output_filename)
+

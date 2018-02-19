@@ -60,49 +60,49 @@ def test_get_angle_returns_float():
     assert (isinstance(d, np.float)), "get_angle() should return float"
 
 
-### TEST READING METHODS ####
+# ### TEST READING METHODS ####
 
-import networkx as nx
-from morphopy._utils.utils import read_swc
-
-
-def test_read_swc_returned_fileformat():
-
-    import pandas as pd
-    filepath = 'data/Image001-005-01.CNG.swc'
-    G, swc = read_swc(filepath)
-
-    assert(isinstance(G, nx.DiGraph)), "read_swc() should return a graph as networkx.DiGraph"
-    assert(isinstance(swc, pd.DataFrame)), "read_swc() should return a swc as pandas.DataFrame"
+# import networkx as nx
+# from morphopy._utils.utils import read_swc
 
 
-def test_read_swc_all_variables_are_in():
+# def test_read_swc_returned_fileformat():
 
-    filepath = 'data/Image001-005-01.CNG.swc'
-    G, swc = read_swc(filepath)
+#     import pandas as pd
+#     filepath = 'data/Image001-005-01.CNG.swc'
+#     G, swc = read_swc(filepath)
 
-    assert 'n' in swc.keys(), "column 'n' should be in pandas.DataFrame"
-    assert 'x' in swc.keys(), "column 'x' should be in pandas.DataFrame"
-    assert 'y' in swc.keys(), "column 'y' should be in pandas.DataFrame"
-    assert 'z' in swc.keys(), "column 'z' should be in pandas.DataFrame"
-    assert 'type' in swc.keys(), "column 'type' should be in pandas.DataFrame"
-    assert 'parent' in swc.keys(), "column 'parent' should be in pandas.DataFrame"
+#     assert(isinstance(G, nx.DiGraph)), "read_swc() should return a graph as networkx.DiGraph"
+#     assert(isinstance(swc, pd.DataFrame)), "read_swc() should return a swc as pandas.DataFrame"
 
 
+# def test_read_swc_all_variables_are_in():
 
-### TEST FUNCTIONAL METHODS ###
+#     filepath = 'data/Image001-005-01.CNG.swc'
+#     G, swc = read_swc(filepath)
+
+#     assert 'n' in swc.keys(), "column 'n' should be in pandas.DataFrame"
+#     assert 'x' in swc.keys(), "column 'x' should be in pandas.DataFrame"
+#     assert 'y' in swc.keys(), "column 'y' should be in pandas.DataFrame"
+#     assert 'z' in swc.keys(), "column 'z' should be in pandas.DataFrame"
+#     assert 'type' in swc.keys(), "column 'type' should be in pandas.DataFrame"
+#     assert 'parent' in swc.keys(), "column 'parent' should be in pandas.DataFrame"
 
 
-from morphopy._utils.utils import get_df_paths
+
+# ### TEST FUNCTIONAL METHODS ###
 
 
-def test_get_df_paths_creates_dataFrame():
-    import pandas as pd
-    filepath = 'data/Image001-005-01.CNG.swc'
-    G, swc = read_swc(filepath)
+# from morphopy._utils.utils import get_df_paths
 
-    paths = get_df_paths(G)
-    assert (isinstance(paths, pd.DataFrame)), "get_df_paths() should return a pandas.DataFrame"
+
+# def test_get_df_paths_creates_dataFrame():
+#     import pandas as pd
+#     filepath = 'data/Image001-005-01.CNG.swc'
+#     G, swc = read_swc(filepath)
+
+#     paths = get_df_paths(G)
+#     assert (isinstance(paths, pd.DataFrame)), "get_df_paths() should return a pandas.DataFrame"
 
 
 
