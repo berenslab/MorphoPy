@@ -1,4 +1,9 @@
 language: python
 python:
  - "3.6"
+
+before_install: 
+ - pip install "networkx<=1.11"
+ - pip install "seaborn<=0.8.1"
+
 script: python -m pytest tests/

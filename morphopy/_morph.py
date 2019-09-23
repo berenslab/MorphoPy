@@ -1,274 +1,443 @@
+import os
 import logging
 
-from ._utils import *
+from ._utils.utils import *
+from ._utils.check import *
+from ._utils.visualize import *
+from ._utils.summarize import *
+from ._utils.preprocessing import *
+from ._utils.representation import get_persistence_barcode
 
 __all__ = ['Morph']
 
 class Morph(object):
 
-    def __init__(self, data, voxelsize=None, loglevel='info'):
+    def __init__(self, filepath, preprocess=True, loglevel='info'):
 
         """
         Initialize Morph object. Load swc as Pandas DataFrame (df_swc). Split all paths on branch point and save as
         df_paths, related information (connection, path length, branch order etc.) are calculated. Other meta data are
-        also saved into Morph Object. If voxelszie is provided, a linestack is constructed and dendritic tree density
-        is computed.
-        
+        also saved into Morph Object.
+
+
         Parameters
         ----------
         data: str
             path to the `.swc` file.
-        voxelsize: list or array-like
-            specify the voxel separation. e.g. [0.665, 0.665, 1]. 
-            If provided, linestack is reconstructed and dendritic tree density map will be computed.
         loglevel: str
-            'debug', 'info', 'warning', 'error', 'critical'.     
+            'debug', 'info', 'warning', 'error', 'critical'.
         """
 
         # logging
         self._logger = get_logger(loglevel)
 
         # meta data
-        self.unit = 'um'
-        self.voxelsize = voxelsize
-        
-        # load data
-        df_swc = read_swc(data)
 
-        df_soma = get_soma(df_swc)
-        df_paths = get_df_paths(df_swc)
-        df_paths = update_df_paths(df_paths, df_soma) # find which paths connect to which
-        df_paths = get_path_statistics(df_paths)
-        df_paths = get_sorder(df_paths) # get Strahler order
+        self.unit = 'um'
+        self.filename = filepath.split('/')[-1].split('.')[0].lower()
+        self.filetype = filepath.split('/')[-1].split('.')[-1].lower()
+        
+        logging.info('  Data: {}'.format(filepath))
+        logging.info('  unit: {}'.format(self.unit))
+        logging.info('  ===================  \n')
+
+        # load data
+        if preprocess:
+            # preprocessing data before gather morph info
+            # including:
+            #   * .swc and .imx format supported
+            #   * remove duplicate points both in raw data and overlap point between paths
+            #   * connect subtrees.
+
+            df_swc, df_paths = data_preprocessing(filepath)
+            G = swc_to_graph(df_swc)
+        
+        else:
+            # read data without preprocessing. .swc only.
+
+            if self.filetype != 'swc':
+                logging.info('  Input data is not .swc file.')
+                logging.info('  Please set `preprocess=True` to read other formats.')
+                raise NotImplementedError
+
+            df_swc = swc_to_df(filepath)
+            G = swc_to_graph(df_swc)
+            df_paths = get_df_paths(G)
+            df_paths, df_paths_drop = sort_path_direction(df_paths)
+            df_paths = reconnect_dropped_paths(df_paths, df_paths_drop)
+            df_paths = find_connection(df_paths)
+
+
+        # check data
+        logging.info('  ===================  ')
+        logging.info('  Checking neurites...   \n')
+
+        check_swc(df_swc)
+
+        # split swc into soma, dendrites, axon, etc..
+        # df_paths = get_df_paths(G)
+        # df_paths = sort_path_direction(df_paths) # find which paths connect to which
 
         self.df_swc = df_swc
         self.df_paths = df_paths
+        self.G = G
+        self.df_persistence_barcode = None
 
-        # linestack | pixel
+    def summarize(self):
 
-        linestack_output = swc_to_linestack(data, self.unit, voxelsize)
+        """
+        Further processing df_paths and get statistics info such as path lengths, branching order into DataFrame.
+        A summary of all single value morph statistics is calculatd. 
+        """
+        logging.info('  Calculating path statistics (e.g. real length, branching order...)')
+        self.df_paths = get_path_statistics(self.df_paths)
+        
+        logging.info('  Calculating summary data...')
+        self.df_summary = get_summary_data(self.df_paths)
+        
+        logging.info('  Calculating density data...')
+        df_density, density_maps = get_density_data(self.df_paths)
+        self.df_summary = pd.concat([self.df_summary, df_density[['asymmetry', 'radius', 'size']]], axis=1)
+        self.density_maps = density_maps
 
-        if linestack_output is not None:
-            self.linestack, self.soma_on_stack, self.coordindate_padding = linestack_output
-            self.df_paths = get_path_on_stack(self.df_paths, self.voxelsize, self.coordindate_padding)
-            self.density_stack, self.dendritic_center = calculate_density(self.linestack, voxelsize)
+        logging.info('  Calculating persistance barcode...')
+        self.df_persistence_barcode = get_persistence_barcode(self.G)
+
+
+    def show_summary(self):
+
+        """
+        Print out summary statistics of the cell.
+
+        Parameters
+        ----------
+        summary: pd.DataFrame
+            a pandas DataFrame that contains summary of one type of neurites of the cell.
+        """
+
+        logging.info('  Summary of the cell')
+        logging.info('  ======================\n')
+
+        summary = self.df_summary.to_dict()
+        # density = self.df_density.to_dict()
+
+        for n in range(len(summary['type'])):
+
+            neurite_type = summary['type'][n]
+            num_path_segments = summary['num_path_segments'][n]
+            num_branchpoints = summary['num_branchpoints'][n]
+            num_irreducible_nodes = summary['num_irreducible_nodes'][n]
+            max_branch_order = summary['max_branch_order'][n]
+            average_nodal_angle_deg = summary['average_nodal_angle_deg'][n]
+            average_nodal_angle_rad = summary['average_nodal_angle_rad'][n]
+            average_local_angle_deg = summary['average_local_angle_deg'][n]
+            average_local_angle_rad = summary['average_local_angle_rad'][n]
+            average_tortuosity = summary['average_tortuosity'][n]
+            real_length_sum = summary['real_length_sum'][n]
+            real_length_mean = summary['real_length_mean'][n]
+            real_length_median = summary['real_length_median'][n]
+            real_length_min = summary['real_length_min'][n]
+            real_length_max = summary['real_length_max'][n]
+            euclidean_length_sum = summary['euclidean_length_sum'][n]
+            euclidean_length_mean = summary['euclidean_length_mean'][n]
+            euclidean_length_median = summary['euclidean_length_median'][n]
+            euclidean_length_min = summary['euclidean_length_min'][n]
+            euclidean_length_max = summary['euclidean_length_max'][n]
+
+
+
+            logging.info('  {}\n'.format(neurite_type).upper())
+            logging.info('    Number of arbor segments: {}'.format(num_path_segments))
+            logging.info('    Number of branch points: {}'.format(num_branchpoints))
+            logging.info('    Number of irreducible nodes: {}'.format(num_irreducible_nodes))
+            logging.info('    Max branching order: {}\n'.format(max_branch_order))
+
+
+            asymmetry = summary['asymmetry'][n]
+            radius = summary['radius'][n]
+            fieldsize = summary['size'][n]
+
+            logging.info('    Asymmetry: {:.3f}'.format(asymmetry))
+            logging.info('    Radius: {:.3f}'.format(radius))
+            logging.info('    Field Area: {:.3f} ×10\u00b3 um\u00b2\n'.format(fieldsize / 1000))
+
+
+            logging.info('  ## Angle \n')
+            logging.info('    Average nodal angle in degree: {:.3f}'.format(average_nodal_angle_deg))
+            logging.info('    Average nodal angle in radian: {:.3f}'.format(average_nodal_angle_rad))
+            logging.info('    Average local angle in degree: {:.3f}'.format(average_local_angle_deg))
+            logging.info('    Average local angle in radian: {:.3f} \n'.format(average_local_angle_rad))
+
+            logging.info('  ## Average tortuosity: {:.3f}\n'.format(average_tortuosity))
+
+            logging.info('  ## Real length (μm)\n')
+
+            logging.info('    Sum: {:.3f}'.format(real_length_sum))
+            logging.info('    Mean: {:.3f}'.format(real_length_mean))
+            logging.info('    Median: {:.3f}'.format(real_length_median))
+            logging.info('    Min: {:.3f}'.format(real_length_min))
+            logging.info('    Max: {:.3f}\n'.format(real_length_max))
+
+            logging.info('  ## Euclidean length (μm)\n')
+
+            logging.info('    Sum: {:.3f}'.format(euclidean_length_sum))
+            logging.info('    Mean: {:.3f}'.format(euclidean_length_mean))
+            logging.info('    Median: {:.3f}'.format(euclidean_length_median))
+            logging.info('    Min: {:.3f}'.format(euclidean_length_min))
+            logging.info('    Max: {:.3f}\n'.format(euclidean_length_max))
+
+            logging.info('  ======================\n')
+
+
+    ##################
+    #### Plotting ####
+    ##################
+
+    def show_morph(self, view='xy', plot_axon=True, plot_basal_dendrites=True, plot_apical_dendrites=True, savefig=False, save_to='./output/img/'):
+
+        """
+        Plot cell morphology in one view.
+
+        Parameters
+        ----------
+        view: str
+            * top view: 'xy'
+            * front view: 'xz'
+            * side view: 'yz'
+        plot_axon: bool
+        plot_basal_dendrites: bool
+        plot_apical_dendrites: bool
+        save_fig: str or None
+            If None, no figure is saved. 
+            Otherwiese, figure is saved to the specified path.
+        """
+
+        df_paths = self.df_paths.copy()
+        fig, ax = plt.subplots(1, 1, figsize=(12,12))
+        ax = plot_morph(ax, df_paths, view, plot_axon, plot_basal_dendrites, plot_apical_dendrites)
+        
+        if savefig:
+            figname = '{}_oneview.png'.format(self.filename)
+            logging.info('  Saving {} to {}'.format(figname, save_to))
+            if not os.path.exists(save_to):
+                os.makedirs(save_to)
+            fig.savefig(save_to + figname)
+
+        return fig, ax
+
+    def show_threeviews(self, plot_axon=True, plot_basal_dendrites=True, plot_apical_dendrites=True, savefig=False, save_to='./output/img/'):
+        """
+        Plot cell morphology in three views.
+
+        Parameters
+        ----------
+        plot_axon: bool
+        plot_basal_dendrites: bool
+        plot_apical_dendrites: bool
+        save_fig: str or None
+            If None, no figure is saved. 
+            Otherwiese, figure is saved to the specified path.
+        """
+
+        df_paths = self.df_paths.copy()
+
+        fig, ax = plt.subplots(1, 3, figsize=(18,6))
+
+        ax0 = plot_morph(ax[0], df_paths, 'xy', plot_axon, plot_basal_dendrites, plot_apical_dendrites)
+        ax1 = plot_morph(ax[1], df_paths, 'xz', plot_axon, plot_basal_dendrites, plot_apical_dendrites)
+        ax2 = plot_morph(ax[2], df_paths, 'yz', plot_axon, plot_basal_dendrites, plot_apical_dendrites)
+        
+        if savefig:
+            figname = '{}_threeviews.png'.format(self.filename)
+            logging.info('  Saving {} to {}'.format(figname, save_to))
+            if not os.path.exists(save_to):
+                os.makedirs(save_to)
+            fig.savefig(save_to + figname)
+
+        return fig, ax
+
+
+    def show_animation(self):
+        """
+        Show cell morphology in 3D vedio. Only works in Jupyter notebook.
+        """
+
+        from mpl_toolkits.mplot3d import Axes3D
+        import matplotlib.animation as animation
+        from IPython.display import HTML
+
+        df_paths = self.df_paths.copy()
+
+        soma = df_paths[df_paths.type == 1].path[0][0]
+        axon = df_paths[df_paths.type == 2]
+        basal_dendrites = df_paths[df_paths.type == 3]
+        apical_dendrites = df_paths[df_paths.type == 4]
+
+        fig = plt.figure(figsize=(12,12))
+        ax = fig.add_subplot(111, projection='3d')
+
+        def init():
+
+            # soma
+            ax.scatter(0,0,0, s=280, color='grey')
+
+            # basal dendrites
+
+            if len(basal_dendrites)>0:
+                bdcolors_idx = np.linspace(0, 200, max(basal_dendrites.branch_order)+1).astype(int)
+                bdcolors = np.vstack(plt.cm.Reds_r(bdcolors_idx))[:, :3]
+
+                for row in basal_dendrites.iterrows():
+
+                    path_id = row[0]
+                    path = row[1]['path'] - soma
+                    order = row[1]['branch_order']
+                    bpt = path[0]
+
+                    ax.plot(path[:, 0], path[:, 1], path[:, 2], color=bdcolors[int(order)])
+                    ax.scatter(bpt[0], bpt[1], bpt[2], color=bdcolors[int(order)], zorder=1)
+
+            # apical dendrites
+            if len(apical_dendrites)>0:
+                adcolors_idx = np.linspace(0, 200, max(apical_dendrites.branch_order)+1).astype(int)
+                adcolors = np.vstack(plt.cm.Purples_r(adcolors_idx))[:, :3]
+
+                for row in apical_dendrites.iterrows():
+
+                    path_id = row[0]
+                    path = row[1]['path'] - soma
+                    order = row[1]['branch_order']
+                    bpt = path[0]
+
+                    ax.plot(path[:, 0], path[:, 1], path[:, 2], color=adcolors[int(order)])
+                    ax.scatter(bpt[0], bpt[1], bpt[2], color=adcolors[int(order)], zorder=1)
+
+            # axon
+            if len(axon)>0:
+                acolors_idx = np.linspace(0, 200, max(axon.branch_order)+1).astype(int)
+                acolors = np.vstack(plt.cm.Blues_r(acolors_idx))[:, :3]
+
+                for row in axon.iterrows():
+
+                    path_id = row[0]
+                    path = row[1]['path'] - soma
+                    order = row[1]['branch_order']
+                    bpt = path[0]
+
+                    ax.plot(path[:, 0], path[:, 1], path[:, 2], color=acolors[int(order)])
+                    ax.scatter(bpt[0], bpt[1], bpt[2], color=acolors[int(order)], zorder=1)
+
+            lim_max = int(np.ceil((np.vstack(df_paths.path.as_matrix()) - soma).max() / 20) * 20)
+            lim_min = int(np.floor((np.vstack(df_paths.path.as_matrix()) - soma).min() / 20) * 20)
+
+            lim = max(abs(lim_max), abs(lim_min))
+
+            ax.set_xlim(-lim, lim)
+            ax.set_ylim(-lim, lim)
+            ax.set_zlim(-lim, lim)
+
+            return fig,
+
+        def animate(i):
+            # azimuth angle : 0 deg to 360 deg
+            ax.view_init(elev=10, azim=i*4)
+            return fig,
+
+        logging.info('  Generating animation. It might take some time...')
+
+        ani = animation.FuncAnimation(fig, animate, init_func=init,
+                                   frames=90, interval=150, blit=True)
+
+        plt.close()
+
+        return HTML(ani.to_html5_video())
+
+    def show_persistence_diagram(self, axon=True, basal_dendrites=True, apical_dendrites=True, savefig=False, save_to='./output/img/'):
+        """
+        Plots the persistence diagram of the neuron. Persistence is a concept from topology that defines invariant
+        structures. Its clearer definition can be found in
+         - S. Chepushtanova, T. Emerson, E.M. Hanson, M. Kirby, F.C. Motta, R. Neville, C. Peterson, P.D. Shipman, and
+           L. Ziegelmeier. Persistence images: An alternative persistent homology representation. CoRR, abs/1507.06217, 2015.
+         - 	arXiv:1603.08432
+         - Li, Yanjie, et al.
+        "Metrics for comparing neuronal tree shapes based on persistent homology." PloS one 12.8 (2017): e0182184.
+
+
+        :param axon: boolean (default True). When set to False the axonal branches are excluded.
+        :param basal_dendrites: boolean (default True). When set to False the basal dendritic branches are excluded.
+        :param apical_dendrites: boolean (default True). When set to False the apical dendritic branches are excluded.
+        :return: fig, ax
+        """
+
+        if self.df_persistence_barcode is None:
+            self.df_persistence_barcode = get_persistence_barcode(self.G)
+
+        index = (self.df_persistence_barcode.type == 1)
+
+        if axon:
+            index |= self.df_persistence_barcode.type == 2
+        if basal_dendrites:
+            index |= self.df_persistence_barcode.type == 3
+        if apical_dendrites:
+            index |= self.df_persistence_barcode.type == 4
+
+        plotting_data = self.df_persistence_barcode[index]
+
+        fig, ax = plt.subplots(1, 3, figsize=(12, 4))
+
+        plot_persistence_diagram(plotting_data, ax[0])
+        plot_persistence_image_2d(plotting_data, ax[1])
+        plot_persistence_image_1d(plotting_data, ax[2])
+
+        if savefig:
+            figname = '{}_persistence_diagram.png'.format(self.filename)
+            logging.info('  Saving {} to {}'.format(figname, save_to))
+            if not os.path.exists(save_to):
+                os.makedirs(save_to)
+            fig.savefig(save_to + figname)
+
+        return fig, ax
+
+    ###############
+    ## Save data ##
+    ###############
+
+    def save_swc(self, save_to='./output/swc/', overwrite=False):
+
+        output_filename = '{}.swc'.format(self.filename)
+
+        if not os.path.exists(save_to):
+            os.makedirs(save_to)
+
+        if os.path.exists(save_to + output_filename) and not overwrite:
+            logging.info('  {} existed. Use `overwrite=True` to overwrite.'.format(output_filename))
+        
+        elif os.path.exists(save_to + output_filename) and not overwrite:
+            logging.info('  Overwriting {}.'.format(output_filename))
+            self.df_swc.to_csv(save_to + output_filename, sep=' ', index=None, header=None)
+        
         else:
-            self.linestack = None
+            logging.info('  Writing {}.swc to {}'.format(self.filename, save_to))
+            self.df_swc.to_csv(save_to + output_filename, sep=' ', index=None, header=None)
 
-    def summary(self, save_to=None,  print_results=True):
+    def save_summary(self, save_to='./output/json/', overwrite=False):
 
-        """
-        Print out summary of the cell morphology. 
+        output_filename = '{}.json'.format(self.filename)
 
-        Parameters
-        ----------
-        save_to: str
-            path and filename of the output json file. 
+        df_summary = self.df_summary.copy()
+        df_summary = df_summary.set_index('type').T
 
-        print_results: bool
-            if True, print out summary using logging.
-        """
+        if not os.path.exists(save_to):
+            os.makedirs(save_to)
 
-        # branch order / number of branch points
-
-        branchpoints = np.vstack(self.df_paths.connect_to_at)
-        branchpoints = unique_row(branchpoints)
-        num_branchpoints = len(branchpoints)
-
-        max_branch_order = max(self.df_paths.corder)
-        max_strahler_order = max(self.df_paths.sorder)
-
-        terminalpaths = self.df_paths.path[self.df_paths.connected_by.apply(len) == 0].as_matrix()
-        terminalpoints = np.vstack([p[-1] for p in terminalpaths])
-        num_terminalpoints = len(terminalpoints)
-
-        outerterminals = get_outer_terminals(terminalpoints)
-
-        num_irreducible_nodes = num_branchpoints + num_terminalpoints
-
-        num_dendritic_segments = len(self.df_paths)
-
-        # path length
-
-        dendritic = self.df_paths['dendritic_length']
-        dendritic_sum = dendritic.sum()
-        dendritic_mean = dendritic.mean()
-        dendritic_median = dendritic.median()
-        dendritic_min = dendritic.min()
-        dendritic_max = dendritic.max()
-
-        euclidean = self.df_paths['euclidean_length']
-        euclidean_sum = euclidean.sum()
-        euclidean_mean = euclidean.mean()
-        euclidean_median = euclidean.median()
-        euclidean_min = euclidean.min()
-        euclidean_max = euclidean.max()
-
-        tortuosity = dendritic / euclidean
-        average_tortuosity = np.mean(tortuosity)      
-
-        # node angles
-        average_nodal_angle_deg, average_nodal_angle_rad, average_local_angle_deg, average_local_angle_rad = get_average_angles(self.df_paths)
-
-        summary = {
-            "general": {
-                "number_of_dendritic_segments": int(num_dendritic_segments),
-                "number_of_branch_points": int(num_branchpoints),
-                "number_of_irreducible_nodes": int(num_irreducible_nodes),
-                "max_branch_order": int(max_branch_order),
-                "max_strahler_order": int(max_strahler_order),
-            },
-            "angle": {
-                "average_nodal_angle_in_degree": average_nodal_angle_deg,
-                "average_nodal_angle_in_radian": average_nodal_angle_rad,
-                "average_local_angle_in_degree": average_local_angle_deg,
-                "average_local_angle_in_radian": average_local_angle_rad,
-            },
-            "length": {
-                "tortuosity": average_tortuosity,
-                "dendritic": {
-                    "sum": dendritic_sum,
-                    "mean": dendritic_mean,
-                    "median": dendritic_median,
-                    "min": dendritic_min,
-                    "max": dendritic_max,
-                },
-                "euclidean":{
-                    "sum": euclidean_sum,
-                    "mean": euclidean_mean,
-                    "median": euclidean_median,
-                    "min": euclidean_min,
-                    "max": euclidean_max,
-                }
-            }
-
-        }
-
-        # dendritic tree density
-        if self.linestack is not None:
-
-            if self.voxelsize is None:
-                voxelsize = [1,1,1]
-            else:
-                voxelsize = self.voxelsize
-
-            dendritic_center = self.dendritic_center
-
-            soma_coordinates = self.soma_on_stack
-
-            asymmetry = np.sqrt(((soma_coordinates[:2] - dendritic_center)**2).sum())
-
-            all_termianls_to_dendritic_center = np.sqrt(np.sum((terminalpoints[:,:2] - dendritic_center) ** 2,  1)) * voxelsize[0]
-            out_terminals_to_dendritic_center = np.sqrt(np.sum((outerterminals[:, :2]- dendritic_center) **2, 1)) * voxelsize[0]
-
-            typical_radius = np.mean(all_termianls_to_dendritic_center)
-            outer_radius = np.mean(out_terminals_to_dendritic_center)
-
-            import cv2
-            dendritic_area = cv2.contourArea(outerterminals[:, :2].astype(np.float32)) * voxelsize[0]**2/1000
-
-            summary.update({"density": {
-                "asymmetry": asymmetry,
-                "outer_radius": outer_radius,
-                "typical_radius": typical_radius,
-                "dendritic_area": dendritic_area
-            }})
-
-        # print and save
-        if print_results:
-            print_summary(summary)
-
-        if save_to is not None:
-
-            logging.info('  Writing to {}'.format(save_to))
-
-            import json
-            with open(save_to, 'w') as f:
-                json.dump(summary, f)
-
-        # return summary
-
-
-    def show_threeviews(self, order='c', save_to=None):
-
-        """
-        Plot cell morphology in three views (Top and two sides).
-
-        Parameters
-        ----------
-        order: str
-            * 'c' (conventional ordering) 
-            * 's' (Strahler ordering)
-        save_to: str
-            Path the figure saved to. e.g. "./figure/threeviews.png"
-
-        """
-
-
-        import matplotlib.pyplot as plt
-        from matplotlib_scalebar.scalebar import ScaleBar
-
-        plt.figure(figsize=(16,16))
-        ax1 = plt.subplot2grid((4,4), (0,1), rowspan=3, colspan=3)
-        ax2 = plt.subplot2grid((4,4), (0,0), rowspan=3, colspan=1)
-        ax3 = plt.subplot2grid((4,4), (3,1), rowspan=1, colspan=3)
-        ax4 = plt.subplot2grid((4,4), (3,0), rowspan=1, colspan=1)  
-
-        df_paths = self.df_paths
-        dendrites = df_paths[df_paths.type == 3]
-        soma = df_paths.loc[0].path[0]
-
-        # xylims, zlims = find_lims(df_paths)
-        # lims = (xylims, zlims)
-        # maxlims = (np.max(np.vstack(df_paths.path), 0)[1:]).astype(int) 
-        # maxlims = np.hstack([maxlims[0], maxlims]) + 30
-        # minlims = (np.min(np.vstack(df_paths.path), 0)[1:]).astype(int)
-
-        lims = find_lims(dendrites)
-
-        plot_skeleton(ax2, dendrites, soma, 2, 0, order, lims)
-        plot_skeleton(ax3, dendrites, soma, 1, 2, order, lims)
-        plot_skeleton(ax1, dendrites, soma, 1, 0, order, lims)
-        scalebar = ScaleBar(1, units=self.unit, location='lower left', box_alpha=0)
-        ax1.add_artist(scalebar)    
-        ax4.axis('off')
-
-        if save_to is not None:
-            plt.savefig(save_to)
-    
-    def show_density(self):
-
-        """
-        Plot cell morphology on dendritic density map.
-        """
-
-        try:
-            density_stack = self.density_stack
-            voxelsize = self.voxelsize
-        except:
-            logging.info('No density stack. Please provide the voxel sizes of the `.swc` file.')
-            return None
+        if os.path.exists(save_to + output_filename) and not overwrite:
+            logging.info('  {} existed. Use `overwrite=True` to overwrite.'.format(output_filename))
         
-        import matplotlib.pyplot as plt
-        from matplotlib_scalebar.scalebar import ScaleBar
+        elif os.path.exists(save_to + output_filename) and not overwrite:
+            logging.info('  Overwriting {}.'.format(output_filename))
+            df_summary.to_json(save_to + output_filename)
+        
+        else:
+            logging.info('  Writing {}.json to {}'.format(self.filename, save_to))
+            df_summary.to_json(save_to + output_filename)
 
-        linestack = self.linestack
-        dendritic_center = self.dendritic_center
-        soma_on_stack = self.soma_on_stack
-        
-        plt.figure(figsize=(16, 16))
-        plt.imshow(density_stack.sum(2), cmap=plt.cm.gnuplot2_r, origin='lower')
-        plt.scatter(dendritic_center[1], dendritic_center[0], color='g', marker='*', s=180, label='Dendritic Center')
-        plt.scatter(soma_on_stack[1], soma_on_stack[0], color='r',  marker='*', s=180, label='Soma')
-        
-        linestack_xy = linestack.sum(2)
-        linestack_xy[linestack_xy !=0] = 1
-        linestack_xy = np.ma.masked_array(linestack_xy, ~linestack.any(2))
-        plt.imshow(linestack_xy, origin='lower', cmap=plt.cm.binary)
-        
-        plt.legend(frameon=False)
-
-        scalebar = ScaleBar(voxelsize[0], units=self.unit, location='lower left', box_alpha=0)
-        plt.gca().add_artist(scalebar)   
-        
-        plt.axis('off')

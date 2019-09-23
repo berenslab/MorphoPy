@@ -1,5 +1,7 @@
-numpy
+numpy>=1.13.1
 pandas==0.20.3
 scipy
 matplotlib
 matplotlib-scalebar
+opencv-python
+networkx<2.0
