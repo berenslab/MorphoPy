@@ -12,3 +12,5 @@
 
 # jupyter
 *.ipynb*
+
+.travis.yml
