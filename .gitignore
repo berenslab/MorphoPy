@@ -12,3 +12,4 @@
 
 # jupyter
 *.ipynb*
+.idea/*
