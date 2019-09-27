@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 
-def get_persistence(self, f=None):
+def get_persistence(neurontree=None, f=None):
     """
     Creates the persistence barcode for the graph G. The algorithm is taken from
     _Quantifying topological invariants of neuronal morphologies_ from Lida Kanari et al
@@ -16,9 +16,9 @@ def get_persistence(self, f=None):
     """
 
     # Initialization
-    L = self.get_tips()
-    R = self.get_root()
-    G = self.get_graph()
+    L = neurontree.get_tips()
+    R = neurontree.get_root()
+    G = neurontree.get_graph()
     D = dict(node_id=[], node_type=[], birth=[], death=[])  # holds persistence barcode
     v = dict()  # holds 'aging' function of visited nodes defined by f
 
