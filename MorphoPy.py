@@ -12,37 +12,48 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv, "c:f:d:", ["compute=", "file=", "dir=", "func="])
     except getopt.GetoptError:
-        print('MorphoPy.py -c <compute_feature> [-f <swc_file> | -d <directory>]')
+        print('Please use: MorphoPy.py -c <compute_feature> [-f <swc_file> | -d <directory>]')
         sys.exit(2)
 
     # default values:
     compute = 'stats'  # default mode
-    file = ''          # default no file -> directory is used
-    swcdir = '.'       # default working directory
+    directory = './'   # default working directory if no file and dir specified
+    file = ""          # default no file -> directory is used
     function = None    # default function none
 
-    # Arguments
+    # Check arguments
     for opt, arg in opts:
         if opt in ('-c', '--compute'):
             compute = arg
         elif opt in ('-f', '--file'):
             file = arg
         elif opt in ('-d', '--dir'):
-            swcdir = arg
+            directory = arg
         elif opt in ('--func'):
-            function = arg
+            # check if valid function selected and set pointer
+            if arg in pf.functions:
+                function = getattr(pf, arg)
 
-    # test if single file or directory and fill array with all files
-    files = []
+    # if single file or directory, fill array with all files
+    allfiles = []
     if len(file) > 1:
-        files.append(file)
-        swcdir = "./"
+        allfiles.append(file)
+        directory = ""
     else:
-        allfiles = os.listdir(swcdir)
-        for f in allfiles:
-            swcpattern = "*.swc"
-            if fnmatch.fnmatch(f, swcpattern):
-                files.append(f)
+        allfiles = os.listdir(directory)
+
+    # test if files have valid extension
+    files = []
+    swc_ext = "*.swc"
+    for f in allfiles:
+        if fnmatch.fnmatch(f, swc_ext):
+            files.append(f)
+
+    # no valid files found
+    if len(files) < 1:
+        print("No valid file is specified or no file found in current directory!")
+        print('Please use: MorphoPy.py -c <compute_feature> [-f <swc_file> | -d <directory>]')
+        sys.exit(2)
 
     ##### Compute morphometric statistics #####
     if compute == 'stats':
@@ -52,7 +63,7 @@ def main(argv):
             print(" Process File: {} ".format(file))
             # compute morphometric stats
             try:
-                swc = pd.read_csv(swcdir+file, delim_whitespace=True, comment='#',
+                swc = pd.read_csv(directory+file, delim_whitespace=True, comment='#',
                                   names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
                 mytree = nt.NeuronTree(swc)
                 print(fp.compute_Morphometric_Statistics(mytree))
@@ -65,14 +76,9 @@ def main(argv):
         # process all files
         for file in files:
             print(" Process File: {} ".format(file))
-            # check if valid function selected
-            if function in pf.functions:
-                function = getattr(pf, function)
-            else:
-                function = None
             # compute persistence data
             try:
-                swc = pd.read_csv(swcdir+file, delim_whitespace=True, comment='#',
+                swc = pd.read_csv(directory+file, delim_whitespace=True, comment='#',
                                   names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
                 mytree = nt.NeuronTree(swc)
                 print(fp.get_persistence(mytree, f=function))
