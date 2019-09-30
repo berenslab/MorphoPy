@@ -3,6 +3,7 @@ import getopt
 import os
 import fnmatch
 import pandas as pd
+import networkx as nx
 import neurontree.NeuronTree as nt
 import computation.feature_presentation as fp
 import computation.persistence_functions as pf
@@ -29,7 +30,7 @@ def main(argv):
             file = arg
         elif opt in ('-d', '--dir'):
             directory = arg
-        elif opt in ('--func'):
+        elif opt in '--func':
             # check if valid function selected and set pointer
             if arg in pf.functions:
                 function = getattr(pf, arg)
@@ -55,6 +56,11 @@ def main(argv):
         print('Please use: MorphoPy.py -c <compute_feature> [-f <swc_file> | -d <directory>]')
         sys.exit(2)
 
+    # set version of networkX
+    nxversion = 1
+    if float(nx.__version__) >= 2:
+        nxversion = 2
+
     ##### Compute morphometric statistics #####
     if compute == 'stats':
         print('##### Morphometric statistics #####')
@@ -65,7 +71,7 @@ def main(argv):
             try:
                 swc = pd.read_csv(directory+file, delim_whitespace=True, comment='#',
                                   names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
-                mytree = nt.NeuronTree(swc)
+                mytree = nt.NeuronTree(swc=swc, nxversion=nxversion)
                 print(fp.compute_Morphometric_Statistics(mytree))
             except:
                 print("Failure in computing morphometric statistics!")
@@ -80,7 +86,7 @@ def main(argv):
             try:
                 swc = pd.read_csv(directory+file, delim_whitespace=True, comment='#',
                                   names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
-                mytree = nt.NeuronTree(swc)
+                mytree = nt.NeuronTree(swc=swc, nxversion=nxversion)
                 print(fp.get_persistence(mytree, f=function))
             except:
                 print("Failure in computing persistence data!")
