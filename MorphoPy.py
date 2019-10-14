@@ -10,15 +10,20 @@ import computation.feature_presentation as fp
 import computation.persistence_functions as pf
 
 
+def help():
+    print(
+        'Please use: MorphoPy.py -c <compute_feature> [--func <persistence_function>] [-f <swc_file> | -d <directory>]')
+    sys.exit(2)
+
+
 def main(argv):
     try:
         opts, args = getopt.getopt(argv, "c:f:d:", ["compute=", "file=", "dir=", "func="])
     except getopt.GetoptError:
-        print('Please use: MorphoPy.py -c <compute_feature> [-f <swc_file> | -d <directory>]')
-        sys.exit(2)
+        help()
 
     # default values:
-    compute = 'stats'  # default mode
+    compute = ''       # no compute mode selected
     directory = './'   # default working directory if no file and dir specified
     file = ""          # default no file -> directory is used
     function = None    # default function none
@@ -33,6 +38,7 @@ def main(argv):
             directory = arg
         elif opt in '--func':
             # check if valid function selected and set pointer
+            # if unknown, computing without special function
             if arg in pf.functions:
                 function = getattr(pf, arg)
 
@@ -54,8 +60,7 @@ def main(argv):
     # no valid files found
     if len(files) < 1:
         print("No valid file is specified or no file found in current directory!")
-        print('Please use: MorphoPy.py -c <compute_feature> [-f <swc_file> | -d <directory>]')
-        sys.exit(2)
+        help()
 
     # set version of networkX
     nxversion = 1
@@ -75,6 +80,7 @@ def main(argv):
                 mytree = nt.NeuronTree(swc=swc, nxversion=nxversion)
                 morpho_stats_table = fp.compute_Morphometric_Statistics(mytree)
                 print(morpho_stats_table)
+                # Export of pandas data frame to csv-file in same directory
                 morpho_stats_table.to_csv(directory+file+"_morpho_stats.csv")
             except:
                 print("Failure in computing morphometric statistics!")
@@ -93,7 +99,7 @@ def main(argv):
                 persistence_table = fp.get_persistence(mytree.get_mst(), f=function)
                 print(persistence_table)
 
-                # create diagram and save to directory
+                # create diagram and save png-file to same directory
                 x = persistence_table['birth']
                 y = persistence_table['death']
                 plt.scatter(x, y, alpha=0.5)
@@ -107,8 +113,8 @@ def main(argv):
             except:
                 print("Failure in computing persistence data!")
     else:
-        print('Unknown mode. Use a valid compute parameter')
-        sys.exit(2)
+        print('Unknown compute mode. Use a valid compute parameter')
+        help()
 
 
 if __name__ == '__main__':
