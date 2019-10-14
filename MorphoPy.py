@@ -4,6 +4,7 @@ import os
 import fnmatch
 import pandas as pd
 import networkx as nx
+import matplotlib.pyplot as plt
 import neurontree.NeuronTree as nt
 import computation.feature_presentation as fp
 import computation.persistence_functions as pf
@@ -72,7 +73,9 @@ def main(argv):
                 swc = pd.read_csv(directory+file, delim_whitespace=True, comment='#',
                                   names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
                 mytree = nt.NeuronTree(swc=swc, nxversion=nxversion)
-                print(fp.compute_Morphometric_Statistics(mytree))
+                morpho_stats_table = fp.compute_Morphometric_Statistics(mytree)
+                print(morpho_stats_table)
+                morpho_stats_table.to_csv(directory+file+"_morpho_stats.csv")
             except:
                 print("Failure in computing morphometric statistics!")
 
@@ -87,10 +90,22 @@ def main(argv):
                 swc = pd.read_csv(directory+file, delim_whitespace=True, comment='#',
                                   names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
                 mytree = nt.NeuronTree(swc=swc, nxversion=nxversion)
-                print(fp.get_persistence(mytree, f=function))
+                persistence_table = fp.get_persistence(mytree.get_mst(), f=function)
+                print(persistence_table)
+
+                # create diagram and save to directory
+                x = persistence_table['birth']
+                y = persistence_table['death']
+                plt.scatter(x, y, alpha=0.5)
+                if function is None:
+                    plt.title('Persistence Diagram')
+                else:
+                    plt.title('Persistence Diagram ({})'.format(function.__name__))
+                plt.xlabel('birth')
+                plt.ylabel('death')
+                plt.savefig(directory+file+"_persistence.png")
             except:
                 print("Failure in computing persistence data!")
-
     else:
         print('Unknown mode. Use a valid compute parameter')
         sys.exit(2)
