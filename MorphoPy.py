@@ -114,6 +114,31 @@ def main(argv):
                 plt.close()
             except:
                 print("Failure in computing persistence data!")
+
+    ##### Compute density map #####
+    elif compute == 'density':
+        print('##### Density Map #####')
+        # process all files
+        for file in files:
+            print(" Process File: {} ".format(file))
+            # compute density map
+            try:
+                swc = pd.read_csv(directory+file, delim_whitespace=True, comment='#',
+                                  names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
+                mytree = nt.NeuronTree(swc=swc, nxversion=nxversion)
+
+                dist = 1  # in microns
+                # get the resampled point could along each neurite at distance 1 micron.
+                # pc is an array of 3D coordinates for each resampled node
+                pc = mytree.resample_nodes(mytree.get_graph(), dist)
+                plt.figure()
+                plt.scatter(pc[:, 0], pc[:, 2], s=1)
+                plt.title('Density Map')
+
+                plt.savefig(directory+file+"_density.png")
+                plt.close()
+            except:
+                print("Failure in computing density map!")
     else:
         print('Unknown compute mode. Use a valid compute parameter')
         help()
