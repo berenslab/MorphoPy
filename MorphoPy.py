@@ -102,6 +102,7 @@ def main(argv):
                 # create diagram and save png-file to same directory
                 x = persistence_table['birth']
                 y = persistence_table['death']
+                plt.figure()
                 plt.scatter(x, y, alpha=0.5)
                 if function is None:
                     plt.title('Persistence Diagram')
@@ -110,6 +111,7 @@ def main(argv):
                 plt.xlabel('birth')
                 plt.ylabel('death')
                 plt.savefig(directory+file+"_persistence.png")
+                plt.close()
             except:
                 print("Failure in computing persistence data!")
     else:

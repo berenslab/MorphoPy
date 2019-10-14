@@ -3,7 +3,7 @@ matplotlib
 numpy
 scipy
 pandas
-networkx
+networkx==1.11
 sklearn
 shapely
 pygraphviz
