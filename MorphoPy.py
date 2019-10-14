@@ -11,14 +11,29 @@ import computation.persistence_functions as pf
 
 
 def help():
-    print(
-        'Please use: MorphoPy.py -c <compute_feature> [--func <persistence_function>] [-f <swc_file> | -d <directory>]')
+    print('Usage: MorphoPy.py -c <compute_feature> [--func <persistence_function>]')
+    print('                   [-f <swc_file> | -d <directory>] [-o <output directory>]')
+    print('')
+    print('Options:')
+    print('   -c, --compute                parameter for selecting the computing feature.')
+    print('       --func                   if persistence is selected as feature, you can')
+    print('                                specify with this option a method function you')
+    print('                                want to use at computing the persistence.')
+    print('   -f, --file                   specifies a swc-file as input for Morphopy,')
+    print('                                if no file or directory is selected, working')
+    print('                                directory is used instead.')
+    print('   -d, --directory              specifies a directory as input for swc-files,')
+    print('                                if no file or directory is selected, working')
+    print('                                directory is used instead.')
+    print('   -o, --output                 specities the output directory for saving the')
+    print('                                results in.')
+
     sys.exit(2)
 
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, "c:f:d:", ["compute=", "file=", "dir=", "func="])
+        opts, args = getopt.getopt(argv, "c:f:d:o:", ["compute=", "file=", "dir=", "func=", "output="])
     except getopt.GetoptError:
         help()
 
@@ -27,6 +42,7 @@ def main(argv):
     directory = './'   # default working directory if no file and dir specified
     file = ""          # default no file -> directory is used
     function = None    # default function none
+    output = None      # default output directory is none
 
     # Check arguments
     for opt, arg in opts:
@@ -36,6 +52,8 @@ def main(argv):
             file = arg
         elif opt in ('-d', '--dir'):
             directory = arg
+        elif opt in ('-o', '--output'):
+            output = arg
         elif opt in '--func':
             # check if valid function selected and set pointer
             # if unknown, computing without special function
@@ -45,10 +63,14 @@ def main(argv):
     # if single file or directory, fill array with all files
     allfiles = []
     if len(file) > 1:
-        allfiles.append(file)
-        directory = ""
+        allfiles.append(os.path.basename(file))
+        directory = os.path.dirname(file)+"/"
     else:
         allfiles = os.listdir(directory)
+
+    # if no output directory is specified use source directory
+    if output is None:
+        output = directory
 
     # test if files have valid extension
     files = []
@@ -81,7 +103,7 @@ def main(argv):
                 morpho_stats_table = fp.compute_Morphometric_Statistics(mytree)
                 print(morpho_stats_table)
                 # Export of pandas data frame to csv-file in same directory
-                morpho_stats_table.to_csv(directory+file+"_morpho_stats.csv")
+                morpho_stats_table.to_csv(output+file+"_morpho_stats.csv")
             except:
                 print("Failure in computing morphometric statistics!")
 
@@ -110,7 +132,7 @@ def main(argv):
                     plt.title('Persistence Diagram ({})'.format(function.__name__))
                 plt.xlabel('birth')
                 plt.ylabel('death')
-                plt.savefig(directory+file+"_persistence.png")
+                plt.savefig(output+file+"_persistence.png")
                 plt.close()
             except:
                 print("Failure in computing persistence data!")
@@ -134,8 +156,7 @@ def main(argv):
                 plt.figure()
                 plt.scatter(pc[:, 0], pc[:, 2], s=1)
                 plt.title('Density Map')
-
-                plt.savefig(directory+file+"_density.png")
+                plt.savefig(output+file+"_density.png")
                 plt.close()
             except:
                 print("Failure in computing density map!")
