@@ -12,7 +12,11 @@
 
 # jupyter
 *.ipynb*
+<<<<<<< HEAD
 
 
 *travis.yml
 
+=======
+.idea/*
+>>>>>>> d0869f6ccc99cfdcf38522644d50f440c26d4707
