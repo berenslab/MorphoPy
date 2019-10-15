@@ -1,7 +1,15 @@
-numpy>=1.13.1
-pandas==0.20.3
-scipy
+For NeuronTree:
 matplotlib
-matplotlib-scalebar
-opencv-python
-networkx<2.0
+numpy
+scipy
+pandas
+networkx==1.11
+sklearn
+shapely
+pygraphviz
+
+For NeuronTreeGUI:
+python34-tkinter
+graphviz-devel
+
+
