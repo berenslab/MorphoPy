@@ -11,5 +11,5 @@
 *.egg-info/
 
 # jupyter
-*.ipynb*
+*.ipynb_checkpoints*
 .idea/*
