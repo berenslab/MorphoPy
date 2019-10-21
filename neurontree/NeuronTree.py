@@ -591,7 +591,8 @@ class NeuronTree:
         Wrapper function to the networkx.edges() function. It returns a list of edges.
         :param start: int, node id, determines the starting edge within the neuron
         :param type_ix: int, optional, default = None. Determines the type of edges to be returned.
-        Options are None (= all edges), 2 (= axonal edges) and 3 (= dendritic edges).
+        Options are None (= all edges), 2 (= axonal edges), 3 (= basal dendritic edges), 4 (= apical dendritic edges) or
+        [3,4] (= all dendritic edges).
         :param data: boolean, default=False. If set to True the edge attribute data is returned as well.
         :return: list of edges
         """
@@ -602,13 +603,15 @@ class NeuronTree:
             edges = [x for x in self._G.edges(start, data=data) if (x[0] in nodes or x[1] in nodes)]
         return edges
 
-    def get_dendrite_nodes(self, data=False):
+    def get_dendrite_nodes(self, data=False, type_ix=[3, 4]):
         """
         Returns all dendritic nodes.
         :param data: boolean, default=False. If set to True the node attribute data is returned as well.
+        :param type_ix: list, default = [3,4]. This determines if all, only basal (ix =3) or only apical (ix = 4)
+        dendritic nodes are returned.
         :return: list of dendritic nodes
         """
-        return np.array(self.nodes(type_ix=[3, 4] , data=data))
+        return np.array(self.nodes(type_ix=type_ix , data=data))
 
     def get_axon_nodes(self, data=False):
         """
@@ -624,7 +627,7 @@ class NeuronTree:
 
     def get_dendrite_edges(self, start=None, data=False):
         dendrite_nodes = self.get_dendrite_nodes()
-        return [x for x in self._G.edges(start,data=data) if (x[0] in dendrite_nodes or x[1] in dendrite_nodes)]
+        return [x for x in self._G.edges(start, data=data) if (x[0] in dendrite_nodes or x[1] in dendrite_nodes)]
 
     def get_tips(self):
         """
@@ -645,12 +648,12 @@ class NeuronTree:
         #bp_indx = np.where(np.array(np.sum(nx.adjacency_matrix(self._G), axis=1)).flatten() > 1)
         return np.array(self.nodes())[bp_indx]
 
-    def get_dendritic_tree(self):
+    def get_dendritic_tree(self, type_ix=[3,4]):
         """
         Returns the dendrites as a new NeuronTree.
         :return: NeuronTree
         """
-        nodes = list(self.get_dendrite_nodes())
+        nodes = list(self.get_dendrite_nodes(type_ix=type_ix))
         nodes.insert(0, self.get_root())
         subgraph = nx.subgraph(self._G, nodes)
         return NeuronTree(graph=subgraph, nxversion=self._nxversion)
@@ -1507,7 +1510,7 @@ class NeuronTree:
             nx.draw_networkx_edge_labels(self._G, pos, edge_labels=edge_labels, **kwds)
 
     def draw_2D(self, fig=None, projection='xz', axon_color='grey', dendrite_color='darkgrey',
-                apical_dendrite_color='darkyellow', x_offset=0, y_offset=0, **kwargs):
+                apical_dendrite_color='darkgreen', x_offset=0, y_offset=0, **kwargs):
         """
         Plots a 2D projection of the stick figure neuron.
         :param fig: Figure in which to draw. If None a new figure is created.
