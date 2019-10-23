@@ -3,6 +3,9 @@ import random
 import networkx as nx
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from neurontree.utils import smooth_gaussian
 
 
 def get_persistence(neurontree=None, f=None):
@@ -133,3 +136,137 @@ def compute_Morphometric_Statistics(neurontree=None):
         z['tree_asymmetry'] = 0
 
     return pd.DataFrame.from_dict(z, orient='index')
+
+def compute_Density_Maps(neurontree=None, distance=1, smooth=False, sigma=1):
+    # get the resampled point could along each neurite at distance 1 micron.
+    # pc is an array of 3D coordinates for each resampled node
+    pc = neurontree.resample_nodes(neurontree.get_graph(), distance)
+
+    # holds all density plots to return to user
+    plots = []
+    plt.figure()
+    plt.scatter(pc[:, 0], pc[:, 2], s=1)
+    sns.despine()
+    plt.title('Density Map with resampled nodes')
+    plots.append(plt)
+
+    ###### PARAMETER ################
+    # r holds the normalization bounds. They could be read in through the config.
+    r = dict(min=np.min(pc, axis=0), max=np.max(pc, axis=0))
+
+    # which axes to project on
+    proj_axes = '02'
+    dim = len(proj_axes)
+    n_bins = 100
+
+    ######## COMPUTATION ############
+    # normalize point cloud
+    pc = (pc - r['min']) / (r['max'] - r['min'])
+
+    # holds the range for binning of the histogram. So far the cells are noramlized to be between max --> 1 and min --> 0
+    # I can therefore know, that the point will lie between 0 and 1. However, the range could also be a parameter set
+    # in the config file.
+    range_ = [[-.1, 1.1]] * dim
+    data = _project_data(proj_axes, pc)
+
+    # compute histogram hence density map
+    H_100, edges = np.histogramdd(data, bins=(n_bins,) * dim,
+                                  range=range_, normed=True)
+
+    H_20, edges_20 = np.histogramdd(data, bins=(20,) * dim,
+                                    range=range_, normed=True)
+
+    H_10, edges_10 = np.histogramdd(data, bins=(10,) * dim,
+                                    range=range_, normed=True)
+
+    # perform smoothing
+    if smooth:
+        H_100 = smooth_gaussian(H_100, dim=dim, sigma=sigma)
+        H_20 = smooth_gaussian(H_20, dim=dim, sigma=sigma)
+        H_10 = smooth_gaussian(H_10, dim=dim, sigma=sigma)
+
+
+    # plot maps and store in array
+    plt.figure(figsize=(15, 5))
+    plt.title('Histogram hence density map')
+
+    plt.subplot(131)
+    plt.imshow(H_100.T)
+    plt.gca().invert_yaxis()
+    plt.title('100 bins')
+
+    plt.subplot(132)
+    plt.imshow(H_20.T)
+    plt.gca().invert_yaxis()
+    plt.title('20 bins')
+
+    plt.subplot(133)
+    plt.imshow(H_10.T)
+    plt.gca().invert_yaxis()
+    plt.title('10 bins')
+    plots.append(plt)
+
+
+
+    for proj_axes, ax in [('0', 'x'), ('1', 'y'), ('2', 'z')]:
+
+        plt.figure()
+        plt.title('Histogram hence density map')
+        dim = len(proj_axes)
+
+        # holds the range for binning of the histogram. So far the cells are noramlized to be between max --> 1 and min --> 0
+        # I can therefore know, that the point will lie between 0 and 1. However, the range could also be a parameter set
+        # in the config file.
+        range_ = [[-.1, 1.1]] * dim
+        data = _project_data(proj_axes, pc)
+
+        for k, n_bins in enumerate([100, 20], start=1):
+            # compute histogram hence density map
+            H, edges = np.histogramdd(data, bins=(n_bins,) * dim,
+                                      range=range_, normed=True)
+
+            # perform smoothing
+            if smooth:
+                H = smooth_gaussian(H, dim=dim, sigma=sigma)
+
+            plt.subplot(2, 2, k)
+            plt.plot(H)
+            sns.despine()
+            plt.xlabel(ax)
+            plt.title('%i bins' % n_bins)
+
+        plt.suptitle('Projection onto the %s axis' % ax, weight='bold')
+        plots.append(plt)
+
+    return plots
+
+
+
+def _project_data(proj_axes, data):
+    """
+        Helper function to project data onto the the axes defined in proj_axes.
+
+        :param proj_axes:   str that holds the axes that are projected to as number, e.g. '01' for projection onto xy
+                            or '02' for projection onto xz.
+    """
+
+    p_a = proj_axes
+    dim = len(proj_axes)
+
+    if dim == 2:
+        indices = '012'
+        for ix in range(len(p_a)):
+            indices = indices.replace(p_a[ix], '')
+        deleted_axis = int(indices)
+        ax = [0, 1, 2]
+        ax.remove(deleted_axis)
+        result = data[:, ax]
+
+    elif dim == 1:
+
+        ax = int(p_a)
+        result = data[:, ax]
+    else:
+        result = data
+
+    return result

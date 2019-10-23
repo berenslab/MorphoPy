@@ -4,6 +4,8 @@ import os
 import fnmatch
 import pandas as pd
 import networkx as nx
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 import neurontree.NeuronTree as nt
 import computation.feature_presentation as fp
@@ -11,29 +13,36 @@ import computation.persistence_functions as pf
 
 
 def help():
-    print('Usage: MorphoPy.py -c <compute_feature> [--func <persistence_function>]')
+    print('Usage: MorphoPy.py -c <compute_feature> [--func <persistence_function> | --smooth <1|0> | --sigma <value>]')
     print('                   [-f <swc_file> | -d <directory>] [-o <output directory>]')
     print('')
     print('Options:')
-    print('   -c, --compute                parameter for selecting the computing feature.')
+    print('   -c, --compute                parameter for selecting the computing feature:')
+    print('                                persistence: Compute persistence data         ')
+    print('                                stats      : Compute Morphometric statistics  ')
+    print('                                density    : Create density maps              ')
     print('       --func                   if persistence is selected as feature, you can')
     print('                                specify with this option a method function you')
-    print('                                want to use at computing the persistence.')
-    print('   -f, --file                   specifies a swc-file as input for Morphopy,')
-    print('                                if no file or directory is selected, working')
-    print('                                directory is used instead.')
-    print('   -d, --directory              specifies a directory as input for swc-files,')
-    print('                                if no file or directory is selected, working')
-    print('                                directory is used instead.')
-    print('   -o, --output                 specities the output directory for saving the')
-    print('                                results in.')
+    print('                                want to use at computing the persistence.     ')
+    print('       --smooth                 if density map is selected as feature, you can')
+    print('                                turn smoothing on (1). (default: 0)           ')
+    print('       --sigma                  if density map is selected and smoothin is    ')
+    print('                                turned on, you can specity the sigma value of ')
+    print('                                smoothing. (default: 1)                       ')
+    print('   -f, --file                   specifies a swc-file as input for Morphopy,   ')
+    print('                                if no file or directory is selected, working  ')
+    print('                                directory is used as default.                 ')
+    print('   -d, --directory              specifies a directory as input for swc-files. ')
+    print('                                (default: working directory)                  ')
+    print('   -o, --output                 specifies the output directory for saving the ')
+    print('                                results in. (default: same as source)         ')
 
     sys.exit(2)
 
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, "c:f:d:o:", ["compute=", "file=", "dir=", "func=", "output="])
+        opts, args = getopt.getopt(argv, "c:f:d:o:", ["compute=", "file=", "dir=", "func=", "smooth=", "sigma=", "output="])
     except getopt.GetoptError:
         help()
 
@@ -43,6 +52,8 @@ def main(argv):
     file = ""          # default no file -> directory is used
     function = None    # default function none
     output = None      # default output directory is none
+    smooth = False     # default value: smoothing off in density maps
+    sigma = 1          # default value of sigma (density maps smoothing)
 
     # Check arguments
     for opt, arg in opts:
@@ -54,6 +65,11 @@ def main(argv):
             directory = arg
         elif opt in ('-o', '--output'):
             output = arg
+        elif opt in '--smooth':
+            if arg == '1':
+                smooth = True
+        elif opt in '--sigma':
+            sigma = int(arg)
         elif opt in '--func':
             # check if valid function selected and set pointer
             # if unknown, computing without special function
@@ -149,15 +165,11 @@ def main(argv):
                                   names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
                 mytree = nt.NeuronTree(swc=swc, nxversion=nxversion)
 
-                dist = 1  # in microns
-                # get the resampled point could along each neurite at distance 1 micron.
-                # pc is an array of 3D coordinates for each resampled node
-                pc = mytree.resample_nodes(mytree.get_graph(), dist)
-                plt.figure()
-                plt.scatter(pc[:, 0], pc[:, 2], s=1)
-                plt.title('Density Map')
-                plt.savefig(output+file+"_density.png")
-                plt.close()
+                plots = fp.compute_Density_Maps(mytree, smooth=smooth, sigma=sigma)
+
+                for idx, plot in enumerate(plots, start=1):
+                    plot.savefig(output+file+"_density_%s.png" % idx)
+                    plot.close()
             except:
                 print("Failure in computing density map!")
     else:
