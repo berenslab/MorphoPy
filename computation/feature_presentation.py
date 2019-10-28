@@ -3,6 +3,7 @@ import random
 import networkx as nx
 import numpy as np
 import pandas as pd
+import configparser as cp
 import matplotlib.pyplot as plt
 import seaborn as sns
 from neurontree.utils import smooth_gaussian
@@ -137,10 +138,10 @@ def compute_Morphometric_Statistics(neurontree=None):
 
     return pd.DataFrame.from_dict(z, orient='index')
 
-def compute_Density_Maps(neurontree=None, distance=1, smooth=False, sigma=1):
+def compute_Density_Maps(neurontree=None, conf=None):
     # get the resampled point could along each neurite at distance 1 micron.
     # pc is an array of 3D coordinates for each resampled node
-    pc = neurontree.resample_nodes(neurontree.get_graph(), distance)
+    pc = neurontree.resample_nodes(neurontree.get_graph(), d=1)
 
     # holds all density plots to return to user
     plots = []
@@ -151,13 +152,36 @@ def compute_Density_Maps(neurontree=None, distance=1, smooth=False, sigma=1):
     plots.append(plt)
 
     ###### PARAMETER ################
-    # r holds the normalization bounds. They could be read in through the config.
-    r = dict(min=np.min(pc, axis=0), max=np.max(pc, axis=0))
+    # read from config if available
+    if conf is not None:
+        cfg = cp.ConfigParser()
+        cfg.read(conf)
 
-    # which axes to project on
-    proj_axes = '02'
+        min = np.array([cfg.getfloat("norm_bound", "r_min_x"),
+                       cfg.getfloat("norm_bound", "r_min_y"),
+                       cfg.getfloat("norm_bound", "r_min_z")])
+        max = np.array([cfg.getfloat("norm_bound", "r_max_x"),
+                       cfg.getfloat("norm_bound", "r_max_y"),
+                       cfg.getfloat("norm_bound", "r_max_z")])
+        r = dict(min=min, max=max)
+
+        proj_axes = cfg.get("global", "proj_axes")
+        n_bins = cfg.getint("global", "n_bins")
+        normed = cfg.getboolean("global", "normed")
+        smooth = cfg.getboolean("global", "smooth")
+        sigma = cfg.getint("global", "sigma")
+    else:
+        # set default values if no config available:
+        # r holds the normalization bounds
+        r = dict(min=np.min(pc, axis=0), max=np.max(pc, axis=0))
+        # which axes to project on
+        proj_axes = '02'
+        n_bins = 100
+        normed = True
+        smooth = False
+        sigma = 1
+
     dim = len(proj_axes)
-    n_bins = 100
 
     ######## COMPUTATION ############
     # normalize point cloud
@@ -171,13 +195,13 @@ def compute_Density_Maps(neurontree=None, distance=1, smooth=False, sigma=1):
 
     # compute histogram hence density map
     H_100, edges = np.histogramdd(data, bins=(n_bins,) * dim,
-                                  range=range_, normed=True)
+                                  range=range_, normed=normed)
 
     H_20, edges_20 = np.histogramdd(data, bins=(20,) * dim,
-                                    range=range_, normed=True)
+                                    range=range_, normed=normed)
 
     H_10, edges_10 = np.histogramdd(data, bins=(10,) * dim,
-                                    range=range_, normed=True)
+                                    range=range_, normed=normed)
 
     # perform smoothing
     if smooth:
@@ -223,7 +247,7 @@ def compute_Density_Maps(neurontree=None, distance=1, smooth=False, sigma=1):
         for k, n_bins in enumerate([100, 20], start=1):
             # compute histogram hence density map
             H, edges = np.histogramdd(data, bins=(n_bins,) * dim,
-                                      range=range_, normed=True)
+                                      range=range_, normed=normed)
 
             # perform smoothing
             if smooth:
