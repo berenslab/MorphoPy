@@ -678,13 +678,20 @@ class NeuronTree:
         """
         return nx.adjancency_matrix(self._G, weight=weight)
 
-    def get_extend(self):
+    def get_extend(self, robust=False):
         """
         Returns the maximal extend in x, y and z direction.
+        :param robust: bool. This parameter determines if the extend is calculated as maximum (default robust=False) or
+        as 95-percentile (robust=True). The latter is considered a more robust value, as it reflects the extend of 95%
+        of the mass.
         :return: 1x3 numpy.array
         """
         P = np.array(list(nx.get_node_attributes(self._G, 'pos').values()))
-        return np.max(P, axis=0) - np.min(P, axis=0)
+        if robust:
+            extend = np.percentile(P, 97.5, axis=0) - np.percentile(P, 2.5, axis=0)
+        else:
+            extend = np.max(P, axis=0) - np.min(P, axis=0)
+        return extend
 
     def get_root_angle_dist(self, angle_type='axis_angle', **kwargs):
         """
