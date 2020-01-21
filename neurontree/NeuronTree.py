@@ -1592,12 +1592,22 @@ class NeuronTree:
         # create dataframe with graph data
         G = self._G
         ids = [int(k) for k in G.nodes()]
-        pos = np.round(np.array(list(nx.get_node_attributes(G, 'pos').values())), 2)
-        r = np.array(list(nx.get_node_attributes(G, 'radius').values()))
-        t = np.array(list(nx.get_node_attributes(G, 'type').values())).astype(int)
-        pids = [int(list(l.keys())[0]) for l in list(G.pred.values()) if list(l.keys())]
-        root_idx = np.where(ids == self.get_root())[0][0]
-        pids.insert(root_idx, -1)
+        pos_dict = nx.get_node_attributes(G, 'pos')
+        r_dict = nx.get_node_attributes(G, 'radius')
+        t_dict = nx.get_node_attributes(G, 'type')
+
+        # create a parent dictionary
+        beg = np.array([e[0] for e in self.edges()])
+        end = np.array([e[1] for e in self.edges()])
+
+        parents = {e: b for b, e in zip(beg, end)}
+        parents[self.get_root()] = -1
+
+        pids = [parents[e] for e in ids]
+        pos = np.array([np.round(pos_dict[k], 2) for k in ids])
+        r = np.array([r_dict[k] for k in ids])
+        t = np.array([int(t_dict[k]) for k in ids])
+
         # write graph into swc file
         d = {'n': ids, 'type': t, 'x': pos[:, 0], 'y': pos[:, 1], 'z': pos[:, 2], 'radius': r, 'parent': pids}
         df = pd.DataFrame(data=d, columns=['n', 'type', 'x','y', 'z' ,'radius' , 'parent'])
