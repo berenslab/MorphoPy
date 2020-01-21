@@ -1594,7 +1594,8 @@ class NeuronTree:
         r = np.array(list(nx.get_node_attributes(G, 'radius').values()))
         t = np.array(list(nx.get_node_attributes(G, 'type').values())).astype(int)
         pids = [int(list(l.keys())[0]) for l in list(G.pred.values()) if list(l.keys())]
-        pids.insert(0, -1)
+        root_idx = np.where(ids == self.get_root())[0][0]
+        pids.insert(root_idx, -1)
         # write graph into swc file
         d = {'n': ids, 'type': t, 'x': pos[:, 0], 'y': pos[:, 1], 'z': pos[:, 2], 'radius': r, 'parent': pids}
         df = pd.DataFrame(data=d, columns=['n', 'type', 'x','y', 'z' ,'radius' , 'parent'])
