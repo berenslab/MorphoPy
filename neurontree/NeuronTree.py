@@ -96,10 +96,9 @@ class NeuronTree:
                                      [dict(zip(node_keys, [pos[ix], t[ix], radius[ix]])) for ix in range(pos.shape[0])]))
 
                 # create edge data
-                n_ = n.tolist()
-                parent_idx = [np.where(n == k)[0][0] if k != -1 else -1 for k in pid[1:]]
+                parent_idx = np.array([np.where(n == k)[0][0] if k != -1 else -1 for k in pid])
                 # calculate euclidean distance between end points of edge
-                ec = np.sqrt(np.sum((pos[parent_idx] - pos[1:]) ** 2, axis=1))
+                ec = np.sqrt(np.sum((pos[parent_idx[parent_idx != -1]] - pos[parent_idx != -1]) ** 2, axis=1))
                 edge_keys = ['euclidean_dist', 'path_length']
 
                 # exclude pid =-1
