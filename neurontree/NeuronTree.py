@@ -102,8 +102,11 @@ class NeuronTree:
                 ec = np.sqrt(np.sum((pos[parent_idx] - pos[1:]) ** 2, axis=1))
                 edge_keys = ['euclidean_dist', 'path_length']
 
+                # exclude pid =-1
+                node_idx = (pid != -1)
+
                 # create a list of edges of the form [(e1,e2, {'euclidean_dist': ec, 'path_length': pl}), ..]
-                edge_data = list(zip(pid[1:], n[1:],
+                edge_data = list(zip(pid[node_idx], n[node_idx],
                                      [dict(zip(edge_keys, [ec[ix], ec[ix]])) for ix in range(ec.shape[0])]))
 
             G.add_nodes_from(node_data)
