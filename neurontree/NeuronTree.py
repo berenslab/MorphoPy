@@ -1640,6 +1640,7 @@ class NeuronTree:
         # create dataframe with graph data
         G = self._G
         ids = [int(k) for k in G.nodes()]
+        ids.sort()
         pos_dict = nx.get_node_attributes(G, 'pos')
         r_dict = nx.get_node_attributes(G, 'radius')
         t_dict = nx.get_node_attributes(G, 'type')
