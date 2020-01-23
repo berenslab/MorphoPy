@@ -459,6 +459,20 @@ class NeuronTree:
         S = NeuronTree(node_data=G.nodes(data=True), edge_data=G.edges(data=True), post_process=False, nxversion=self._nxversion)
         return S
 
+    def rename_nodes(self, label=None):
+        """
+        Renames the nodes within the graph. Note, this operation is done in place. If no label dictionary is passed the
+        nodes are relabeled in consecutive order.
+        :param label: optional. Dictionary holding the renaming {old_node_label: new_node_label}
+        """
+
+        nodes = self.nodes()
+        nodes.sort()
+
+        if label is None:
+            label = dict(zip(nodes, range(1, len(nodes) + 1)))
+        nx.relabel.relabel_nodes(self.get_graph(), label, copy=False)
+
     def get_node_attributes(self):
         """ returns the list of attributes assigned to each node.
             If no attributes are assigned it returns an empty list.
