@@ -1342,6 +1342,40 @@ class NeuronTree:
         else:
             return np.histogramdd(results, bins=(nbins,) * dim, normed=True)
 
+    def get_neurites(self, soma_included=True):
+        """
+        Returns a list of all neurites extending from the soma (axon and dendrites).
+        :param soma_included: bool. Determines if the soma is part of the neurites or not.
+        :return: list of NeuronTrees
+        """
+
+        r = self.get_root()
+
+        neurite_paths = dict()
+        G = self.get_graph()
+
+        # get the path of each neurite extending from the soma
+        for t in self.get_tips():
+            path = nx.dijkstra_path(G, r, t)
+            stem_ix = path[1]
+
+            if stem_ix in neurite_paths.keys():
+                # if traversing the same neurite to another tip, just append the path
+                neurite_paths[stem_ix] += path
+            else:
+                # if tracing a new neurite
+                neurite_paths[stem_ix] = path
+
+        # get subgraph with all nodes
+        subgraphs = []
+        for key in neurite_paths.keys():
+            nodes = set(neurite_paths[key])
+            if not soma_included:
+                nodes.remove(r)
+            s = nx.subgraph(G, nodes)
+            subgraphs.append(NeuronTree(graph=s))
+
+        return subgraphs
 
 #######################################################################################################################
 #######################################################################################################################
