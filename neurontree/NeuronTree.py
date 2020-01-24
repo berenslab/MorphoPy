@@ -96,13 +96,18 @@ class NeuronTree:
                                      [dict(zip(node_keys, [pos[ix], t[ix], radius[ix]])) for ix in range(pos.shape[0])]))
 
                 # create edge data
-                parent_idx = [np.where(n == k)[0][0] if k != -1 else -1 for k in pid[1:]]
+
+                parent_idx = np.array([np.where(n == k)[0][0] if k != -1 else -1 for k in pid])
+
                 # calculate euclidean distance between end points of edge
-                ec = np.sqrt(np.sum((pos[parent_idx] - pos[1:]) ** 2, axis=1))
+                ec = np.sqrt(np.sum((pos[parent_idx[parent_idx != -1]] - pos[parent_idx != -1]) ** 2, axis=1))
                 edge_keys = ['euclidean_dist', 'path_length']
 
+                # exclude pid =-1
+                node_idx = (pid != -1)
+
                 # create a list of edges of the form [(e1,e2, {'euclidean_dist': ec, 'path_length': pl}), ..]
-                edge_data = list(zip(pid[1:], n[1:],
+                edge_data = list(zip(pid[node_idx], n[node_idx],
                                      [dict(zip(edge_keys, [ec[ix], ec[ix]])) for ix in range(ec.shape[0])]))
 
             G.add_nodes_from(node_data)
@@ -458,6 +463,20 @@ class NeuronTree:
 
         S = NeuronTree(node_data=G.nodes(data=True), edge_data=G.edges(data=True), post_process=False, nxversion=self._nxversion)
         return S
+
+    def rename_nodes(self, label=None):
+        """
+        Renames the nodes within the graph. Note, this operation is done in place. If no label dictionary is passed the
+        nodes are relabeled in consecutive order.
+        :param label: optional. Dictionary holding the renaming {old_node_label: new_node_label}
+        """
+
+        nodes = self.nodes()
+        nodes.sort()
+
+        if label is None:
+            label = dict(zip(nodes, range(1, len(nodes) + 1)))
+        nx.relabel.relabel_nodes(self.get_graph(), label, copy=False)
 
     def get_node_attributes(self):
         """ returns the list of attributes assigned to each node.
@@ -1345,6 +1364,40 @@ class NeuronTree:
         else:
             return np.histogramdd(results, bins=(nbins,) * dim, normed=True)
 
+    def get_neurites(self, soma_included=True):
+        """
+        Returns a list of all neurites extending from the soma (axon and dendrites).
+        :param soma_included: bool. Determines if the soma is part of the neurites or not.
+        :return: list of NeuronTrees
+        """
+
+        r = self.get_root()
+
+        neurite_paths = dict()
+        G = self.get_graph()
+
+        # get the path of each neurite extending from the soma
+        for t in self.get_tips():
+            path = nx.dijkstra_path(G, r, t)
+            stem_ix = path[1]
+
+            if stem_ix in neurite_paths.keys():
+                # if traversing the same neurite to another tip, just append the path
+                neurite_paths[stem_ix] += path
+            else:
+                # if tracing a new neurite
+                neurite_paths[stem_ix] = path
+
+        # get subgraph with all nodes
+        subgraphs = []
+        for key in neurite_paths.keys():
+            nodes = set(neurite_paths[key])
+            if not soma_included:
+                nodes.remove(r)
+            s = nx.subgraph(G, nodes)
+            subgraphs.append(NeuronTree(graph=s))
+
+        return subgraphs
 
 #######################################################################################################################
 #######################################################################################################################
@@ -1595,11 +1648,23 @@ class NeuronTree:
         # create dataframe with graph data
         G = self._G
         ids = [int(k) for k in G.nodes()]
-        pos = np.round(np.array(list(nx.get_node_attributes(G, 'pos').values())), 2)
-        r = np.array(list(nx.get_node_attributes(G, 'radius').values()))
-        t = np.array(list(nx.get_node_attributes(G, 'type').values())).astype(int)
-        pids = [int(list(l.keys())[0]) for l in list(G.pred.values()) if list(l.keys())]
-        pids.insert(0, -1)
+        ids.sort()
+        pos_dict = nx.get_node_attributes(G, 'pos')
+        r_dict = nx.get_node_attributes(G, 'radius')
+        t_dict = nx.get_node_attributes(G, 'type')
+
+        # create a parent dictionary
+        beg = np.array([e[0] for e in self.edges()])
+        end = np.array([e[1] for e in self.edges()])
+
+        parents = {e: b for b, e in zip(beg, end)}
+        parents[self.get_root()] = -1
+
+        pids = [parents[e] for e in ids]
+        pos = np.array([np.round(pos_dict[k], 2) for k in ids])
+        r = np.array([r_dict[k] for k in ids])
+        t = np.array([int(t_dict[k]) for k in ids])
+
         # write graph into swc file
         d = {'n': ids, 'type': t, 'x': pos[:, 0], 'y': pos[:, 1], 'z': pos[:, 2], 'radius': r, 'parent': pids}
         df = pd.DataFrame(data=d, columns=['n', 'type', 'x','y', 'z' ,'radius' , 'parent'])
