@@ -471,7 +471,9 @@ class NeuronTree:
 
         if label is None:
             label = dict(zip(nodes, range(1, len(nodes) + 1)))
-        nx.relabel.relabel_nodes(self.get_graph(), label, copy=False)
+        relabeled_G = nx.relabel.relabel_nodes(self.get_graph(), label)
+
+        self._G = relabeled_G
 
     def get_node_attributes(self):
         """ returns the list of attributes assigned to each node.
@@ -518,8 +520,9 @@ class NeuronTree:
         try:
             root = np.min(self.nodes(type_ix=1))
         except (ValueError, KeyError):
-            print('No node is attributed as being the soma. Returning the smallest node id.')
-            root = np.min(self.nodes())
+            print('No node is attributed as being the soma. Returning the node with no incoming edge.')
+            E = np.array(self.edges())
+            root = (set(self.nodes()) - set(E[:, 1])).pop()
 
         return root
 

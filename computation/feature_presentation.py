@@ -49,7 +49,7 @@ def get_persistence(neurontree=None, f=None):
             # if all children are active
             if all(c in A for c in C):
                 # choose randomly from the oldest children
-                age = np.array([v[c] for c in C])
+                age = np.array([np.abs(v[c]) for c in C])
                 indices = np.where(age == age[np.argmax(age)])[0]
                 c_m = C[random.choice(indices)]
 
