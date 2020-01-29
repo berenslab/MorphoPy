@@ -512,6 +512,61 @@ class NeuronTree:
             attr = list(self._G.adj[e[0]][e[1]].keys())
         return attr
 
+    def get_path_length(self):
+        """
+        Returns a dictionary containing the path length to the root for each node.
+        :return:
+         dict: Dictionary of the form {node_id=path length to soma}
+        """
+        r = self.get_root()
+
+        edges = self.edges(data=True)
+        nodes = self.nodes()
+        nodes.sort()
+        edges.sort()
+
+        pl = dict(zip(nodes, [0] * len(nodes)))
+        while edges:
+
+            e1, e2, data = edges.pop(0)
+
+            if e1 == r:
+                pl[e2] = data['path_length']
+            elif pl[e1] != 0:
+                pl[e2] = pl[e1] + data['path_length']
+            else:
+                ix = np.random.randint(0, len(edges))
+                edges.insert(ix, (e1, e2, data))
+
+        return pl
+
+    def get_cumulative_path_length(self):
+        """
+        Returns a dictionary that hold the cumulative path length of the subtree attached to node n. The root holds
+        the total path length within the tree whereas the cumulative path length of all tips is equal to zero.
+        :return:
+        dict: Dictionary holding the cumulative path length of the subtree connected to each node.
+        """
+
+        tips = self.get_tips()
+        G = self.get_graph()
+        nodes = self.nodes()
+        c_pl = dict(zip(nodes, [0] * len(nodes)))
+
+        active_nodes = list(tips)
+        while len(active_nodes) > 0:
+            a = active_nodes.pop(0)
+
+            edges = G.edges(a, data=True)
+            # for add pl of each edge coming from a
+            for e1, e2, data in edges:
+                c_pl[e1] += (c_pl[e2] + data['path_length'])
+
+            # insert the parents
+            parents = G.predecessors(a)
+            active_nodes += parents
+        return c_pl
+
     def get_root(self):
         """
         Returns the root of the Neuron which is typically the soma with node id = 1.
