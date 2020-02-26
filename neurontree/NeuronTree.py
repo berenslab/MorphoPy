@@ -134,19 +134,32 @@ class NeuronTree:
         R = self._G
         nodes_to_merge = True
         root_ix = self.get_root()
-        root = R.node[root_ix]
+
+        if self._nxversion == 2:
+            # changed for version 2.2 of networkX
+            root = R.nodes[root_ix]
+        else:
+            root = R.node[root_ix]
 
         while nodes_to_merge:
             nodes_to_merge = False
             root_successors = R.successors(root_ix)
             for succ in root_successors:
-                s = R.node[int(succ)]
+                if self._nxversion == 2:
+                    # changed for version 2.2 of networkX
+                    s = R.nodes[int(succ)]
+                else:
+                    s = R.node[int(succ)]
 
                 if s['type'] == root['type']:
                     nodes_to_merge = True
                     succ_successors = R.successors(succ)
                     for e in succ_successors:
-                        n2 = R.node[int(e)]
+                        if self._nxversion == 2:
+                            # changed for version 2.2 of networkX
+                            n2 = R.nodes[int(e)]
+                        else:
+                            n2 = R.node[int(e)]
                         d = np.sqrt(np.sum((root['pos'] - n2['pos']) ** 2))
                         R.add_edge(root_ix, e, euclidean_dist=d, path_length=d)
                     R.remove_node(succ)
@@ -163,12 +176,22 @@ class NeuronTree:
         while edgelist:
             predecessor, redundantNode = edgelist.pop()
 
-            n1 = self._G.node[predecessor]
+            if self._nxversion == 2:
+                # changed for version 2.x of networkX
+                n1 = self._G.nodes[predecessor]
+            else:
+                n1 = self._G.node[predecessor]
+
             successors = self._G.successors(redundantNode)
 
             # connect edges across redundant nodes
             for succ in successors:
-                n2 = self._G.node[succ]
+                if self._nxversion == 2:
+                    # changed for version 2.x of networkX
+                    n2 = self._G.nodes[succ]
+                else:
+                    n2 = self._G.node[succ]
+
                 d = np.sqrt(np.sum((n1['pos'] - n2['pos']) ** 2))
                 self._G.add_edge(predecessor, succ, euclidean_dist=d, path_length=d)
 
@@ -306,7 +329,11 @@ class NeuronTree:
             S = nx.dfs_tree(self._G, s).nodes()
             t = self._get_branch_type(S)
             for k in S:
-                self._G.node[k]['type'] = t
+                if self._nxversion == 2:
+                    # changed for version 2.x of networkX
+                    self._G.nodes[k]['type'] = t
+                else:
+                    self._G.node[k]['type'] = t
 
     def _clean_axon(self):
         """
@@ -382,7 +409,11 @@ class NeuronTree:
         tips = self.get_tips()
 
         # get the node data
-        node_data = self.get_graph().node
+        if self._nxversion == 2:
+            # changed for version 2.x of networkX
+            node_data = self.get_graph().nodes
+        else:
+            node_data = self.get_graph().node
         node_data_new = [(node, node_data[node]) for node in np.append(other_points, tips)]
 
         # get parent of each node and create edge_data
@@ -490,10 +521,11 @@ class NeuronTree:
             if self._nxversion == 2:
                 # changed for version 2.2 of networkX
                 node_id = list(self._G.nodes().keys())[0]
+                attr = list(self._G.nodes[node_id].keys())
             else:
                 # this works only with version 1 of networkX
                 node_id = self._G.nodes()[0]
-            attr = list(self._G.node[node_id].keys())
+                attr = list(self._G.node[node_id].keys())
         return attr
 
     def get_edge_attributes(self):
@@ -602,9 +634,17 @@ class NeuronTree:
             nodes = list(self._G.nodes(data=data))
         else:
             if type(type_ix) == list:
-                nodes = [k for k in self._G.node if self._G.node[k]['type'] in type_ix]
+                if self._nxversion == 2:
+                    # changed for version 2.x of networkX
+                    nodes = [k for k in self._G if self._G.nodes[k]['type'] in type_ix]
+                else:
+                    nodes = [k for k in self._G.nodes if self._G.node[k]['type'] in type_ix]
             else:
-                nodes = [k for k in self._G.node if self._G.node[k]['type'] == type_ix]
+                if self._nxversion == 2:
+                    # changed for version 2.x of networkX
+                    nodes = [k for k in self._G if self._G.nodes[k]['type'] == type_ix]
+                else:
+                    nodes = [k for k in self._G.node if self._G.node[k]['type'] == type_ix]
         return nodes
 
     def edges(self, start=None, type_ix=None, data=False):
@@ -974,12 +1014,21 @@ class NeuronTree:
         path_angle = {}
 
         for u, v in self.edges():
-            e1 = self.get_graph().node[v]['pos'] - self.get_graph().node[u]['pos']
+            if self._nxversion == 2:
+                # changed for version 2.x of networkX
+                e1 = self.get_graph().nodes[v]['pos'] - self.get_graph().nodes[u]['pos']
+            else:
+                e1 = self.get_graph().node[v]['pos'] - self.get_graph().node[u]['pos']
             path_angle[u] = {}
             try:
                 path_angle[u][v] = {}
                 for w in successors[v]:
-                    e2 = self.get_graph().node[w]['pos'] - self.get_graph().node[v]['pos']
+                    if self._nxversion == 2:
+                        # changed for version 2.x of networkX
+                        e2 = self.get_graph().nodes[w]['pos'] - self.get_graph().nodes[v]['pos']
+                    else:
+                        e2 = self.get_graph().node[w]['pos'] - self.get_graph().node[v]['pos']
+
                     path_angle[u][v][w] = angle_between(e1, e2) * 180 / np.pi
             except KeyError:
                 continue
@@ -1037,7 +1086,11 @@ class NeuronTree:
             successors = list(self.get_graph().adj[bp].keys())
             branches = []
             for succ in successors:  # create a vector for each branching edge
-                v = self.get_graph().node[succ]['pos'] - self.get_graph().node[bp]['pos']
+                if self._nxversion == 2:
+                    # changed for version 2.x of networkX
+                    v = self.get_graph().nodes[succ]['pos'] - self.get_graph().nodes[bp]['pos']
+                else:
+                    v = self.get_graph().node[succ]['pos'] - self.get_graph().node[bp]['pos']
                 branches.append(v)
             for u, v in combinations(branches, 2):
                 branch_angles.append(angle_between(u, v) * 180 / np.pi)
@@ -1100,8 +1153,13 @@ class NeuronTree:
         for e in self.edges(data=True):
 
             h = e[2]['euclidean_dist']
-            r = self.get_graph().node[e[0]]['radius']
-            R = self.get_graph().node[e[1]]['radius']
+            if self._nxversion == 2:
+                # changed for version 2.x of networkX
+                r = self.get_graph().nodes[e[0]]['radius']
+                R = self.get_graph().nodes[e[1]]['radius']
+            else:
+                r = self.get_graph().node[e[0]]['radius']
+                R = self.get_graph().node[e[1]]['radius']
 
             d[(e[0], e[1])] = (1/3)*np.pi*h*(r*r + r*R + R*R)
         return d
@@ -1114,8 +1172,13 @@ class NeuronTree:
         d = {}
         for e in self.edges(data=True):
             h = e[2]['euclidean_dist']
-            r = self.get_graph().node[e[0]]['radius']
-            R = self.get_graph().node[e[1]]['radius']
+            if self._nxversion == 2:
+                # changed for version 2.x of networkX
+                r = self.get_graph().nodes[e[0]]['radius']
+                R = self.get_graph().nodes[e[1]]['radius']
+            else:
+                r = self.get_graph().node[e[0]]['radius']
+                R = self.get_graph().node[e[1]]['radius']
 
             d[(e[0], e[1])] = np.pi*(r + R)*np.sqrt((R-r)**2 + h**2)
         return d
