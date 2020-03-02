@@ -44,7 +44,13 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv, "c:f:d:o:", ["compute=", "func=", "conf=", "file=", "dir=", "output="])
     except getopt.GetoptError:
+        print("Wrong options are specified!")
         help()
+
+    # check if arguments are empty
+    if len(argv) < 1:
+      print("No arguments are used! At least the compute mode has to be passed.")
+      help()
 
     # default values:
     compute = ''       # no compute mode selected
@@ -56,6 +62,10 @@ def main(argv):
 
     # Check arguments
     for opt, arg in opts:
+        # argument is missing because next option is in argument
+        if arg.startswith("-"):
+            print("Wrong argument in option: "+opt)
+            help()
         if opt in ('-c', '--compute'):
             compute = arg
         elif opt in ('-f', '--file'):
