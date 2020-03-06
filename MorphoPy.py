@@ -13,7 +13,7 @@ import computation.persistence_functions as pf
 
 
 def help():
-    print('Usage: MorphoPy.py -c <compute_feature> [--func <persistence_function> | --smooth <1|0> | --sigma <value>]')
+    print('Usage: MorphoPy.py -c <compute_feature> [--func <persistence_function> | --conf <config_file>]')
     print('                   [-f <swc_file> | -d <directory>] [-o <output directory>]')
     print('')
     print('Options:')
@@ -42,10 +42,15 @@ def help():
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, "c:f:d:o:", ["compute=", "func=", "smooth=", "sigma=", "conf=",
-                                                      "file=", "dir=", "output="])
+        opts, args = getopt.getopt(argv, "c:f:d:o:", ["compute=", "func=", "conf=", "file=", "dir=", "output="])
     except getopt.GetoptError:
+        print("Wrong options are specified!")
         help()
+
+    # check if arguments are empty
+    if len(argv) < 1:
+      print("No arguments are used! At least the compute mode has to be passed.")
+      help()
 
     # default values:
     compute = ''       # no compute mode selected
@@ -53,12 +58,14 @@ def main(argv):
     file = ""          # default no file -> directory is used
     function = None    # default function none
     output = None      # default output directory is none
-    smooth = False     # default value: smoothing off in density maps
-    sigma = 1          # default value of sigma (density maps smoothing)
     conf = None        # default value, no config file is used
 
     # Check arguments
     for opt, arg in opts:
+        # argument is missing because next option is in argument
+        if arg.startswith("-"):
+            print("Wrong argument in option: "+opt)
+            help()
         if opt in ('-c', '--compute'):
             compute = arg
         elif opt in ('-f', '--file'):
@@ -67,11 +74,6 @@ def main(argv):
             directory = arg
         elif opt in ('-o', '--output'):
             output = arg
-        elif opt in '--smooth':
-            if arg == '1':
-                smooth = True
-        elif opt in '--sigma':
-            sigma = int(arg)
         elif opt in '--conf':
             conf = arg
         elif opt in '--func':

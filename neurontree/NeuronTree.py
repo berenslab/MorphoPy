@@ -96,7 +96,9 @@ class NeuronTree:
                                      [dict(zip(node_keys, [pos[ix], t[ix], radius[ix]])) for ix in range(pos.shape[0])]))
 
                 # create edge data
+
                 parent_idx = np.array([np.where(n == k)[0][0] if k != -1 else -1 for k in pid])
+
                 # calculate euclidean distance between end points of edge
                 ec = np.sqrt(np.sum((pos[parent_idx[parent_idx != -1]] - pos[parent_idx != -1]) ** 2, axis=1))
                 edge_keys = ['euclidean_dist', 'path_length']
@@ -132,17 +134,32 @@ class NeuronTree:
         R = self._G
         nodes_to_merge = True
         root_ix = self.get_root()
-        root = R.node[root_ix]
+
+        if self._nxversion == 2:
+            # changed for version 2.2 of networkX
+            root = R.nodes[root_ix]
+        else:
+            root = R.node[root_ix]
 
         while nodes_to_merge:
             nodes_to_merge = False
-            for succ in R.successors(root_ix):
-                s = R.node[int(succ)]
+            root_successors = R.successors(root_ix)
+            for succ in root_successors:
+                if self._nxversion == 2:
+                    # changed for version 2.2 of networkX
+                    s = R.nodes[int(succ)]
+                else:
+                    s = R.node[int(succ)]
 
                 if s['type'] == root['type']:
                     nodes_to_merge = True
-                    for e in R.successors(succ):
-                        n2 = R.node[int(e)]
+                    succ_successors = R.successors(succ)
+                    for e in succ_successors:
+                        if self._nxversion == 2:
+                            # changed for version 2.2 of networkX
+                            n2 = R.nodes[int(e)]
+                        else:
+                            n2 = R.node[int(e)]
                         d = np.sqrt(np.sum((root['pos'] - n2['pos']) ** 2))
                         R.add_edge(root_ix, e, euclidean_dist=d, path_length=d)
                     R.remove_node(succ)
@@ -159,12 +176,22 @@ class NeuronTree:
         while edgelist:
             predecessor, redundantNode = edgelist.pop()
 
-            n1 = self._G.node[predecessor]
+            if self._nxversion == 2:
+                # changed for version 2.x of networkX
+                n1 = self._G.nodes[predecessor]
+            else:
+                n1 = self._G.node[predecessor]
+
             successors = self._G.successors(redundantNode)
 
             # connect edges across redundant nodes
             for succ in successors:
-                n2 = self._G.node[succ]
+                if self._nxversion == 2:
+                    # changed for version 2.x of networkX
+                    n2 = self._G.nodes[succ]
+                else:
+                    n2 = self._G.node[succ]
+
                 d = np.sqrt(np.sum((n1['pos'] - n2['pos']) ** 2))
                 self._G.add_edge(predecessor, succ, euclidean_dist=d, path_length=d)
 
@@ -302,7 +329,11 @@ class NeuronTree:
             S = nx.dfs_tree(self._G, s).nodes()
             t = self._get_branch_type(S)
             for k in S:
-                self._G.node[k]['type'] = t
+                if self._nxversion == 2:
+                    # changed for version 2.x of networkX
+                    self._G.nodes[k]['type'] = t
+                else:
+                    self._G.node[k]['type'] = t
 
     def _clean_axon(self):
         """
@@ -373,14 +404,16 @@ class NeuronTree:
             NeuronTree: mst. The minimal spanning tree representation of the original neuron.
         """
         # get the included nodes, which are soma, branch points and tips
-        other_points = np.unique(np.append(self.get_branchpoints(), self.get_root()))
+        root = self.get_root()
+        other_points = np.unique(np.append(self.get_branchpoints(), root))
         tips = self.get_tips()
 
-        # get the node data
-        if self._nxversion == 1:
-            node_data = self.get_graph().node
+
+        if self._nxversion == 2:
+            # changed for version 2.x of networkX
+            node_data = self.get_graph().nodes
         else:
-            node_data = self.get_graph().nodes()
+            node_data = self.get_graph().node
         node_data_new = [(node, node_data[node]) for node in np.append(other_points, tips)]
 
         # get parent of each node and create edge_data
@@ -390,7 +423,7 @@ class NeuronTree:
         while nodes:
             current_node = nodes.pop()
             # if node is  not soma
-            if current_node != self.get_root():
+            if current_node != root:
                 cn = copy.copy(current_node)
                 pred = list(nx.DiGraph.predecessors(self.get_graph(), current_node))[0]
                 path_length = edge_data[pred][cn]['path_length']
@@ -656,19 +689,21 @@ class NeuronTree:
         """
 
         if type_ix is None:
-            nodes = self._G.nodes(data=data)
+            nodes = list(self._G.nodes(data=data))
         else:
-            if self._nxversion == 1:
-                if type(type_ix) == list:
-                    nodes = [k for k in self._G.node if self._G.node[k]['type'] in type_ix]
+            if type(type_ix) == list:
+                if self._nxversion == 2:
+                    # changed for version 2.x of networkX
+                    nodes = [k for k in self._G if self._G.nodes[k]['type'] in type_ix]
+                else:
+                    nodes = [k for k in self._G.nodes if self._G.node[k]['type'] in type_ix]
+            else:
+                if self._nxversion == 2:
+                    # changed for version 2.x of networkX
+                    nodes = [k for k in self._G if self._G.nodes[k]['type'] == type_ix]
                 else:
                     nodes = [k for k in self._G.node if self._G.node[k]['type'] == type_ix]
-            if self._nxversion == 2:
-                if type(type_ix) == list:
-                    nodes = [k for k in self._G.nodes if self._G.nodes[k]['type'] in type_ix]
-                else:
-                    nodes = [k for k in self._G.nodes if self._G.nodes[k]['type'] == type_ix]
-                
+
         return nodes
 
     def edges(self, start=None, type_ix=None, data=False):
@@ -682,7 +717,7 @@ class NeuronTree:
         :return: list of edges
         """
         if type_ix is None:
-            edges = self._G.edges(start, data=data)
+            edges = list(self._G.edges(start, data=data))
         else:
             nodes = self.nodes(type_ix=type_ix)
             edges = [x for x in self._G.edges(start, data=data) if (x[0] in nodes or x[1] in nodes)]
@@ -729,7 +764,7 @@ class NeuronTree:
         :return: list of node ids of all branch points (nodes that have more than one successor).
         """
         # is this correct???:
-        bp_indx = np.where(np.array(np.sum(nx.adjacency_matrix(self._G).toarray(), axis=1)).flatten() > 1)
+        bp_indx = np.where(np.array(np.sum(nx.adjacency_matrix(self._G), axis=1)).flatten() > 1)[0]
         #bp_indx = np.where(np.array(np.sum(nx.adjacency_matrix(self._G), axis=1)).flatten() > 1)
         return np.array(self.nodes())[bp_indx]
 
@@ -832,7 +867,7 @@ class NeuronTree:
             Dictionary of the form {u: branch_order} for each node reachable from starting node.
         """
         d = {}
-        edges = self.edges(start)
+        edges = list(self.edges(start))
         d[start] = bo
         if len(edges) > 1:
             for e in edges:
@@ -1038,12 +1073,21 @@ class NeuronTree:
         path_angle = {}
 
         for u, v in self.edges():
-            e1 = self.get_graph().node[v]['pos'] - self.get_graph().node[u]['pos']
+            if self._nxversion == 2:
+                # changed for version 2.x of networkX
+                e1 = self.get_graph().nodes[v]['pos'] - self.get_graph().nodes[u]['pos']
+            else:
+                e1 = self.get_graph().node[v]['pos'] - self.get_graph().node[u]['pos']
             path_angle[u] = {}
             try:
                 path_angle[u][v] = {}
                 for w in successors[v]:
-                    e2 = self.get_graph().node[w]['pos'] - self.get_graph().node[v]['pos']
+                    if self._nxversion == 2:
+                        # changed for version 2.x of networkX
+                        e2 = self.get_graph().nodes[w]['pos'] - self.get_graph().nodes[v]['pos']
+                    else:
+                        e2 = self.get_graph().node[w]['pos'] - self.get_graph().node[v]['pos']
+
                     path_angle[u][v][w] = angle_between(e1, e2) * 180 / np.pi
             except KeyError:
                 continue
@@ -1101,7 +1145,11 @@ class NeuronTree:
             successors = list(self.get_graph().adj[bp].keys())
             branches = []
             for succ in successors:  # create a vector for each branching edge
-                v = self.get_graph().node[succ]['pos'] - self.get_graph().node[bp]['pos']
+                if self._nxversion == 2:
+                    # changed for version 2.x of networkX
+                    v = self.get_graph().nodes[succ]['pos'] - self.get_graph().nodes[bp]['pos']
+                else:
+                    v = self.get_graph().node[succ]['pos'] - self.get_graph().node[bp]['pos']
                 branches.append(v)
             for u, v in combinations(branches, 2):
                 branch_angles.append(angle_between(u, v) * 180 / np.pi)
@@ -1164,8 +1212,13 @@ class NeuronTree:
         for e in self.edges(data=True):
 
             h = e[2]['euclidean_dist']
-            r = self.get_graph().node[e[0]]['radius']
-            R = self.get_graph().node[e[1]]['radius']
+            if self._nxversion == 2:
+                # changed for version 2.x of networkX
+                r = self.get_graph().nodes[e[0]]['radius']
+                R = self.get_graph().nodes[e[1]]['radius']
+            else:
+                r = self.get_graph().node[e[0]]['radius']
+                R = self.get_graph().node[e[1]]['radius']
 
             d[(e[0], e[1])] = (1/3)*np.pi*h*(r*r + r*R + R*R)
         return d
@@ -1178,8 +1231,13 @@ class NeuronTree:
         d = {}
         for e in self.edges(data=True):
             h = e[2]['euclidean_dist']
-            r = self.get_graph().node[e[0]]['radius']
-            R = self.get_graph().node[e[1]]['radius']
+            if self._nxversion == 2:
+                # changed for version 2.x of networkX
+                r = self.get_graph().nodes[e[0]]['radius']
+                R = self.get_graph().nodes[e[1]]['radius']
+            else:
+                r = self.get_graph().node[e[0]]['radius']
+                R = self.get_graph().node[e[1]]['radius']
 
             d[(e[0], e[1])] = np.pi*(r + R)*np.sqrt((R-r)**2 + h**2)
         return d
@@ -1289,7 +1347,10 @@ class NeuronTree:
 
         branchpoints = self.get_branchpoints()
         nodes = self.nodes()
-        out_degree = nx.DiGraph.out_degree(G)
+        if self._nxversion == 1:
+            out_degree = nx.DiGraph.out_degree(G)
+        else:
+            out_degree = dict(G.out_degree())
 
         degree = dict(zip(nodes, [0] * len(nodes)))
         for n in nodes:
