@@ -377,7 +377,10 @@ class NeuronTree:
         tips = self.get_tips()
 
         # get the node data
-        node_data = self.get_graph().node
+        if self._nxversion == 1:
+            node_data = self.get_graph().node
+        else:
+            node_data = self.get_graph().nodes()
         node_data_new = [(node, node_data[node]) for node in np.append(other_points, tips)]
 
         # get parent of each node and create edge_data
@@ -401,7 +404,7 @@ class NeuronTree:
                 edge_data_new.append((pred, current_node, dict(euclidean_dist=ec, path_length=path_length)))
 
                 nodes.add(pred)  # adds the predecessor only once since nodes is a set
-        return NeuronTree(node_data=node_data_new, edge_data=edge_data_new, nxversion=self._nxversion)
+        return NeuronTree(node_data=node_data_new, edge_data=edge_data_new, nxversion=self._nxversion, post_process=False)
 
     def smooth_neurites(self, dim=1, window_size=21):
 
@@ -466,7 +469,7 @@ class NeuronTree:
         :param label: optional. Dictionary holding the renaming {old_node_label: new_node_label}
         """
 
-        nodes = self.nodes()
+        nodes = list(self.nodes())
         nodes.sort()
 
         if label is None:
@@ -487,10 +490,11 @@ class NeuronTree:
             if self._nxversion == 2:
                 # changed for version 2.2 of networkX
                 node_id = list(self._G.nodes().keys())[0]
+                attr = list(self._G.nodes[node_id].keys())
             else:
                 # this works only with version 1 of networkX
                 node_id = self._G.nodes()[0]
-            attr = list(self._G.node[node_id].keys())
+                attr = list(self._G.node[node_id].keys())
         return attr
 
     def get_edge_attributes(self):
@@ -654,10 +658,17 @@ class NeuronTree:
         if type_ix is None:
             nodes = self._G.nodes(data=data)
         else:
-            if type(type_ix) == list:
-                nodes = [k for k in self._G.node if self._G.node[k]['type'] in type_ix]
-            else:
-                nodes = [k for k in self._G.node if self._G.node[k]['type'] == type_ix]
+            if self._nxversion == 1:
+                if type(type_ix) == list:
+                    nodes = [k for k in self._G.node if self._G.node[k]['type'] in type_ix]
+                else:
+                    nodes = [k for k in self._G.node if self._G.node[k]['type'] == type_ix]
+            if self._nxversion == 2:
+                if type(type_ix) == list:
+                    nodes = [k for k in self._G.nodes if self._G.nodes[k]['type'] in type_ix]
+                else:
+                    nodes = [k for k in self._G.nodes if self._G.nodes[k]['type'] == type_ix]
+                
         return nodes
 
     def edges(self, start=None, type_ix=None, data=False):
@@ -1652,9 +1663,15 @@ class NeuronTree:
         colors = ['k', axon_color, dendrite_color, apical_dendrite_color]
 
         cs = []
+        
+        if self._nxversion ==1:
+            node_dict = G.node
+        else:
+            node_dict= G.nodes()
+        
         for k, e in enumerate(G.edges()):
-            n1 = G.node[e[0]]
-            n2 = G.node[e[1]]
+            n1 = node_dict[e[0]]
+            n2 = node_dict[e[1]]
             V[k, 0] = n1['pos']
             V[k, 1] = n2['pos']
             cs.append(colors[int(n2['type']) - 1])
