@@ -13,3 +13,6 @@
 # jupyter
 *.ipynb_checkpoints*
 .idea/*
+
+# DS Store
+*.DS_Store*
