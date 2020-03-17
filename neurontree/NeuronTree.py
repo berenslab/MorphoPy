@@ -21,13 +21,18 @@ matplotlib.rcParams.update({'font.size': 14})
 
 class NeuronTree:
 
-    # resample nodes along the edges of G in distance d, return array of 3D positions
-    @staticmethod
-    def resample_nodes(G, d):
+    # resample nodes along the edges of _G in distance d, return array of 3D positions
+    def resample_nodes(self, d=1):
         P = []
-        for (u, v, edata) in G.edges(data=True):
-            n1 = G.node[u]
-            n2 = G.node[v]
+        for (u, v, edata) in self._G.edges(data=True):
+            if self._nxversion == 2:
+                # changed for version 2.x of networkX
+                n1 = self._G.nodes[u]
+                n2 = self._G.nodes[v]
+            else:
+                n1 = self._G.node[u]
+                n2 = self._G.node[v]
+            
             e = edata['euclidean_dist']
             m = n2['pos'] - n1['pos']
             m /= np.linalg.norm(m)
@@ -37,7 +42,7 @@ class NeuronTree:
             for a in range(1, int(e / d)):
                 P.append(g(a * d))
 
-        P += list(nx.get_node_attributes(G, 'pos').values())
+        P += list(nx.get_node_attributes(self._G, 'pos').values())
         return np.array(P)
 
     # creates a networkX Tree out of a swc file.
@@ -443,7 +448,7 @@ class NeuronTree:
                 edge_data_new.append((pred, current_node, dict(euclidean_dist=ec, path_length=path_length)))
 
                 nodes.add(pred)  # adds the predecessor only once since nodes is a set
-        return NeuronTree(node_data=node_data_new, edge_data=edge_data_new, nxversion=self._nxversion, post_process=False)
+        return NeuronTree(node_data=node_data_new, edge_data=edge_data_new, nxversion=self._nxversion)
 
     def smooth_neurites(self, dim=1, window_size=21):
 
@@ -498,7 +503,7 @@ class NeuronTree:
         nx.set_edge_attributes(G, 'euclidean_dist', dict(zip(G.edges(), e_attr)))
         nx.set_edge_attributes(G, 'path_length', dict(zip(G.edges(), e_attr)))
 
-        S = NeuronTree(node_data=G.nodes(data=True), edge_data=G.edges(data=True), post_process=False, nxversion=self._nxversion)
+        S = NeuronTree(node_data=G.nodes(data=True), edge_data=G.edges(data=True), nxversion=self._nxversion)
         return S
 
     def rename_nodes(self, label=None):

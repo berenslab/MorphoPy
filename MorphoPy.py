@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import sys
 import getopt
 import os
@@ -128,6 +129,7 @@ def main(argv):
                 morpho_stats_table.to_csv(output+file+"_morpho_stats.csv")
             except:
                 print("Failure in computing morphometric statistics!")
+                print("Error: ",sys.exc_info()[1])
 
     ##### Compute persistence data #####
     elif compute == 'persistence':
@@ -158,6 +160,7 @@ def main(argv):
                 plt.close()
             except:
                 print("Failure in computing persistence data!")
+                print("Error: ",sys.exc_info()[1])
 
     ##### Compute density map #####
     elif compute == 'density':
@@ -180,6 +183,7 @@ def main(argv):
                 print("Failure in computing density map: Config file not found or not readable!")
             except:
                 print("Failure in computing density map!")
+                print("Error: ",sys.exc_info()[1])
     else:
         print('Unknown compute mode. Use a valid compute parameter')
         help()

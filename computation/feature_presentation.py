@@ -127,7 +127,7 @@ def compute_Morphometric_Statistics(neurontree=None):
     z['mean_branch_angle'] = np.mean(branch_angles)
 
     # get maximal degree within data
-    z['max_degree'] = np.max([item[1] for item in R.get_graph().out_degree().items() if item[0] != R.get_root()])
+    z['max_degree'] = np.max([item[1] for item in R.get_graph().out_degree() if item[0] != R.get_root()])
 
     # get tree asymmetry
     weights, psad = R.get_psad()
@@ -141,7 +141,7 @@ def compute_Morphometric_Statistics(neurontree=None):
 def compute_Density_Maps(neurontree=None, conf=None):
     # get the resampled point could along each neurite at distance 1 micron.
     # pc is an array of 3D coordinates for each resampled node
-    pc = neurontree.resample_nodes(neurontree.get_graph(), d=1)
+    pc = neurontree.resample_nodes(d=1)
 
     # holds all density plots to return to user
     plots = []
