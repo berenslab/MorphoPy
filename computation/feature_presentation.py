@@ -186,7 +186,9 @@ def compute_Density_Maps(neurontree=None, conf=None):
 
     ######## COMPUTATION ############
     # normalize point cloud
-    pc = (pc - r['min']) / (r['max'] - r['min'])
+    ext = (r['max'] - r['min'])
+    ext[ext == 0] = 1
+    pc = (pc - r['min'])/ ext
 
     # holds the range for binning of the histogram. So far the cells are noramlized to be between max --> 1 and min --> 0
     # I can therefore know, that the point will lie between 0 and 1. However, the range could also be a parameter set
