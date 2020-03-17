@@ -272,7 +272,7 @@ class NeuronTree:
         """
 
         G = self._G
-        roots = self.nodes(type_ix=1)
+        roots = self.get_root(return_all=True) # in case there are disconnected neurites
 
         trees = []
         for r in roots:
@@ -310,7 +310,6 @@ class NeuronTree:
         root = self.get_root()
         other_points = np.unique(np.append(self.get_branchpoints(), root))
         tips = self.get_tips()
-
 
         if self._nxversion == 2:
             # changed for version 2.x of networkX
@@ -351,9 +350,10 @@ class NeuronTree:
         positions = nx.get_node_attributes(G, 'pos')
 
         smoothed = dict(zip(G.nodes(), [False] * len(G.nodes())))
-        smoothed[1] = True
+        r = self.get_root()
+        smoothed[r] = True
 
-        dist_ = nx.single_source_dijkstra_path_length(G, source=1, weight='path_length')
+        dist_ = nx.single_source_dijkstra_path_length(G, source=r, weight='path_length')
         tips = self.get_tips()
 
         # get tips sorted by path length in descending order
@@ -507,13 +507,18 @@ class NeuronTree:
             active_nodes += parents
         return c_pl
 
-    def get_root(self):
+    def get_root(self, return_all=False):
         """
-        Returns the root of the Neuron which is typically the soma with node id = 1.
-        :return: int, node id of the soma.
+        Returns the root of the Neuron's rooted tree graph. A root is defined as a node that has an in degree of 0.
+        :param return_all: bool (defaut=False). Determines if all roots are returned or just one. If there is only one
+        root it is returned as an int.
+        :return: int or list , node id(s) of the tree roots.
         """
-        root = np.min(self.nodes(type_ix=1))
-        return root
+        roots = [n for n, d in self._G.in_degree().items() if d == 0]
+        if return_all:
+            return roots
+        else:
+            return roots[0]
 
     def reduce(self, method='mst', e=0.01):
         """
@@ -764,7 +769,8 @@ class NeuronTree:
             d: dict
             Dictionary of the form {u: branch_order} for each node.
         """
-        return self._get_branch_order(1,0)
+        root = self.get_root()
+        return self._get_branch_order(root,0)
 
     def _get_branch_order(self, start, bo):
         """
@@ -1397,32 +1403,38 @@ class NeuronTree:
 
     def get_neurites(self, soma_included=True):
         """
-        Returns a list of all neurites extending from the soma (axon and dendrites).
+        Returns a list of all neurites extending from the soma (axon and dendrites). If the neurites are disconnected
+        only the part connected to the soma will be returned.
         :param soma_included: bool. Determines if the soma is part of the neurites or not.
         :return: list of NeuronTrees
         """
 
-        r = self.get_root()
+        roots = self.get_root(return_all=True)
+        soma_nodes = self.nodes(type_ix=1)
+        r = [x for x in roots if x in soma_nodes][0]  # get somatic root node
 
         neurite_paths = dict()
         G = self.get_graph()
 
         # get the path of each neurite extending from the soma
         for t in self.get_tips():
-            path = nx.dijkstra_path(G, r, t)
-            stem_ix = path[1]
+            try:
+                path = nx.dijkstra_path(G, r, t)
+                stem_ix = path[1]
 
-            if stem_ix in neurite_paths.keys():
-                # if traversing the same neurite to another tip, just append the path
-                neurite_paths[stem_ix] += path
-            else:
-                # if tracing a new neurite
-                neurite_paths[stem_ix] = path
+                if stem_ix in neurite_paths.keys():
+                    # if traversing the same neurite to another tip, just append the path
+                    neurite_paths[stem_ix] = neurite_paths[stem_ix].union(set(path))
+                else:
+                    # if tracing a new neurite
+                    neurite_paths[stem_ix] = set(path)
+            except:
+                continue
 
         # get subgraph with all nodes
         subgraphs = []
         for key in neurite_paths.keys():
-            nodes = set(neurite_paths[key])
+            nodes = neurite_paths[key]
             if not soma_included:
                 nodes.remove(r)
             s = nx.subgraph(G, nodes)
