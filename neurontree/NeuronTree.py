@@ -18,6 +18,7 @@ from neurontree.utils import angle_between, get_rotation_matrix, rotationMatrixT
 sys.setrecursionlimit(100000)
 matplotlib.rcParams.update({'font.size': 14})
 
+
 class NeuronTree:
 
     # resample nodes along the edges of G in distance d, return array of 3D positions
@@ -119,51 +120,51 @@ class NeuronTree:
 
             self._remove_redundant_nodes()
             self._make_tree()   # needed to access the functions predecessor and successor
-            if 'type' in self.get_node_attributes() and post_process:
-                self._merge_roots_by_type()
-                self._unify_type()
-                self._clean_axon()
+            # if 'type' in self.get_node_attributes() and post_process:
+            #     self._merge_roots_by_type()
+            #     self._unify_type()
+            #     self._clean_axon()
 
-    def _merge_roots_by_type(self):
-        """
-        Starts at the root node in the soma and successively merges all nodes labeled as soma (type=1) into one node.
-        This results in a neuron with one single soma node. The manipulation is done inplace.
-
-        """
-
-        R = self._G
-        nodes_to_merge = True
-        root_ix = self.get_root()
-
-        if self._nxversion == 2:
-            # changed for version 2.2 of networkX
-            root = R.nodes[root_ix]
-        else:
-            root = R.node[root_ix]
-
-        while nodes_to_merge:
-            nodes_to_merge = False
-            root_successors = R.successors(root_ix)
-            for succ in root_successors:
-                if self._nxversion == 2:
-                    # changed for version 2.2 of networkX
-                    s = R.nodes[int(succ)]
-                else:
-                    s = R.node[int(succ)]
-
-                if s['type'] == root['type']:
-                    nodes_to_merge = True
-                    succ_successors = R.successors(succ)
-                    for e in succ_successors:
-                        if self._nxversion == 2:
-                            # changed for version 2.2 of networkX
-                            n2 = R.nodes[int(e)]
-                        else:
-                            n2 = R.node[int(e)]
-                        d = np.sqrt(np.sum((root['pos'] - n2['pos']) ** 2))
-                        R.add_edge(root_ix, e, euclidean_dist=d, path_length=d)
-                    R.remove_node(succ)
-        self._G = R
+    # def _merge_roots_by_type(self):
+    #     """
+    #     Starts at the root node in the soma and successively merges all nodes labeled as soma (type=1) into one node.
+    #     This results in a neuron with one single soma node. The manipulation is done inplace.
+    #
+    #     """
+    #
+    #     R = self._G
+    #     nodes_to_merge = True
+    #     root_ix = self.get_root()
+    #
+    #     if self._nxversion == 2:
+    #         # changed for version 2.2 of networkX
+    #         root = R.nodes[root_ix]
+    #     else:
+    #         root = R.node[root_ix]
+    #
+    #     while nodes_to_merge:
+    #         nodes_to_merge = False
+    #         root_successors = R.successors(root_ix)
+    #         for succ in root_successors:
+    #             if self._nxversion == 2:
+    #                 # changed for version 2.2 of networkX
+    #                 s = R.nodes[int(succ)]
+    #             else:
+    #                 s = R.node[int(succ)]
+    #
+    #             if s['type'] == root['type']:
+    #                 nodes_to_merge = True
+    #                 succ_successors = R.successors(succ)
+    #                 for e in succ_successors:
+    #                     if self._nxversion == 2:
+    #                         # changed for version 2.2 of networkX
+    #                         n2 = R.nodes[int(e)]
+    #                     else:
+    #                         n2 = R.node[int(e)]
+    #                     d = np.sqrt(np.sum((root['pos'] - n2['pos']) ** 2))
+    #                     R.add_edge(root_ix, e, euclidean_dist=d, path_length=d)
+    #                 R.remove_node(succ)
+    #     self._G = R
 
     def _remove_redundant_nodes(self):
         """
@@ -200,72 +201,72 @@ class NeuronTree:
             nodeindices = np.array(list(nx.get_edge_attributes(self._G, 'euclidean_dist').values())) == 0
             edgelist = list(np.array(list(nx.get_edge_attributes(self._G, 'euclidean_dist').keys()))[nodeindices])
 
-    def _merge_roots_by_distance(self, dist):
-        """
-        Merge nodes into one single soma node that are 'dist' microns far away from the soma. Merging is done inplace.
-        :param dist: double, distance in microns.
-        """
+    # def _merge_roots_by_distance(self, dist):
+    #     """
+    #     Merge nodes into one single soma node that are 'dist' microns far away from the soma. Merging is done inplace.
+    #     :param dist: double, distance in microns.
+    #     """
+    #
+    #     R = self._G
+    #     nodes_to_remove = True
+    #     root_ix = self.get_root()
+    #     root = R.node[root_ix]
+    #
+    #     # merge everything that is dist microns away from root node pos
+    #     # dist for BC cells is < 50 voxel = 2.5 microns
+    #     while (nodes_to_remove):
+    #         nodes_to_remove = False
+    #         for succ in R.successors(root_ix):
+    #             edge = R.get_edge_data(root_ix, succ)
+    #             if edge['euclidean_dist'] <= dist:
+    #                 nodes_to_remove = True
+    #                 for e in R.successors(succ):
+    #                     n2 = R.node[int(e)]
+    #                     d = np.sqrt(np.sum((root['pos'] - n2['pos']) ** 2))
+    #                     R.add_edge(root_ix, e, euclidean_dist=d, path_length=d)
+    #                 R.remove_node(succ)
+    #
+    #     self._G = R
 
-        R = self._G
-        nodes_to_remove = True
-        root_ix = self.get_root()
-        root = R.node[root_ix]
-
-        # merge everything that is dist microns away from root node pos
-        # dist for BC cells is < 50 voxel = 2.5 microns
-        while (nodes_to_remove):
-            nodes_to_remove = False
-            for succ in R.successors(root_ix):
-                edge = R.get_edge_data(root_ix, succ)
-                if edge['euclidean_dist'] <= dist:
-                    nodes_to_remove = True
-                    for e in R.successors(succ):
-                        n2 = R.node[int(e)]
-                        d = np.sqrt(np.sum((root['pos'] - n2['pos']) ** 2))
-                        R.add_edge(root_ix, e, euclidean_dist=d, path_length=d)
-                    R.remove_node(succ)
-
-        self._G = R
-
-    def _merge_edges_on_path_by_displacement(self, start=1, disp=5):
-        """
-        Reduces the number of nodes along all neurites based on their displacement from the line connecting the outer
-        branch points. It deletes all nodes B on path A-->B-->C that are maximally 'disp' microns displaced from the
-        edge A-->C. The reduction is done inplace, to preserve the original structure please copy the NeuronTree before.
-        :param start: node id, default = 1. Denotes the starting point within the NeuronTree.
-        :param disp: double, displacement threshold in microns. It determines the perpendicular distance within which
-        all nodes get deleted.
-        """
-
-        Tree = self._G
-        current_node = start
-        successors = Tree.successors(start)
-
-        while (successors):
-
-            pred = Tree.predecessors(current_node)
-            succ = successors.pop(0)
-            deg = Tree.out_degree()[current_node]
-            if deg == 1:
-                if pred and pred == Tree.predecessors(Tree.predecessors(succ)[0]):
-                    p = Tree.node[pred[0]]
-                    s = Tree.node[succ]
-                    c = Tree.node[current_node]
-                    d = np.linalg.norm(np.cross(c['pos'] - p['pos'], p['pos'] - s['pos'])) / np.linalg.norm(
-                        c['pos'] - p['pos'])
-                    if d < disp:
-                        for s in Tree.successors(current_node):
-                            path = nx.shortest_path_length(Tree, pred[0], s, weight='path_length')
-                            d = np.sqrt(np.sum((p['pos'] - s['pos']) ** 2))
-                            Tree.add_edge(pred[0], s, euclidean_dist=d, path_length=path)
-
-                        Tree.remove_node(current_node)
-            S = Tree.successors(succ)
-            S[len(S):] = successors
-            successors = S
-
-            current_node = succ
-        self._G = Tree
+    # def _merge_edges_on_path_by_displacement(self, start=1, disp=5):
+    #     """
+    #     Reduces the number of nodes along all neurites based on their displacement from the line connecting the outer
+    #     branch points. It deletes all nodes B on path A-->B-->C that are maximally 'disp' microns displaced from the
+    #     edge A-->C. The reduction is done inplace, to preserve the original structure please copy the NeuronTree before.
+    #     :param start: node id, default = 1. Denotes the starting point within the NeuronTree.
+    #     :param disp: double, displacement threshold in microns. It determines the perpendicular distance within which
+    #     all nodes get deleted.
+    #     """
+    #
+    #     Tree = self._G
+    #     current_node = start
+    #     successors = Tree.successors(start)
+    #
+    #     while (successors):
+    #
+    #         pred = Tree.predecessors(current_node)
+    #         succ = successors.pop(0)
+    #         deg = Tree.out_degree()[current_node]
+    #         if deg == 1:
+    #             if pred and pred == Tree.predecessors(Tree.predecessors(succ)[0]):
+    #                 p = Tree.node[pred[0]]
+    #                 s = Tree.node[succ]
+    #                 c = Tree.node[current_node]
+    #                 d = np.linalg.norm(np.cross(c['pos'] - p['pos'], p['pos'] - s['pos'])) / np.linalg.norm(
+    #                     c['pos'] - p['pos'])
+    #                 if d < disp:
+    #                     for s in Tree.successors(current_node):
+    #                         path = nx.shortest_path_length(Tree, pred[0], s, weight='path_length')
+    #                         d = np.sqrt(np.sum((p['pos'] - s['pos']) ** 2))
+    #                         Tree.add_edge(pred[0], s, euclidean_dist=d, path_length=path)
+    #
+    #                     Tree.remove_node(current_node)
+    #         S = Tree.successors(succ)
+    #         S[len(S):] = successors
+    #         successors = S
+    #
+    #         current_node = succ
+    #     self._G = Tree
 
     def _merge_edges_on_path_by_edge_length(self, start=1, e=0.01):
         """
@@ -609,13 +610,7 @@ class NeuronTree:
         Returns the root of the Neuron which is typically the soma with node id = 1.
         :return: int, node id of the soma.
         """
-        try:
-            root = np.min(self.nodes(type_ix=1))
-        except (ValueError, KeyError):
-            print('No node is attributed as being the soma. Returning the node with no incoming edge.')
-            E = np.array(self.edges())
-            root = (set(self.nodes()) - set(E[:, 1])).pop()
-
+        root = np.min(self.nodes(type_ix=1))
         return root
 
     def reduce(self, method='mst', e=0.01):
