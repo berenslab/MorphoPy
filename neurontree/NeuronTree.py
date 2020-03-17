@@ -337,14 +337,14 @@ class NeuronTree:
         """
         # clean up axon: only longest axon is kept
         axon_edges = self.get_axon_edges()
-
+        root = self.get_root()
         if axon_edges:
             axon_edges = np.array(axon_edges)
-            edges = axon_edges[(axon_edges[:, 0] == 1)]
+            edges = axon_edges[(axon_edges[:, 0] == root)]
             l = []
 
             for n in edges:
-                l.append(len(nx.dfs_tree(self._G, n[1]).nodes()))
+                l.append(len(nx.dfs_tree(self._G, n[root]).nodes()))
 
             m = max(l)
             ax = edges[l.index(m)][1]
