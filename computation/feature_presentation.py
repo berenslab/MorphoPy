@@ -81,7 +81,8 @@ def compute_Morphometric_Statistics(neurontree=None):
     tips = neurontree.get_tips()
     z['tips'] = tips.size
 
-    z['stems'] = len(neurontree.edges(1))
+    root = neurontree.get_root()
+    z['stems'] = len(neurontree.edges(root))
 
     z['total_length'] = np.sum(list(nx.get_edge_attributes(neurontree.get_graph(), 'path_length').values()))
     # get all radii
