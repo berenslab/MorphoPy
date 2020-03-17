@@ -116,7 +116,7 @@ class NeuronTree:
         if G.nodes():
 
             self._remove_redundant_nodes()
-            self._make_tree()   # needed to access the functions predecessor and successor
+            #self._make_tree()   # needed to access the functions predecessor and successor
 
 
     # def _merge_roots_by_type(self):
@@ -373,10 +373,21 @@ class NeuronTree:
         looses the original node and edge attributes. Manipulation done inplace.
         changed for use with networkx v2 (works also in old version: parameters with names)
         """
-
+        
         G = self._G
-        r = self.get_root()
-        T = nx.dfs_tree(G, r)
+        roots = self.nodes(type_ix=1)
+
+        trees = []
+        for r in roots:
+            trees.append(nx.dfs_tree(G, r))
+
+        if len(trees) > 1:
+            edges = []
+            for t in trees:
+                edges += t.edges()
+            T = nx.from_edgelist(edges, create_using=nx.DiGraph())
+        else:
+            T = trees[0]
 
         for n_attr in self.get_node_attributes():
             attr = nx.get_node_attributes(G, name=n_attr)
