@@ -43,7 +43,7 @@ class NeuronTree:
     # creates a networkX Tree out of a swc file.
     # scaling denotes the conversion factor needed to convert the units given in swc file to microns
     # soma_rad denotes the radius of the soma given in microns
-    def __init__(self, swc=None, scaling=1., node_data=[], edge_data=[], graph=None, post_process=True, nxversion=1):
+    def __init__(self, swc=None, scaling=1., node_data=[], edge_data=[], graph=None, nxversion=1):
         """
         Creates a NeuronTree object that contains a networkx.DiGraph with node attributes 'pos' [x,y,z],
         'type' [1:soma,2:axon,3: dendrite], 'radius' and edge attributes 'euclidean_dist' and 'path_length'.
@@ -56,9 +56,6 @@ class NeuronTree:
         :param node_data: list of nodes with node id and dictionary of node attributes
         :param edge_data: list of edges with dicionary of edge attributes
         :param graph: networkx.DiGraph. It is assumed that the graph contains the required labels.
-        :param post_process: boolean. Determines whether the Neuron is post-processed or not. If set to True the soma
-        points are merged into one single point, the branch types are unified and short branches that originate from the
-        soma and are labelled as axon will get removed.
         """
         # set version of networkX
         self._nxversion = nxversion
@@ -120,10 +117,7 @@ class NeuronTree:
 
             self._remove_redundant_nodes()
             self._make_tree()   # needed to access the functions predecessor and successor
-            # if 'type' in self.get_node_attributes() and post_process:
-            #     self._merge_roots_by_type()
-            #     self._unify_type()
-            #     self._clean_axon()
+
 
     # def _merge_roots_by_type(self):
     #     """
