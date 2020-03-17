@@ -116,7 +116,7 @@ class NeuronTree:
         if G.nodes():
 
             self._remove_redundant_nodes()
-            #self._make_tree()   # needed to access the functions predecessor and successor
+            self._make_tree()   # needed to access the functions predecessor and successor
 
 
     # def _merge_roots_by_type(self):
@@ -373,7 +373,7 @@ class NeuronTree:
         looses the original node and edge attributes. Manipulation done inplace.
         changed for use with networkx v2 (works also in old version: parameters with names)
         """
-        
+
         G = self._G
         roots = self.nodes(type_ix=1)
 
@@ -647,6 +647,18 @@ class NeuronTree:
             self._merge_edges_on_path_by_displacement(disp=e)
         else:
             raise NotImplementedError('Method {0} is not implemented!'.format(method))
+
+    def is_connected(self):
+        """
+        This function returns True if the neuron is connected and False otherwise. In case of False it means that there
+        are disconnected neurites in the reconstruction.
+
+        For access to the disconnected components checkout networkx.connected_components(graph).
+        :return: bool. True if all neurites are connected, False otherwise.
+        """
+        G = self.get_graph()
+        connected = nx.connected.is_connected(G.to_undirected())
+        return connected
 
     def truncate_nodes(self, perc=.1, no_trunc_nodes=None):
         """
