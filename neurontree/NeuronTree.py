@@ -576,9 +576,8 @@ class NeuronTree:
         
         :return: bool. True if a root node is found, False otherwise.
         """
-        if 1 in self._G.adj:
-            return True
-        return False
+        roots = self.get_root(return_all=True)
+        return len(roots) > 0
 
     def truncate_nodes(self, perc=.1, no_trunc_nodes=None):
         """
@@ -1002,7 +1001,8 @@ class NeuronTree:
                 d[u][v][w] returns the angle between edge (u,v) and (v,w)
         """
         # get the depth first search successors from the soma (id=1).
-        successors = nx.dfs_successors(self.get_graph(), 1)
+        root = self.get_root()
+        successors = nx.dfs_successors(self.get_graph(), root)
         path_angle = {}
 
         for u, v in self.edges():
@@ -1041,7 +1041,8 @@ class NeuronTree:
             edges   bin edges of the histogram in hist. Definition as in numpy.histogrammdd
         """
 
-        successors = nx.dfs_successors(self.get_graph(), 1)
+        root = self.get_root()
+        successors = nx.dfs_successors(self.get_graph(), root)
         path_angle = []
         nodes = []
         for n1, n2 in self.edges():
