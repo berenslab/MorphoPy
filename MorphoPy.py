@@ -3,6 +3,7 @@ import sys
 import getopt
 import os
 import fnmatch
+import traceback
 import pandas as pd
 import networkx as nx
 import matplotlib as mpl
@@ -14,6 +15,7 @@ import computation.persistence_functions as pf
 
 
 def help():
+    print('')
     print('Usage: MorphoPy.py -c <compute_feature> [--func <persistence_function> | --conf <config_file>]')
     print('                   [-f <swc_file> | -d <directory>] [-o <output directory>]')
     print('')
@@ -39,8 +41,22 @@ def help():
     print('                                results in. (default: same as source)         ')
 
     sys.exit(2)
-
-
+    
+def printException(message="Unknown Error"):
+    tb = traceback.format_exc()
+    tb = tb.split("\n",3)[3];
+    print()
+    print(message)
+    print()
+    print("Exception occured:")
+    print(tb)
+    
+def checkNeuronTree(neurontree=None):
+    if not neurontree.has_root():
+        raise ValueError('Graph has no root defined!')
+    if not neurontree.is_connected():
+        raise ValueError('Graph has disconnected nodes!')
+    
 def main(argv):
     try:
         opts, args = getopt.getopt(argv, "c:f:d:o:", ["compute=", "func=", "conf=", "file=", "dir=", "output="])
@@ -104,7 +120,7 @@ def main(argv):
 
     # no valid files found
     if len(files) < 1:
-        print("No valid file is specified or no file found in current directory!")
+        print('No valid file is specified or no file found in current directory!')
         help()
 
     # set version of networkX
@@ -123,13 +139,13 @@ def main(argv):
                 swc = pd.read_csv(directory+file, delim_whitespace=True, comment='#',
                                   names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
                 mytree = nt.NeuronTree(swc=swc, nxversion=nxversion)
+                checkNeuronTree(mytree)
                 morpho_stats_table = fp.compute_Morphometric_Statistics(mytree)
                 print(morpho_stats_table)
                 # Export of pandas data frame to csv-file in same directory
                 morpho_stats_table.to_csv(output+file+"_morpho_stats.csv")
             except:
-                print("Failure in computing morphometric statistics!")
-                print("Error: ",sys.exc_info()[1])
+                printException("Failure in computing morphometric statistics!")
 
     ##### Compute persistence data #####
     elif compute == 'persistence':
@@ -142,6 +158,8 @@ def main(argv):
                 swc = pd.read_csv(directory+file, delim_whitespace=True, comment='#',
                                   names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
                 mytree = nt.NeuronTree(swc=swc, nxversion=nxversion)
+                checkNeuronTree(mytree)
+                
                 persistence_table = fp.get_persistence(mytree.get_mst(), f=function)
                 print(persistence_table)
 
@@ -159,8 +177,7 @@ def main(argv):
                 plt.savefig(output+file+"_persistence.png")
                 plt.close()
             except:
-                print("Failure in computing persistence data!")
-                print("Error: ",sys.exc_info()[1])
+                printException("Failure in computing persistence data!")
 
     ##### Compute density map #####
     elif compute == 'density':
@@ -173,17 +190,17 @@ def main(argv):
                 swc = pd.read_csv(directory+file, delim_whitespace=True, comment='#',
                                   names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
                 mytree = nt.NeuronTree(swc=swc, nxversion=nxversion)
-
+                checkNeuronTree(mytree)
+                
                 plots = fp.compute_Density_Maps(mytree, conf=conf)
-
+                
                 for idx, plot in enumerate(plots, start=1):
                     plot.savefig(output+file+"_density_%s.png" % idx)
                     plot.close()
             except FileNotFoundError:
                 print("Failure in computing density map: Config file not found or not readable!")
             except:
-                print("Failure in computing density map!")
-                print("Error: ",sys.exc_info()[1])
+                printException("Failure in computing density map!")
     else:
         print('Unknown compute mode. Use a valid compute parameter')
         help()

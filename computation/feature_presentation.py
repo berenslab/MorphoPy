@@ -128,8 +128,12 @@ def compute_Morphometric_Statistics(neurontree=None):
     z['mean_branch_angle'] = np.mean(branch_angles)
 
     # get maximal degree within data
-    z['max_degree'] = np.max([item[1] for item in R.get_graph().out_degree() if item[0] != R.get_root()])
-
+    if neurontree._nxversion == 2:
+        # changed for version 2.x of networkX
+        z['max_degree'] = np.max([item[1] for item in R.get_graph().out_degree() if item[0] != R.get_root()])
+    else:
+        z['max_degree'] = np.max([item[1] for item in R.get_graph().out_degree().items() if item[0] != R.get_root()])
+    
     # get tree asymmetry
     weights, psad = R.get_psad()
     if np.sum(list(weights.values())) != 0:

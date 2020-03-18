@@ -72,9 +72,12 @@ class NeuronTree:
 
             if swc is not None:
                 node_keys = ['pos', 'type', 'radius']
-
+                
                 if type(swc) == pd.DataFrame:
-
+                    
+                    if(swc.size == 0):
+                        raise ValueError('No points found in swc file!')
+                        
                     # sort out node data
                     n = swc['n'].values # get node ids
                     pos = np.array([swc['x'].values, swc['y'].values, swc['z'].values]).T / scaling
@@ -90,7 +93,7 @@ class NeuronTree:
                     pid = swc['parent']
 
                 else:
-                    raise ValueError('type of swc representation unknown')
+                    raise ValueError('Type of swc representation unknown!')
 
                 # create node data
                 t[pid == -1] = 1
@@ -122,7 +125,8 @@ class NeuronTree:
 
             self._remove_redundant_nodes()
             self._make_tree()   # needed to access the functions predecessor and successor
-
+            
+        
     def _remove_redundant_nodes(self):
         """
         Remove redundant nodes from the NeuronTree. A node is considered redundant if the edge between two nodes has a
@@ -514,7 +518,11 @@ class NeuronTree:
         root it is returned as an int.
         :return: int or list , node id(s) of the tree roots.
         """
-        roots = [n for n, d in self._G.in_degree().items() if d == 0]
+        if self._nxversion == 2:
+            # changed for version 2.2 of networkX
+            roots = [n for n, d in self._G.in_degree() if d == 0]
+        else:
+            roots = [n for n, d in self._G.in_degree().items() if d == 0]
         if return_all:
             return roots
         else:
@@ -561,6 +569,16 @@ class NeuronTree:
         G = self.get_graph()
         connected = nx.connected.is_connected(G.to_undirected())
         return connected
+        
+    def has_root(self):
+        """
+        This function returns True if the neuron has a valid root node and False if not
+        
+        :return: bool. True if a root node is found, False otherwise.
+        """
+        if 1 in self._G.adj:
+            return True
+        return False
 
     def truncate_nodes(self, perc=.1, no_trunc_nodes=None):
         """
