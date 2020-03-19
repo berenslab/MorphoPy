@@ -12,6 +12,7 @@ from scipy.ndimage.filters import gaussian_filter
 from sklearn.decomposition import PCA
 from scipy.spatial import ConvexHull
 
+
 def unit_vector(vector):
     """ Returns the unit vector of the vector.
 
@@ -395,7 +396,7 @@ def smooth_gaussian(data, dim, sigma=2):
     return Xb
 
 
-def get_standardized_swc(swc, scaling=1., soma_radius=None, pca_rot=False):
+def get_standardized_swc(swc, scaling=1., soma_radius=None, soma_center=True, pca_rot=False):
     """
     This function collapses all soma points to a single node located at the centroid of the convex hull of the original
     soma nodes. It can also scale the coordinates, merge nodes into the soma that have a bigger radius than soma_radius
@@ -405,6 +406,7 @@ def get_standardized_swc(swc, scaling=1., soma_radius=None, pca_rot=False):
     :param soma_radius: float (default=None), if set, then all nodes with a radius greater or equal to soma radius are
     set to be somatic (type=1). In a subsequent step these nodes will be merged to one. Careful! If this radius is set
     too small this leads to faulty skeletons.
+    :param soma_center: bool (default=True), if True, x,y,z are soma centered.
     :param pca_rot: bool (default=False), if True, the x,y,z coordinates in the given swc file are rotated into their
     PCA frame. Then x corresponds to the direction of highest and z to the direction of lowest variance.
     :return: pandas.DataFrame
@@ -427,18 +429,25 @@ def get_standardized_swc(swc, scaling=1., soma_radius=None, pca_rot=False):
     # create one point soma when there is more than three soma points
     sp = swc[swc['type'] == 1]
     root_id = np.min(sp['n'].values)
-    if sp.shape[0] > 3:
-        print('There are more than 3 soma points. The radius of the soma is estimated...')
+    if sp.shape[0] > 1:
+        if sp.shape[0] > 3:
+            print('There are more than 3 soma points. The location and the radius of the soma is estimated based on its'
+                  ' convex hull...')
 
-        # calculate the convex hull of soma points
-        convex_hull = ConvexHull(sp[['x', 'y', 'z']].values, qhull_options='QJ')
+            # calculate the convex hull of soma points
+            convex_hull = ConvexHull(sp[['x', 'y', 'z']].values, qhull_options='QJ')
 
-        hull_points = convex_hull.points
+            hull_points = convex_hull.points
 
-        centroid = np.mean(hull_points, axis=0)
+            centroid = np.mean(hull_points, axis=0)
 
-        distances_to_centroid = np.linalg.norm(hull_points-centroid, axis=1)
-        rad = np.max(distances_to_centroid)
+            distances_to_centroid = np.linalg.norm(hull_points-centroid, axis=1)
+            rad = np.max(distances_to_centroid)
+        else:
+            print("There are 2-3 soma points. The location and the radius of the soma is estimated based on their mean.")
+
+            centroid = np.mean(sp[['x', 'y', 'z']].values, axis=0)
+            rad = np.mean(sp[['radius']].values)
 
         # fix the parent connections
         connection_locations = [row.n for k, row in swc.iterrows() if
@@ -447,27 +456,21 @@ def get_standardized_swc(swc, scaling=1., soma_radius=None, pca_rot=False):
         connected_points['parent'] = root_id
         swc.update(connected_points)
 
-        to_delete = list(sp['n'].values)
-        for k in connection_locations:
-            try:
-                to_delete.remove(k)
-            except ValueError:
-                continue
-
-        soma_dict = dict(
-            zip(['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], [int(root_id), int(1), centroid[0], centroid[1],
-                                                                   centroid[2], rad, int(-1)]))
-
-        swc.update(pd.DataFrame(soma_dict, index=[0]))
-
         # delete old soma points
-        swc = swc.drop(swc.index[to_delete[:-1]])
+        to_delete = [swc[swc['n'] == n].index[0] for n in sp['n'].values]
+        swc = swc.drop(swc.index[to_delete])
 
+        # add new soma point
+        soma_dict = dict(zip(['n', 'type', 'x', 'y', 'z', 'radius', 'parent'],
+                             [int(root_id), int(1), centroid[0], centroid[1], centroid[2], rad, int(-1)]))
+
+        swc = swc.append(pd.DataFrame(soma_dict, index=[0]))
         swc = swc.sort_index()
 
     # soma center on first entry
-    centroid = swc[swc['n'] == root_id][['x', 'y', 'z']].values.reshape(-1)
-    swc.update(swc[['x', 'y', 'z']] - centroid)
+    if soma_center:
+        centroid = swc[swc['n'] == root_id][['x', 'y', 'z']].values.reshape(-1)
+        swc.update(swc[['x', 'y', 'z']] - centroid)
 
     if soma_radius:
         print('Setting all nodes to type soma that have a larger radius than %s microns...' % soma_radius)
