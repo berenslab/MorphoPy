@@ -627,13 +627,13 @@ class NeuronTree:
                     # changed for version 2.x of networkX
                     nodes = [k for k in self._G if self._G.nodes[k]['type'] in type_ix]
                 else:
-                    nodes = [k for k in self._G.nodes if self._G.node[k]['type'] in type_ix]
+                    nodes = [k for k in self._G.nodes() if self._G.node[k]['type'] in type_ix]
             else:
                 if self._nxversion == 2:
                     # changed for version 2.x of networkX
                     nodes = [k for k in self._G if self._G.nodes[k]['type'] == type_ix]
                 else:
-                    nodes = [k for k in self._G.node if self._G.node[k]['type'] == type_ix]
+                    nodes = [k for k in self._G.nodes() if self._G.node[k]['type'] == type_ix]
 
         return nodes
 
