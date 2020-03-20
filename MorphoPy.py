@@ -14,7 +14,7 @@ import computation.feature_presentation as fp
 import computation.persistence_functions as pf
 
 
-def help():
+def help(exitcode=0):
     print('')
     print('Usage: MorphoPy.py -c <compute_feature> [--func <persistence_function> | --conf <config_file>]')
     print('                   [-f <swc_file> | -d <directory>] [-o <output directory>]')
@@ -39,8 +39,11 @@ def help():
     print('                                (default: working directory)                  ')
     print('   -o, --output                 specifies the output directory for saving the ')
     print('                                results in. (default: same as source)         ')
+    sys.exit(exitcode)
 
-    sys.exit(2)
+def version():
+    print('MorphoPy version 0.1')
+    sys.exit(0)
     
 def printException(message="Unknown Error"):
     tb = traceback.format_exc()
@@ -59,15 +62,15 @@ def checkNeuronTree(neurontree=None):
     
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, "c:f:d:o:", ["compute=", "func=", "conf=", "file=", "dir=", "output="])
+        opts, args = getopt.getopt(argv, "c:f:d:o:hv", ["compute=", "func=", "conf=", "file=", "dir=", "output=", "help", "version"])
     except getopt.GetoptError:
         print("Wrong options are specified!")
-        help()
+        help(1)
 
     # check if arguments are empty
     if len(argv) < 1:
       print("No arguments are used! At least the compute mode has to be passed.")
-      help()
+      help(1)
 
     # default values:
     compute = ''       # no compute mode selected
@@ -98,6 +101,10 @@ def main(argv):
             # if unknown, computing without special function
             if arg in pf.functions:
                 function = getattr(pf, arg)
+        elif opt in ('-v', '--version'):
+            version()
+        elif opt in ('-h', '--help'):
+            help()
 
     # if single file or directory, fill array with all files
     allfiles = []
@@ -121,7 +128,7 @@ def main(argv):
     # no valid files found
     if len(files) < 1:
         print('No valid file is specified or no file found in current directory!')
-        help()
+        help(1)
 
     # set version of networkX
     nxversion = 1
@@ -203,7 +210,10 @@ def main(argv):
                 printException("Failure in computing density map!")
     else:
         print('Unknown compute mode. Use a valid compute parameter')
-        help()
+        help(1)
+        
+    # program end
+    sys.exit(0)
 
 
 if __name__ == '__main__':
