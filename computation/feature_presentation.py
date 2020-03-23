@@ -107,7 +107,7 @@ def compute_Morphometric_Statistics(neurontree=None):
     z['min_path_angle'] = np.min(path_angles)
     z['median_path_angle'] = np.median(path_angles)
 
-    R = neurontree.get_mst()
+    R = neurontree.get_topological_minor()
     segment_length = R.get_segment_length()
     terminal_segment_pl = [item[1] for item in segment_length.items() if item[0][1] in tips]
     intermediate_segment_pl = [item[1] for item in segment_length.items() if item[0][1] not in tips]

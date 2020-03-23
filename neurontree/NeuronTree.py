@@ -301,12 +301,13 @@ class NeuronTree:
     def get_graph(self):
         return self._G
 
-    def get_mst(self):
+    def get_topological_minor(self):
         """
-        Returns the minimal spanning tree of the Neuron.
-        changed for use with networkx v2 (works also in old version: edge -> adj)
+        Returns the topological minor of the Neuron. In this representation all continuation points are pruned away and
+        the neuron solely consists of tips and branch points.
+        Changed for use with networkx v2 (works also in old version: edge -> adj)
         :return:
-            NeuronTree: mst. The minimal spanning tree representation of the original neuron.
+            NeuronTree: mst. The topological minor representation of the original neuron.
         """
         # get the included nodes, which are soma, branch points and tips
         root = self.get_root()
@@ -547,7 +548,7 @@ class NeuronTree:
             self._make_tree()
 
         if method == 'mst':
-            mst = self.get_mst()
+            mst = self.get_topological_minor()
             self._G = mst.get_graph()
         elif method == 'dist':
             self._merge_edges_on_path_by_edge_length(e=e)
@@ -875,7 +876,7 @@ class NeuronTree:
             Dictionary of the form {(n_s, n_e): segment length[u] in either 'path length' or 'euclidean distance' }
         """
 
-        T = self.get_mst()
+        T = self.get_topological_minor()
 
         segment_length = nx.get_edge_attributes(T.get_graph(), dist)
         return segment_length
