@@ -16,3 +16,7 @@
 
 # DS Store
 *.DS_Store*
+
+# build
+build/*
+
