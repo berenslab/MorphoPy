@@ -17,7 +17,11 @@
 In the following, all commands written in boxes need to be entered into your terminal.
 ### Software Requirements
 #### Mac:
-
+You need python with pip installed and graphviz wich can be downloaded with MacPorts
+ - python 3
+ - pip 3
+ - graphviz-devel
+ 
 #### Linux:
 Debian/Ubuntu packages:
 
@@ -45,11 +49,12 @@ You can install them with this command:
 	yum install git gcc-c++ python36 python36-pip python36-devel geos-devel graphviz-devel
 #### Windows:
 
- - python 3.7
- - pip 3.7
- - graphviz development ???
- - geometry library development ???
-###  Install the python package (Mac & Linux)
+ - git: you can find it [here](https://git-scm.com/download/win)
+ - python >3.7: download from Microsoft store or  [here](https://www.python.org/downloads/windows/)
+ - pip >3.7: be sure you selected to install it with the base package
+ - Microsoft Build Tools >14.0 you can download them [here](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+ - graphviz development (x64)
+###  Install the python package
 
 **1)** Clone the GitHub repository into your local directory:
 
@@ -58,9 +63,26 @@ Note: If the git command does not work under Mac OS, you have to install the mis
 
 **2)** Now the last step: install the package from the new created GitHub folder. And make sure you are using pip3 (install it if it is missing):
 
-	pip3 install MorphoPy/dist/morphopy-*.whl
+	pip3 install MorphoPy/dist/morphopy-0.1-py3-none-any.whl
 	
 The installation is finished and MorphoPy should be available from everywhere on the command prompt.
+
+###  Install the python package (Windows)
+
+**1)** Be sure that you have python and pip in the correct version available in your command prompt:
+
+	python -V
+	pip -V
+		
+You should get a python version >3.6 and a compatible pip. You should see the same major version of python in brackets at the end of the line.
+
+**2)** Clone the GitHub repository into your local directory:
+
+	git clone https://github.com/berenslab/MorphoPy
+
+**2)** Clone the GitHub repository into your local directory:
+
+	pip install MorphoPy\dist\morphopy-0.1-py3-none-any.whl
 	
 [back to start](#content)
 
