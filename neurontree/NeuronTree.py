@@ -125,8 +125,7 @@ class NeuronTree:
 
             self._remove_redundant_nodes()
             self._make_tree()   # needed to access the functions predecessor and successor
-            
-        
+
     def _remove_redundant_nodes(self):
         """
         Remove redundant nodes from the NeuronTree. A node is considered redundant if the edge between two nodes has a
@@ -161,7 +160,6 @@ class NeuronTree:
             self._G.remove_node(redundantNode)
             nodeindices = np.array(list(nx.get_edge_attributes(self._G, 'euclidean_dist').values())) == 0
             edgelist = list(np.array(list(nx.get_edge_attributes(self._G, 'euclidean_dist').keys()))[nodeindices])
-
 
     def _merge_edges_on_path_by_edge_length(self, start=1, e=0.01):
         """
@@ -1100,6 +1098,32 @@ class NeuronTree:
             return np.histogramdd(data, **kwargs)
         else:
             return np.histogram(path_angle, **kwargs)
+
+    def get_soma_angles(self):
+        """
+        Returns the list of angles between the neurites exiting the soma.
+        :return: soma_angles    list of angles (in degree).
+        """
+
+        from itertools import combinations
+
+        r = self.get_root()
+        successors = list(self.get_graph().adj[r].keys())
+        print(successors)
+        branches = []
+        for succ in successors:
+            if self._nxversion == 2:
+                # changed for version 2.x of networkX
+                v = self.get_graph().nodes[succ]['pos'] - self.get_graph().nodes[r]['pos']
+            else:
+                v = self.get_graph().node[succ]['pos'] - self.get_graph().node[r]['pos']
+            branches.append(v)
+        soma_angles = []
+        for u, v in combinations(branches, 2):
+            # compute the angles between all possible combinations. Only keep the len(branches) - 1 smallest of them
+            soma_angles.append(angle_between(u, v) * 180 / np.pi)
+        soma_angles.sort()
+        return soma_angles[:len(branches) - 1]
 
     def get_branch_angles(self):
         """
