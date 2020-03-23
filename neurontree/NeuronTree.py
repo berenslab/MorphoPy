@@ -696,7 +696,7 @@ class NeuronTree:
         """
         # is this correct???:
         bp_indx = np.where(np.array(np.sum(nx.adjacency_matrix(self._G), axis=1)).flatten() > 1)[0]
-        #bp_indx = np.where(np.array(np.sum(nx.adjacency_matrix(self._G), axis=1)).flatten() > 1)
+
         return np.array(self.nodes())[bp_indx]
 
     def get_dendritic_tree(self, type_ix=[3,4]):
@@ -789,6 +789,7 @@ class NeuronTree:
         root = self.get_root()
         return self._get_branch_order(root,0)
 
+
     def _get_branch_order(self, start, bo):
         """
         Returns the dictionary assigning the right branch order to each node.
@@ -807,6 +808,34 @@ class NeuronTree:
         elif len(edges) == 1:
             d.update(self._get_branch_order(edges[0][1], bo))
         return d
+
+    def get_strahler_order(self):
+        """
+        Returns the dictionary assigning the right Strahler order to each node.
+        If the node is a leaf (has no children), its Strahler number is one.
+        If the node has one child with Strahler number i, and all other children have Strahler numbers less than i,
+        then the Strahler number of the node is i again.
+        If the node has two or more children with Strahler number i, and no children with greater number,
+        then the Strahler number of the node is i + 1. ( taken from https://en.wikipedia.org/wiki/Strahler_number)
+        :return:
+            dict. Dictionary of the form {u: Strahler order} for each node.
+        """
+
+        tips = self.get_tips()
+        post_order = list(nx.dfs_postorder_nodes(self.get_graph(), self.get_root()))
+
+        active = [n for n in post_order if n not in tips]
+        strahler_order = dict(zip(tips, [1] * len(tips)))
+
+        for a in active:
+            so, counts = np.unique([strahler_order[s] for s in self._G.successors(a)], return_counts=True)
+            # the highest child straher order only occurs once
+            if counts[-1] == 1:
+                strahler_order[a] = so[-1]
+            else:
+                strahler_order[a] = so[-1] + 1
+
+        return strahler_order
 
     def _get_distance(self, dist='path_from_soma', weight='euclidean_dist', as_dict=False):
         """
@@ -858,7 +887,7 @@ class NeuronTree:
         Returns a Gaussian kernel density estimate of the distribution of the measure defined by _key_.
         changed for use with networkx v2 (works also in old version: edge -> adj)
         :param key: String, measure to calculate the kernel density estimate from. Options are: 'thickness',
-        'path_angle', 'branch_angle', 'branch_order' and 'distance'.
+        'path_angle', 'branch_angle', 'branch_order', 'strahler_order' and 'distance'.
         :param dist: Optional. Allows to express the measure as a function of distance. If set to None, the kde is
         one-dimensional, otherwise it is has two dimensions. Options for available distance measures,
         see _get_distance().
@@ -926,6 +955,15 @@ class NeuronTree:
                 return stats.gaussian_kde(data)
             else:
                 return stats.gaussian_kde(branch_order)
+
+        elif key == 'strahler_order':
+            strahler_order = list(self.get_strahler_order().values())
+
+            if dist:
+                data = np.array(list(zip(self._get_distance(dist), strahler_order)))
+                return stats.gaussian_kde(data)
+            else:
+                return stats.gaussian_kde(strahler_order)
 
         elif key == 'distance':
             distance = np.array(list(nx.single_source_dijkstra_path_length(self.get_graph(), source=self.get_root(),
@@ -1074,7 +1112,13 @@ class NeuronTree:
         from itertools import combinations
 
         branch_angles = []
-        branchpoints = self.get_branchpoints()
+        branchpoints = list(self.get_branchpoints())
+
+        # remove soma from the list of branch points
+        soma = self.get_root()
+        if soma in branchpoints:
+            branchpoints.remove(soma)
+
         for bp in branchpoints:
             successors = list(self.get_graph().adj[bp].keys())
             branches = []
@@ -1085,8 +1129,12 @@ class NeuronTree:
                 else:
                     v = self.get_graph().node[succ]['pos'] - self.get_graph().node[bp]['pos']
                 branches.append(v)
+            all_angles = []
             for u, v in combinations(branches, 2):
-                branch_angles.append(angle_between(u, v) * 180 / np.pi)
+                # compute the angles between all possible combinations. Only keep the len(branches) - 1 smallest of them
+                all_angles.append(angle_between(u, v) * 180 / np.pi)
+            all_angles.sort()
+            branch_angles += all_angles[:len(branches)-1]
         return branch_angles
 
     def get_branch_angle_dist(self, dist_measure=None, **kwargs):
@@ -1095,16 +1143,21 @@ class NeuronTree:
             The distribution is calculated against a distance measure, namely 'path_from_soma' or 'branch_order'.
             The branch angles are returned in degree.
         :param dist_measure: string. default = None
-            Defines the distance measure against whom the thickness is calculated. Possible choices are 'path_from_soma'
+            Defines the distance measure against whom the branch angles are calculated. Possible choices are 'path_from_soma'
             or 'branch_order'.
-        :param kwargs: dditional arguments to be passed to histogram calculation
+        :param kwargs: additional arguments to be passed to histogram calculation
         :return:
             hist    2D histogram
             edges   bin edges of the histogram in hist. Definition as in numpy.histogrammdd
         """
 
         branch_angles = self.get_branch_angles()
-        branchpoints = self.get_branchpoints()
+        branchpoints = list(self.get_branchpoints())
+        # remove soma from the list of branch points
+        soma = self.get_root()
+        if soma in branchpoints:
+            branchpoints.remove(soma)
+
         if dist_measure:
             distances = self._get_distance(dist_measure, as_dict=True)
             dist = [distances[n] for n in branchpoints]
