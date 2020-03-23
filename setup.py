@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
       name='morphopy',
       version='0.1',
-      scripts=['MorphoPy.py'] ,
+      scripts=['MorphoPy'] ,
       author="Adam von Daranyi",
       author_email="adam.von-daranyi@uni-tuebingen.de",
       description="morphology command line tool",
@@ -27,6 +27,7 @@ setuptools.setup(
          'numpy',
          'pandas',
          'networkx',
+         'seaborn',
          'sklearn',
          'shapely',
          'pygraphviz'

@@ -16,7 +16,7 @@ import computation.persistence_functions as pf
 
 def help(exitcode=0):
     print('')
-    print('Usage: MorphoPy.py -c <compute_feature> [--func <persistence_function> | --conf <config_file>]')
+    print('Usage: MorphoPy -c <compute_feature> [--func <persistence_function> | --conf <config_file>]')
     print('                   [-f <swc_file> | -d <directory>] [-o <output directory>]')
     print('')
     print('Options:')
