@@ -131,4 +131,12 @@ Help:
 
 ## <a name="module">Module description</a> 
 
+**Important:** MorphoPy requires the soma to be one single point. If several soma points are present in the
+reconstruction file they will be automatically collapsed to the centroid of their convex hull on file loading.
+(also see utils.get_standardized_swc).
+MorphoPy currently only supports neurites that connect back to the soma. This means, axons that emerge from dendritic
+structures can not be handled.
+
+
 [back to start](#content)
+

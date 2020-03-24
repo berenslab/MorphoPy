@@ -788,7 +788,6 @@ class NeuronTree:
         root = self.get_root()
         return self._get_branch_order(root,0)
 
-
     def _get_branch_order(self, start, bo):
         """
         Returns the dictionary assigning the right branch order to each node.
@@ -842,7 +841,7 @@ class NeuronTree:
         :param dist: String, defines the distance measure to be used (default is 'path_from_soma'), Options are
         'path_from_soma' and 'branch_order'.
         :param weight: String. Defines the edge attribute that is considered for the distance. Options are
-        ['euclidean_dist' = default, 'path_lenght']
+        ['euclidean_dist' = default, 'path_length']
         :param as_dict: boolean, default = False. Determines whether the distance are returned as a dictionary of the
         form {'node_id': ,distance} or as an numpy.array.
         :return: Dictionary or numpy.array of the defined distance measure from each node to the soma.

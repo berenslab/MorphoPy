@@ -237,8 +237,6 @@ def compute_Density_Maps(neurontree=None, conf=None):
     plt.title('10 bins')
     plots.append(plt)
 
-
-
     for proj_axes, ax in [('0', 'x'), ('1', 'y'), ('2', 'z')]:
 
         plt.figure()
@@ -270,8 +268,6 @@ def compute_Density_Maps(neurontree=None, conf=None):
         plots.append(plt)
 
     return plots
-
-
 
 def _project_data(proj_axes, data):
     """
