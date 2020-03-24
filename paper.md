@@ -8,36 +8,38 @@ tags:
 authors:
     - name: Sophie Laturnus
       orcid: 0000-0001-9532-788X
-      affiliation: "1,2,3"
+      affiliation: "1,3,4"
 
     - name: Adam von Daranyi
-      affiliation: ?
+      affiliation: 4
 
     - name: Philipp Berens
      orcid: 0000-0002-0199-4727
-     affiliation: "1,2,3"
+     affiliation: "1,2,3,4"
 
 affiliations:
     - name: Institute for Ophthalmic Research, University of T\"ubingen, Germany
     index: 1
-    - name: Bernstein Center for Computational Neuroscience, University of T\"ubingen, Germany
+    - name: Institute for Bioinformatics and Medical Informatics, University of T\"ubingen, Germany
     index: 2
-    - name: Center for Integrative Neuroscience, University of T\"ubingen, Germany
+    - name: Bernstein Center for Computational Neuroscience, University of T\"ubingen, Germany
     index: 3
-
+    - name: Center for Integrative Neuroscience, University of T\"ubingen, Germany
+    index: 4
 date: \today
 bibliography: morphopy.bib
 ---
 
 # Summary
+- ADD INTRO
 
 `MorphoPy` is a Python3 software package. It is meant to easily extract different feature representations from neural
-morphologies for downstream statistical analysis. Common representations are density maps, single valued
+morphologies for downstream statistical analysis. It features representations such as density maps, single valued
 summary statistics (morphometrics), morphometric distributions and persistence images[@li:2017; @kanari:2018]. For many
-of these representations there has been code published already [@cuntz:2011; @li:2017; @kanari:2018; @NeuroM] but they
-are written in different languages (MATLAB, C, Python2, Python3) and only cover one or two types of representations each.
-`MorphoPy` bundles these most common representations in one simple open source framework to make them accessible to a
-large community.
+of these representations there has been code published already [@cuntz:2011; @li:2017; @kanari:2018; @NeuroM] but it has
+been written in different languages (MATLAB, C, Python2, Python3) and only they cover one or two types of representation
+each. `MorphoPy` bundles these most common representations in one simple open source framework to make them accessible
+to a large community.
 
 `MorphoPy` has been developed in the context of a benchmarking study for cortical interneuron cell type classification
 based on their morphology [@laturnus:2019]. It has already been used in a series of scientific publications that tried
