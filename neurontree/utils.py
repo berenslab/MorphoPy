@@ -426,6 +426,13 @@ def get_standardized_swc(swc, scaling=1., soma_radius=None, soma_center=True, pc
 
         swc.update(pd.DataFrame(result, columns=['x', 'y']))
 
+    if soma_radius:
+        print('Setting all nodes to type soma that have a larger radius than %s microns...' % soma_radius)
+
+        d = np.vstack((swc['radius'], swc['type'])).T
+        d[d[:, 0] >= soma_radius, 1] = 1
+        swc.update(pd.DataFrame(d[:, 1].astype(int), columns=['type']))
+
     # create one point soma when there is more than three soma points
     sp = swc[swc['type'] == 1]
     root_id = np.min(sp['n'].values)
@@ -471,14 +478,6 @@ def get_standardized_swc(swc, scaling=1., soma_radius=None, soma_center=True, pc
     if soma_center:
         centroid = swc[swc['n'] == root_id][['x', 'y', 'z']].values.reshape(-1)
         swc.update(swc[['x', 'y', 'z']] - centroid)
-
-    if soma_radius:
-        print('Setting all nodes to type soma that have a larger radius than %s microns...' % soma_radius)
-
-        d = np.vstack((swc['radius'], swc['type'])).T
-        d[d[:, 0] >= soma_radius, 1] = 1
-        swc.update(pd.DataFrame(d[:, 1].astype(int), columns=['type']))
-
     return swc
 
 
