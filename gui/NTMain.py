@@ -167,7 +167,7 @@ class MainWindow(object):
 
     def minSpan(self):
         print("Get minimal spanning tree ...")
-        min_span_tree = self.myNeuronTree.get_mst()
+        min_span_tree = self.myNeuronTree.get_topological_minor()
 
     def createPersistence(self):
 
@@ -188,7 +188,7 @@ class MainWindow(object):
 
     def createPersThread(self):
         try:
-            min_span_tree = self.myNeuronTree.get_mst()
+            min_span_tree = self.myNeuronTree.get_topological_minor()
             persistence_table = fr.get_persistence(min_span_tree, self.function)
             print(persistence_table)
             x = persistence_table['birth']

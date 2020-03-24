@@ -169,7 +169,7 @@ def main(argv):
                 mytree = nt.NeuronTree(swc=swc, nxversion=nxversion)
                 checkNeuronTree(mytree)
                 
-                persistence_table = fp.get_persistence(mytree.get_mst(), f=function)
+                persistence_table = fp.get_persistence(mytree.get_topological_minor(), f=function)
                 print(persistence_table)
 
                 # create diagram and save png-file to same directory
