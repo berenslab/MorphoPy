@@ -129,6 +129,13 @@ Help:
 
 [back to start](#content)
 
+## <a name="contributing">Contributing to MorphoPy </a>
+
+MorphoPy is an open source project and we are happy if you want to contribute in any way. You can report bugs and request
+feature via [GitHub issues](https://github.com/berenslab/MorphoPy/issues). If you want to develop the code base further,
+you can work with git pull requests. Please make sure that you document the code and add test and example of how to use
+your code.
+
 ## <a name="module">Module description</a> 
 
 **Important:** MorphoPy requires the soma to be one single point. If several soma points are present in the
@@ -136,6 +143,7 @@ reconstruction file they will be automatically collapsed to the centroid of thei
 MorphoPy currently only supports neurites that connect back to the soma. This means, axons that emerge from dendritic
 structures can not be handled.
 
+All data is stored in the tidy data format (http://vita.had.co.nz/papers/tidy-data.pdf).
 ### Density maps
 Changing config
 
@@ -150,6 +158,8 @@ Changing the Code
 These features are not available via the command line tool.
 Descriptions. Frequency histograms can be queried for all single value statistics. One can provide a distance measure (branch order,
 path distance from soma) to investigate their spatial distribution.
+
+
 
 [back to start](#content)
 
