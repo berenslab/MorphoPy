@@ -150,7 +150,9 @@ def main(argv):
                 morpho_stats_table = fp.compute_Morphometric_Statistics(mytree)
                 print(morpho_stats_table)
                 # Export of pandas data frame to csv-file in same directory
-                morpho_stats_table.to_csv(output+file+"_morpho_stats.csv")
+                outputfile=output+file+"_morpho_stats.csv"
+                morpho_stats_table.to_csv(outputfile)
+                print("Statistics saved to: "+outputfile)
             except:
                 printException("Failure in computing morphometric statistics!")
 
@@ -181,7 +183,9 @@ def main(argv):
                     plt.title('Persistence Diagram ({})'.format(function.__name__))
                 plt.xlabel('birth')
                 plt.ylabel('death')
-                plt.savefig(output+file+"_persistence.png")
+                outputfile=output+file+"_persistence.png"
+                plt.savefig(outputfile)
+                print("Persistence saved to: "+outputfile)
                 plt.close()
             except:
                 printException("Failure in computing persistence data!")
@@ -200,10 +204,11 @@ def main(argv):
                 checkNeuronTree(mytree)
                 
                 plots = fp.compute_Density_Maps(mytree, conf=conf)
-                
+                outputfile=output+file+"_density_"
                 for idx, plot in enumerate(plots, start=1):
-                    plot.savefig(output+file+"_density_%s.png" % idx)
+                    plot.savefig(outputfile+"%s.png" % idx)
                     plot.close()
+                print("Density maps saved to %sx.png" % outputfile)
             except FileNotFoundError:
                 print("Failure in computing density map: Config file not found or not readable!")
             except:
