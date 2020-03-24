@@ -137,6 +137,20 @@ reconstruction file they will be automatically collapsed to the centroid of thei
 MorphoPy currently only supports neurites that connect back to the soma. This means, axons that emerge from dendritic
 structures can not be handled.
 
+Density maps
+Changing config
+
+Persistence
+changing distance function. Adding a distance function
+
+Morphometric statistics
+Explanation of basic statistics
+Changing the Code
+
+Morphometric distributions
+Not available per command line
+Descriptions. Frequency histograms can be queried for all single value statistics. One can provide a distance measure (branch order,
+path distance from soma) to investigate their spatial distribution.
 
 [back to start](#content)
 
