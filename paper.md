@@ -14,6 +14,8 @@ authors:
       affiliation: ?
 
     - name: Philipp Berens
+     orcid: 0000-0002-0199-4727
+     affiliation: "1,2,3"
 
 affiliations:
     - name: Institute for Ophthalmic Research, University of T\"ubingen, Germany
@@ -29,14 +31,16 @@ bibliography: morphopy.bib
 
 # Summary
 
-TODO:
-- A summary describing the high-level functionality and purpose of the software for a diverse, non-specialist audience.
-- A clear Statement of Need that illustrates the research purpose of the software.
+`MorphoPy` is a Python3 software package. It is meant to easily extract different feature representations from neural
+morphologies for downstream statistical analysis. Common representations are density maps, single valued
+summary statistics (morphometrics), morphometric distributions and persistence images[@li:2017; @kanari:2018]. For many
+of these representations there has been code published already [@cuntz:2011; @li:2017; @kanari:2018; @NeuroM] but they
+are written in different languages (MATLAB, C, Python2, Python3) and only cover one or two types of representations each.
+`MorphoPy` bundles these most common representations in one simple open source framework to make them accessible to a
+large community.
 
 `MorphoPy` has been developed in the context of a benchmarking study for cortical interneuron cell type classification
-based on their morphology [@laturnus:2019]. It was designed to facilitate and bundle the extraction of different feature
-representations from neural morphologies, namely density maps, single valued morphometric statistics and persistence
-diagrams as described by @kanari:2018 and @li:2017. It has already been used in a series of scientific publications that tried
+based on their morphology [@laturnus:2019]. It has already been used in a series of scientific publications that tried
 to relate transcriptome, electrophysiology and morphology of cortical interneurons in V1 and M1 [@scala:2019; @scala:2020].
 
 
