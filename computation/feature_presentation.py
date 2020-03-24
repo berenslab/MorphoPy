@@ -32,8 +32,13 @@ def get_persistence(neurontree=None, f=None):
     if f is None:
         # radial distance function
         def f(G, u, v):
-            n = G.node[u]['pos']
-            r = G.node[v]['pos']
+            if neurontree._nxversion == 2:
+                # changed for version 2.x of networkX
+                n = G.nodes[u]['pos']
+                r = G.nodes[v]['pos']
+            else:
+                n = G.node[u]['pos']
+                r = G.node[v]['pos']
 
             return np.sqrt(np.dot(n - r, n - r))
 
@@ -59,7 +64,10 @@ def get_persistence(neurontree=None, f=None):
                     A.remove(c_i)
                     if c_i != c_m:
                         D['node_id'].append(c_i)
-                        D['node_type'].append(G.node[c_i]['type'])
+                        if neurontree._nxversion == 2:
+                            D['node_type'].append(G.nodes[c_i]['type'])
+                        else:
+                            D['node_type'].append(G.node[c_i]['type'])
                         D['birth'].append(v[c_i])
                         D['death'].append(f(G, p, R))
                 v[p] = v[c_m]
