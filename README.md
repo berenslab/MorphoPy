@@ -132,23 +132,22 @@ Help:
 ## <a name="module">Module description</a> 
 
 **Important:** MorphoPy requires the soma to be one single point. If several soma points are present in the
-reconstruction file they will be automatically collapsed to the centroid of their convex hull on file loading.
-(also see utils.get_standardized_swc).
+reconstruction file they will be automatically collapsed to the centroid of their convex hull on file loading (also see utils.get_standardized_swc).
 MorphoPy currently only supports neurites that connect back to the soma. This means, axons that emerge from dendritic
 structures can not be handled.
 
-Density maps
+### Density maps
 Changing config
 
-Persistence
+### Persistence
 changing distance function. Adding a distance function
 
-Morphometric statistics
+### Morphometric statistics
 Explanation of basic statistics
 Changing the Code
 
-Morphometric distributions
-Not available per command line
+### Morphometric distributions
+These features are not available via the command line tool.
 Descriptions. Frequency histograms can be queried for all single value statistics. One can provide a distance measure (branch order,
 path distance from soma) to investigate their spatial distribution.
 
