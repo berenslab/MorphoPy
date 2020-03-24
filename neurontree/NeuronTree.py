@@ -1613,108 +1613,9 @@ class NeuronTree:
         ax.set_ylabel('Y [microns]')
         ax.set_zlabel('Z [microns]')
 
-    def draw_3D_volumetric(self, fig=None, ix=111, axon_color='grey', dendrite_color='darkgrey'):
-        """
-        Draws a volumetric neuron in 3D.
-        changed for use with networkx v2 (works also in old version: edge -> adj)
-        :param fig: Figure in which to draw. If None a new figure is created.
-        :param ix: Index of the subplot within the figure 'fig'. Default: 111
-        :param axon_color: Color, default='grey'. Defines the color of the axon.
-        :param dendrite_color: Color, default='darkgrey'. Defines the color of the dendrites.
-        """
 
-        P = nx.get_node_attributes(self._G, 'pos')          # get 3D position for each node
-        Rad = nx.get_node_attributes(self._G, 'radius')     # get radius for each node
-        Type = nx.get_node_attributes(self._G, 'type')      # get type for each node
-
-        # number of surfaces for each volume segment
-        num = 5
-
-        u = np.linspace(0, 2 * np.pi, num=num)
-        v = np.linspace(0, np.pi, num=num)
-
-        # parametric surface of a sphere
-        fx = lambda r: r * np.outer(np.cos(u), np.sin(v))
-        fy = lambda r: r * np.outer(np.sin(u), np.sin(v))
-        fz = lambda r: r * np.outer(np.ones(np.size(u)), np.cos(v))
-
-        # Create a figure
-        if not fig:
-            fig = plt.figure()
-
-        # Add three dimensional axis
-        ax = fig.add_subplot(ix, projection='3d')
-
-        unit_z = np.array([0, 0, 1])
-        
-        # plot the nodes as spheres
-        for i in self.nodes():
-            pos = P[i]
-            r = Rad[i]
-            if Type[i] == 2:
-                c = axon_color
-            elif Type[i] == 1:  # plot the soma black
-                c = 'k'
-            else:
-                c = dendrite_color
-            ax.plot_surface(fx(r) + pos[0], fy(r) + pos[1], fz(r) + pos[2], color=c)
-
-        # plot segments as cone frustums
-        for e in self._G.edges():
-            if e[0] == 1:
-                a = Rad[e[1]]
-                b = Rad[e[1]]
-            else:
-                a = Rad[e[0]]
-                b = Rad[e[1]]
-
-            if Type[e[1]] == 2:
-                c = axon_color
-            else:
-                c = dendrite_color
-
-            h = self._G.adj[e[0]][e[1]]['euclidean_dist'] # length of the edge
-            # translation
-            T = P[e[0]]
-            # rotation
-            R = get_rotation_matrix(unit_z, P[e[1]] - P[e[0]])  # rotate edge
-
-            k = np.linspace(0, h, num)
-            t = np.linspace(0, 2 * np.pi, num)
-
-            # parametric surface of a cone frustrum
-            cx = lambda k, t: np.outer((a * (h - k) + b * k) / h, np.cos(t))
-            cy = lambda k, t: np.outer((a * (h - k) + b * k) / h, np.sin(t))
-
-            F = np.array([cx(k, t), cy(k, t), np.meshgrid(k, k)[1]]).T
-
-            R_ = np.reshape(np.tile(R.T, (1, num)).T, [num, 3, 3])
-            E = np.einsum('lij, lkj->lki', R_, F)
-            ax.plot_surface(E[:, :, 0] + T[0], E[:, :, 1] + T[1], E[:, :, 2] + T[2], color=c)
-
-        ax.set_xlabel('X [microns]')
-        ax.set_ylabel('Y [microns]')
-        ax.set_zlabel('Z [microns]')
-
-    def draw_tree(self, edge_labels=False, **kwds):
-        """
-        Draw neuron as a planar tree.
-        :param edge_labels: Boolean, default=False. Determines if edgelabels are drawn as well.
-        :param kwds: arguments that can be passed to the nx.draw_networkx function.
-        """
-
-        pos = nx.drawing.nx_agraph.graphviz_layout(self._G, prog='dot')
-
-        colors = self.get_node_colors()
-
-        nx.draw_networkx(self._G, pos, node_color=colors, **kwds)
-        if edge_labels:
-            # draw graph with weights on edges
-            edge_labels = {(n1, n2): self._G[n1][n2]['path_length'] for (n1, n2) in self._G.edges()}
-            nx.draw_networkx_edge_labels(self._G, pos, edge_labels=edge_labels, **kwds)
-
-    def draw_2D(self, fig=None, projection='xz', axon_color='grey', dendrite_color='darkgrey',
-                apical_dendrite_color='darkgreen', x_offset=0, y_offset=0, **kwargs):
+    def draw_2D(self, fig=None, ax=None, projection='xz', axon_color='darkgreen', dendrite_color='darkgrey',
+                apical_dendrite_color='grey', x_offset=0, y_offset=0, **kwargs):
         """
         Plots a 2D projection of the stick figure neuron.
         :param fig: Figure in which to draw. If None a new figure is created.
@@ -1727,12 +1628,22 @@ class NeuronTree:
         """
         if not fig:
             fig = plt.figure()
+
+        elif not ax:
+            ax = fig.gca()
+
         if projection == 'xy':
             indices = [0,1]
         elif projection == 'xz':
             indices = [0,2]
         elif projection == 'yz':
             indices = [1,2]
+        elif projection == 'yx':
+            indices=[1,0]
+        elif projection == 'zx':
+            indices = [2,0]
+        elif projection == 'zy':
+            indices = [2,1]
         else:
             raise ValueError('projection %s is not defined.'% projection)
 
@@ -1763,26 +1674,25 @@ class NeuronTree:
             plt_idx = plt_idx[:, 0]
 
         if plt_idx.any():
-            _ = fig.gca().plot(V[plt_idx, :, x].T + x_offset, V[plt_idx, :, y].T + y_offset, c=axon_color, **kwargs)
+            _ = ax.plot(V[plt_idx, :, x].T + x_offset, V[plt_idx, :, y].T + y_offset, c=axon_color, **kwargs)
 
         plt_idx = np.array([cs_i == dendrite_color for cs_i in cs])
         if len(plt_idx.shape) > 1:
             plt_idx = plt_idx[:, 0]
 
         if plt_idx.any():
-            _ = fig.gca().plot(V[plt_idx, :, x].T + x_offset, V[plt_idx, :, y].T + y_offset, c=dendrite_color, **kwargs)
+            _ = ax.plot(V[plt_idx, :, x].T + x_offset, V[plt_idx, :, y].T + y_offset, c=dendrite_color, **kwargs)
 
         plt_idx = np.array([cs_i == apical_dendrite_color for cs_i in cs])
         if len(plt_idx.shape) > 1:
             plt_idx = plt_idx[:, 0]
 
         if plt_idx.any():
-            _ = fig.gca().plot(V[plt_idx, :, x].T + x_offset, V[plt_idx, :, y].T + y_offset, c=apical_dendrite_color,
+            _ = ax.plot(V[plt_idx, :, x].T + x_offset, V[plt_idx, :, y].T + y_offset, c=apical_dendrite_color,
                                **kwargs)
 
 
     ############# SAVING FUNCTIONS #####################
-
 
     def to_swc(self):
         """
