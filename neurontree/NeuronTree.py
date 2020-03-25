@@ -866,7 +866,8 @@ class NeuronTree:
 
     def get_segment_length(self, dist='path_length'):
         """
-        Returns the dictionary of the segment length in microns of each branch where dist denotes the distance measure.
+        Returns the dictionary of the length in microns of each segment where dist denotes the distance measure. A segment
+        is defined as the path between two branch points or a branch point and a tip.
          Possible options are 'path_length' an 'euclidean_dist'. The keys of the dictionary denote the
         tuples of the starting and end node of each segment.
         :param dist: String, options ['path_length', 'euclidean_dist']
@@ -1632,7 +1633,7 @@ class NeuronTree:
                 ax = fig.gca()
             else:
                 ax = fig.gca()
-       
+
         if projection == 'xy':
             indices = [0,1]
         elif projection == 'xz':
