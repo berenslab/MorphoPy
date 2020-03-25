@@ -7,9 +7,10 @@ import traceback
 import pandas as pd
 import networkx as nx
 import matplotlib as mpl
+
 mpl.use('Agg')
 import matplotlib.pyplot as plt
-import neurontree.NeuronTree as nt
+import computation.file_manager as file_manager
 import computation.feature_presentation as fp
 import computation.persistence_functions as pf
 
@@ -41,50 +42,48 @@ def help(exitcode=0):
     print('                                results in. (default: same as source)         ')
     sys.exit(exitcode)
 
+
 def version():
     print('MorphoPy version 0.1')
     sys.exit(0)
-    
+
+
 def printException(message="Unknown Error"):
     tb = traceback.format_exc()
-    tb = tb.split("\n",3)[3];
+    tb = tb.split("\n", 3)[3];
     print()
     print(message)
     print()
     print("Exception occured:")
     print(tb)
-    
-def checkNeuronTree(neurontree=None):
-    if not neurontree.has_root():
-        raise ValueError('Graph has no root defined!')
-    if not neurontree.is_connected():
-        raise ValueError('Graph has disconnected nodes!')
-    
+
+
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, "c:f:d:o:hv", ["compute=", "func=", "conf=", "file=", "dir=", "output=", "help", "version"])
+        opts, args = getopt.getopt(argv, "c:f:d:o:hv",
+                                   ["compute=", "func=", "conf=", "file=", "dir=", "output=", "help", "version"])
     except getopt.GetoptError:
         print("Wrong options are specified!")
         help(1)
 
     # check if arguments are empty
     if len(argv) < 1:
-      print("No arguments are used! At least the compute mode has to be passed.")
-      help(1)
+        print("No arguments are used! At least the compute mode has to be passed.")
+        help(1)
 
     # default values:
-    compute = ''       # no compute mode selected
-    directory = './'   # default working directory if no file and dir specified
-    file = ""          # default no file -> directory is used
-    function = None    # default function none
-    output = None      # default output directory is none
-    conf = None        # default value, no config file is used
+    compute = ''  # no compute mode selected
+    directory = './'  # default working directory if no file and dir specified
+    file = ""  # default no file -> directory is used
+    function = None  # default function none
+    output = None  # default output directory is none
+    conf = None  # default value, no config file is used
 
     # Check arguments
     for opt, arg in opts:
         # argument is missing because next option is in argument
         if arg.startswith("-"):
-            print("Wrong argument in option: "+opt)
+            print("Wrong argument in option: " + opt)
             help()
         if opt in ('-c', '--compute'):
             compute = arg
@@ -110,7 +109,7 @@ def main(argv):
     allfiles = []
     if len(file) > 1:
         allfiles.append(os.path.basename(file))
-        directory = os.path.dirname(file)+"/"
+        directory = os.path.dirname(file) + "/"
     else:
         allfiles = os.listdir(directory)
 
@@ -143,16 +142,14 @@ def main(argv):
             print(" Process File: {} ".format(file))
             # compute morphometric stats
             try:
-                swc = pd.read_csv(directory+file, delim_whitespace=True, comment='#',
-                                  names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
-                mytree = nt.NeuronTree(swc=swc, nxversion=nxversion)
-                checkNeuronTree(mytree)
+                # import swc file and compute statistics
+                mytree = file_manager.load_swc_file(directory + file, nxversion)
                 morpho_stats_table = fp.compute_Morphometric_Statistics(mytree)
                 print(morpho_stats_table)
                 # Export of pandas data frame to csv-file in same directory
-                outputfile=output+file+"_morpho_stats.csv"
+                outputfile = output + file + "_morpho_stats.csv"
                 morpho_stats_table.to_csv(outputfile)
-                print("Statistics saved to: "+outputfile)
+                print("Statistics saved to: " + outputfile)
             except:
                 printException("Failure in computing morphometric statistics!")
 
@@ -164,15 +161,12 @@ def main(argv):
             print(" Process File: {} ".format(file))
             # compute persistence data
             try:
-                swc = pd.read_csv(directory+file, delim_whitespace=True, comment='#',
-                                  names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
-                mytree = nt.NeuronTree(swc=swc, nxversion=nxversion)
-                checkNeuronTree(mytree)
-                
+                # import swc file and compute persistence table
+                mytree = file_manager.load_swc_file(directory + file, nxversion)
                 persistence_table = fp.get_persistence(mytree.get_topological_minor(), f=function)
-                #TODO add filename as identifier
+                # TODO add filename as identifier
 
-                #TODO concat
+                # TODO concat
                 print(persistence_table)
 
                 # create diagram and save png-file to same directory
@@ -186,9 +180,9 @@ def main(argv):
                     plt.title('Persistence Diagram ({})'.format(function.__name__))
                 plt.xlabel('birth')
                 plt.ylabel('death')
-                outputfile=output+file+"_persistence.png"
+                outputfile = output + file + "_persistence.png"
                 plt.savefig(outputfile)
-                print("Persistence saved to: "+outputfile)
+                print("Persistence saved to: " + outputfile)
                 plt.close()
             except:
                 printException("Failure in computing persistence data!")
@@ -201,26 +195,22 @@ def main(argv):
             print(" Process File: {} ".format(file))
             # compute density map
             try:
-                swc = pd.read_csv(directory+file, delim_whitespace=True, comment='#',
-                                  names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
-
-                mytree = nt.NeuronTree(swc=swc, nxversion=nxversion)
-                checkNeuronTree(mytree)
-                
+                # import swc file and compute density maps
+                mytree = file_manager.load_swc_file(directory + file, nxversion)
                 plots = fp.compute_Density_Maps(mytree, conf=conf)
-                outputfile=output+file+"_density_"
+                outputfile = output + file + "_density_"
                 for idx, plot in enumerate(plots, start=1):
-                    plot.savefig(outputfile+"%s.png" % idx)
+                    plot.savefig(outputfile + "%s.png" % idx)
                     plot.close()
                 print("Density maps saved to %sx.png" % outputfile)
             except FileNotFoundError:
-                print("Failure in computing density map: Config file not found or not readable!")
+                print("Failure in computing density map: Config file not found or not readable: {}".format(conf))
             except:
                 printException("Failure in computing density map!")
     else:
         print('Unknown compute mode. Use a valid compute parameter')
         help(1)
-        
+
     # program end
     sys.exit(0)
 
