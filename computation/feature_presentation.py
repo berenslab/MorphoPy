@@ -77,6 +77,7 @@ def get_persistence(neurontree=None, f=None):
     D['death'].append(f(G, R, R))
     return pd.DataFrame(D)
 
+
 def compute_Morphometric_Statistics(neurontree=None):
     z = dict()
     z['branch_points'] = neurontree.get_branchpoints().size
@@ -114,6 +115,8 @@ def compute_Morphometric_Statistics(neurontree=None):
     z['max_path_angle'] = np.percentile(path_angles, 99.5)
     z['min_path_angle'] = np.min(path_angles)
     z['median_path_angle'] = np.median(path_angles)
+
+    z['mean_soma_exit_angle'] = np.mean(neurontree.get_soma_angles())
 
     R = neurontree.get_topological_minor()
     segment_length = R.get_segment_length()

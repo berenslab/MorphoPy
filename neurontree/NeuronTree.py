@@ -1109,7 +1109,7 @@ class NeuronTree:
 
         r = self.get_root()
         successors = list(self.get_graph().adj[r].keys())
-        
+
         branches = []
         for succ in successors:
             if self._nxversion == 2:
