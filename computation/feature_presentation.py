@@ -96,7 +96,7 @@ def compute_Morphometric_Statistics(neurontree=None):
     # get all radii
     radii = nx.get_node_attributes(neurontree.get_graph(), 'radius')
     # delete the soma
-    radii.pop(neurontree.get_root())
+    radii.pop(root)
     z['avg_thickness'] = np.mean(list(radii.values()))
     z['max_thickness'] = np.max(list(radii.values()))
 
@@ -126,9 +126,9 @@ def compute_Morphometric_Statistics(neurontree=None):
 
     tortuosity = [e[2]['path_length'] / e[2]['euclidean_dist'] for e in R.edges(data=True)]
 
-    z['max_tortuosity'] = np.log(np.percentile(tortuosity, 99.5))
-    z['min_tortuosity'] = np.log(np.min(tortuosity))
-    z['median_tortuosity'] = np.log(np.median(tortuosity))
+    z['log_max_tortuosity'] = np.log(np.percentile(tortuosity, 99.5))
+    z['log_min_tortuosity'] = np.log(np.min(tortuosity))
+    z['log_median_tortuosity'] = np.log(np.median(tortuosity))
 
     branch_angles = R.get_branch_angles()
     z['max_branch_angle'] = np.max(branch_angles)
