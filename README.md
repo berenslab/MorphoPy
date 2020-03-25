@@ -131,10 +131,11 @@ Help:
 
 ## <a name="contributing">Contributing to MorphoPy </a>
 
-MorphoPy is an open source project and we are happy if you want to contribute in any way. You can report bugs and request
-feature via [GitHub issues](https://github.com/berenslab/MorphoPy/issues). If you want to develop the code base further,
-you can work with git pull requests. Please make sure that you document the code and add test and example of how to use
-your code.
+We tested MorphoPy to the best of our knowledge and abilities in the scope of several projects. If you still find a bug
+or you miss a feature, please do not hesitate to let us know via [GitHub issues](https://github.com/berenslab/MorphoPy/issues).
+Please try to provide a minimal example that reproduces the bug you want to be fixed.
+If you want to develop the code base further, you can work with git pull requests. Please make sure that you document
+the code and add test and example of how to use your code.
 
 ## <a name="module">Module description</a> 
 
