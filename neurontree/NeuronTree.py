@@ -42,7 +42,7 @@ class NeuronTree:
             for a in range(1, int(e / d)):
                 P.append(g(a * d))
 
-        P += list(nx.get_node_attributes(self._G, 'pos').values())
+        P += list(self.get_node_attributes('pos').values())
         return np.array(P)
 
     # creates a networkX Tree out of a swc file.
@@ -132,8 +132,8 @@ class NeuronTree:
         euclidean distance = 0, so the node has the same 3D position as its predecessor.
         """
         # get the nodes whose edge between them has distance = 0.
-        nodeindices = np.array(list(nx.get_edge_attributes(self._G, 'euclidean_dist').values())) == 0
-        edgelist = list(np.array(list(nx.get_edge_attributes(self._G, 'euclidean_dist').keys()))[nodeindices])
+        nodeindices = np.array(list(self.get_edge_attributes('euclidean_dist').values())) == 0
+        edgelist = list(np.array(list(self.get_edge_attributes('euclidean_dist').keys()))[nodeindices])
         while edgelist:
             predecessor, redundantNode = edgelist.pop()
 
@@ -158,8 +158,8 @@ class NeuronTree:
 
             # remove redundant node from graph
             self._G.remove_node(redundantNode)
-            nodeindices = np.array(list(nx.get_edge_attributes(self._G, 'euclidean_dist').values())) == 0
-            edgelist = list(np.array(list(nx.get_edge_attributes(self._G, 'euclidean_dist').keys()))[nodeindices])
+            nodeindices = np.array(list(self.get_edge_attributes('euclidean_dist').values())) == 0
+            edgelist = list(np.array(list(self.get_edge_attributes('euclidean_dist').keys()))[nodeindices])
 
     def _merge_edges_on_path_by_edge_length(self, start=1, e=0.01):
         """
@@ -210,7 +210,7 @@ class NeuronTree:
         :param B: subgraph, a branch within the NeuronTree
         :return: int, type id (1: soma, 2: axon, 3: basal dendrite, 4: apical dendrite). Type of the branch 'B'.
         """
-        Y = nx.get_node_attributes(self._G, 'type')
+        Y = self.get_node_attributes('type')
         bt = []
         bt += [Y[k] for k in B]
         return np.round(np.mean(bt))
@@ -257,7 +257,7 @@ class NeuronTree:
         Deprecated! Makes all node positions relative to the soma. The soma will then have position (0,0,0).
         """
         root = self.get_root()
-        if 'pos' in self.get_node_attributes():
+        if 'pos' in self.get_node_attribute_names():
             root_pos = self._G.node[root]['pos']
 
             for v in self._G.node:
@@ -288,12 +288,12 @@ class NeuronTree:
         else:
             T = trees[0]
 
-        for n_attr in self.get_node_attributes():
-            attr = nx.get_node_attributes(G, name=n_attr)
+        for n_attr in self.get_node_attribute_names():
+            attr = self.get_node_attributes(n_attr)
             nx.set_node_attributes(T, name=n_attr, values=attr)
 
-        for e_attr in self.get_edge_attributes():
-            attr = nx.get_edge_attributes(G, name=e_attr)
+        for e_attr in self.get_edge_attribute_names():
+            attr = self.get_edge_attributes(e_attr)
             nx.set_edge_attributes(T, name=e_attr, values=attr)
 
         self._G = T
@@ -350,7 +350,7 @@ class NeuronTree:
 
         G = copy.copy(self.get_graph())
 
-        positions = nx.get_node_attributes(G, 'pos')
+        positions = self.get_node_attributes('pos')
 
         smoothed = dict(zip(G.nodes(), [False] * len(G.nodes())))
         r = self.get_root()
@@ -417,7 +417,7 @@ class NeuronTree:
 
         self._G = relabeled_G
 
-    def get_node_attributes(self):
+    def get_node_attribute_names(self):
         """ returns the list of attributes assigned to each node.
             If no attributes are assigned it returns an empty list.
             changed for use with networkx v2 (works in all versions)
@@ -436,7 +436,17 @@ class NeuronTree:
                 attr = list(self._G.node[node_id].keys())
         return attr
 
-    def get_edge_attributes(self):
+    def get_node_attributes(self, attribute):
+        """
+        Returns a dictionary that holds the attribute's value for each node.
+        :param attribute: string. Possible values are "type", "pos" and "radius".
+        :return: dict of the form {n : attribute_value}eturns a dictionary that holds the attributes value for each edge.
+        :param attribute: string. Possible values are "euclidean_dist" and "path_length"
+        :return: dict of the form {(u,v) : attribute_value}
+        """
+        return nx.get_node_attributes(self.get_graph(), attribute)
+
+    def get_edge_attribute_names(self):
         """
             Returns the list of attributes assigned to each edge.
             If no attributes are assigned it returns an empty list.
@@ -454,6 +464,14 @@ class NeuronTree:
                 e = self._G.edges()[0]
             attr = list(self._G.adj[e[0]][e[1]].keys())
         return attr
+
+    def get_edge_attributes(self, attribute):
+        """
+        Returns a dictionary that holds the attribute's value for each edge.
+        :param attribute: string. Possible values are "euclidean_dist" and "path_length"
+        :return: dict of the form {(u,v) : attribute_value}
+        """
+        return nx.get_edge_attributes(self.get_graph(), attribute)
 
     def get_path_length(self):
         """
@@ -736,7 +754,7 @@ class NeuronTree:
         of the mass.
         :return: 1x3 numpy.array
         """
-        P = np.array(list(nx.get_node_attributes(self._G, 'pos').values()))
+        P = np.array(list(self.get_node_attributes('pos').values()))
         if robust:
             extend = np.percentile(P, 97.5, axis=0) - np.percentile(P, 2.5, axis=0)
         else:
@@ -878,7 +896,7 @@ class NeuronTree:
 
         T = self.get_topological_minor()
 
-        segment_length = nx.get_edge_attributes(T.get_graph(), dist)
+        segment_length = self.get_edge_attributes(dist)
         return segment_length
 
     def get_kde_distribution(self, key, dist=None):
@@ -894,7 +912,7 @@ class NeuronTree:
         """
 
         if key == 'thickness':
-            thickness = np.array(list(nx.get_node_attributes(self.get_graph(), 'radius').values()))
+            thickness = np.array(list(self.get_node_attributes('radius').values()))
 
             if dist:
                 data = np.array(list(zip(self._get_distance(dist), thickness)))
@@ -1015,7 +1033,7 @@ class NeuronTree:
         """
 
         # get the thickness of each node
-        thickness_dict = nx.get_node_attributes(self.get_graph(), 'radius')
+        thickness_dict = self.get_node_attributes('radius')
 
         # delete the soma since it usually skews the distribution
         thickness_dict.pop(self.get_root())
@@ -1578,10 +1596,10 @@ class NeuronTree:
         :param dendrite_color: Color, default='darkgrey'. Defines the color of the dendrites.
         """
 
-        nodes = [k for k in nx.get_node_attributes(self._G, 'pos').values()]
+        nodes = [k for k in self.get_node_attributes('pos').values()]
         nodes = np.array(nodes)
 
-        t = [axon_color if k == 2 else dendrite_color for k in nx.get_node_attributes(self._G, 'type').values()]
+        t = [axon_color if k == 2 else dendrite_color for k in self.get_node_attributes('type').values()]
 
         # plot G
         if not fig:
@@ -1696,6 +1714,7 @@ class NeuronTree:
 
     ############# SAVING FUNCTIONS #####################
 
+
     def to_swc(self):
         """
         Write NeuronTree into swc file compatible pandas.DataFrame.
@@ -1706,9 +1725,9 @@ class NeuronTree:
         G = self._G
         ids = [int(k) for k in G.nodes()]
         ids.sort()
-        pos_dict = nx.get_node_attributes(G, 'pos')
-        r_dict = nx.get_node_attributes(G, 'radius')
-        t_dict = nx.get_node_attributes(G, 'type')
+        pos_dict = self.get_node_attributes('pos')
+        r_dict = self.get_node_attributes('radius')
+        t_dict = self.get_node_attributes('type')
 
         # create a parent dictionary
         beg = np.array([e[0] for e in self.edges()])
@@ -1755,9 +1774,8 @@ class NeuronTree:
             makedirs(path)
 
         data = {}
-        G = self._G
-        P = list(nx.get_node_attributes(G, 'pos').values())
-        T = list(nx.get_node_attributes(G, 'type').values())
+        P = list(self.get_node_attributes('pos').values())
+        T = list(self.get_node_attributes('type').values())
         A = nx.adjacency_matrix(G, weight='path_length')
 
         data['pos'] = P
