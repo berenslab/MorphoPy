@@ -11,8 +11,14 @@ def load_swc_file(filename=None, nxversion=1):
     :param nxversion: version of installed networkX passed to NeuronTree
     :return: NeuronTree object
     """
-    swc = pd.read_csv(filename, delim_whitespace=True, comment='#',
+    f = lambda x: float(x.replace(",", "."))
+    swc = pd.read_csv(filename, delim_whitespace=True, comment='#', converters={'x': f, 'y': f, 'z': f, 'radius': f},
                       names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
+
+    # check returned object if import was successful
+    if swc is None or type(swc) != pd.DataFrame or swc.size == 0:
+        raise ValueError('No points found in swc file, please check format of data!')
+
     swc = utils.get_standardized_swc(swc)
     my_tree = nt.NeuronTree(swc=swc, nxversion=nxversion)
     check_neurontree(my_tree)
