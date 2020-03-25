@@ -189,7 +189,7 @@ def compute_Density_Maps(neurontree=None, conf=None):
         r = dict(min=np.min(pc, axis=0), max=np.max(pc, axis=0))
         # which axes to project on
         proj_axes = '02'
-        n_bins = 100
+        n_bins = 20
         normed = True
         smooth = False
         sigma = 1
@@ -209,10 +209,7 @@ def compute_Density_Maps(neurontree=None, conf=None):
     data = _project_data(proj_axes, pc)
 
     # compute histogram hence density map
-    H_100, edges = np.histogramdd(data, bins=(n_bins,) * dim,
-                                  range=range_, normed=normed)
-
-    H_20, edges_20 = np.histogramdd(data, bins=(20,) * dim,
+    H_20, edges_20 = np.histogramdd(data, bins=(n_bins,) * dim,
                                     range=range_, normed=normed)
 
     H_10, edges_10 = np.histogramdd(data, bins=(10,) * dim,
@@ -220,7 +217,6 @@ def compute_Density_Maps(neurontree=None, conf=None):
 
     # perform smoothing
     if smooth:
-        H_100 = smooth_gaussian(H_100, dim=dim, sigma=sigma)
         H_20 = smooth_gaussian(H_20, dim=dim, sigma=sigma)
         H_10 = smooth_gaussian(H_10, dim=dim, sigma=sigma)
 
@@ -229,17 +225,13 @@ def compute_Density_Maps(neurontree=None, conf=None):
     plt.figure(figsize=(15, 5))
     plt.title('Histogram hence density map')
 
-    plt.subplot(131)
-    plt.imshow(H_100.T)
-    plt.gca().invert_yaxis()
-    plt.title('100 bins')
 
-    plt.subplot(132)
+    plt.subplot(121)
     plt.imshow(H_20.T)
     plt.gca().invert_yaxis()
     plt.title('20 bins')
 
-    plt.subplot(133)
+    plt.subplot(122)
     plt.imshow(H_10.T)
     plt.gca().invert_yaxis()
     plt.title('10 bins')
