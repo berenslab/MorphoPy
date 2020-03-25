@@ -1613,7 +1613,6 @@ class NeuronTree:
         ax.set_ylabel('Y [microns]')
         ax.set_zlabel('Z [microns]')
 
-
     def draw_2D(self, fig=None, ax=None, projection='xz', axon_color='darkgreen', dendrite_color='darkgrey',
                 apical_dendrite_color='grey', x_offset=0, y_offset=0, **kwargs):
         """
@@ -1626,12 +1625,14 @@ class NeuronTree:
         :param y_offset: double, default = 0, define offset for the first projection coordinate.
         :param kwargs: further plotting parameters that can be passed to the plt.plot function.
         """
-        if not fig:
-            fig = plt.figure()
 
-        elif not ax:
-            ax = fig.gca()
-
+        if not ax:
+            if not fig:
+                fig = plt.figure()
+                ax = fig.gca()
+            else:
+                ax = fig.gca()
+       
         if projection == 'xy':
             indices = [0,1]
         elif projection == 'xz':
