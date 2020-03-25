@@ -249,9 +249,9 @@ def compute_Density_Maps(neurontree=None, conf=None):
         range_ = [[-.1, 1.1]] * dim
         data = _project_data(proj_axes, pc)
 
-        for k, n_bins in enumerate([100, 20], start=1):
+        for k, bins in enumerate([10,n_bins ], start=1):
             # compute histogram hence density map
-            H, edges = np.histogramdd(data, bins=(n_bins,) * dim,
+            H, edges = np.histogramdd(data, bins=(bins,) * dim,
                                       range=range_, normed=normed)
 
             # perform smoothing
@@ -262,7 +262,7 @@ def compute_Density_Maps(neurontree=None, conf=None):
             plt.plot(H)
             sns.despine()
             plt.xlabel(ax)
-            plt.title('%i bins' % n_bins)
+            plt.title('%i bins' % bins)
 
         plt.suptitle('Projection onto the %s axis' % ax, weight='bold')
         plots.append(plt)
