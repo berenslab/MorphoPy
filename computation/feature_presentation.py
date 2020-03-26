@@ -93,9 +93,9 @@ def compute_Morphometric_Statistics(neurontree=None):
     root = neurontree.get_root()
     z['stems'] = len(neurontree.edges(root))
 
-    z['total_length'] = np.sum(list(nx.get_edge_attributes(neurontree.get_graph(), 'path_length').values()))
+    z['total_length'] = np.sum(list(neurontree.get_edge_attributes('path_length').values()))
     # get all radii
-    radii = nx.get_node_attributes(neurontree.get_graph(), 'radius')
+    radii = neurontree.get_node_attributes('radius')
     # delete the soma
     radii.pop(root)
     z['avg_thickness'] = np.mean(list(radii.values()))
