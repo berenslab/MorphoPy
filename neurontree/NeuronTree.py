@@ -700,30 +700,6 @@ class NeuronTree:
             angles.update({(n1,n2): func(u, v) * 180 / np.pi})
         return angles
 
-    def get_root_angle_dist(self, angle_type='axis', **kwargs):
-        """
-               Returns the histogram over the root angle distribution over a tree. Root angle denotes the orientation of
-               each edge with respect to the root (soma).
-               :param self: NeuronTree object
-               :param bins: int
-                    Number of bins used in the histogram. Default is 10.
-               :param angle_type: either 'axis' or 'euler'
-                    Defines the type of angle that is calculated. Euler angles are defined as angles around the canonical
-                    euler axes (x, y and z). Axis angles are defined with respect to the rotation axis between two
-                    vectors.
-               :returns:
-                    hist: histogram over angles
-                    edges: edges of histogram. For further information see numpy.histogramdd()
-           """
-        angles = np.array(list(self.get_root_angles(angle_type).values()))
-        if angle_type == 'axis':
-            dim = 1
-        elif angle_type == 'euler':
-            dim = 3
-        hist = np.histogramdd(angles, range=[[0, 180]]*dim, **kwargs)
-
-        return hist
-
     def get_branch_order(self):
         """
         Returns the dictionary of the branch order of each node. The branch order denotes the number of branch points
@@ -782,16 +758,16 @@ class NeuronTree:
 
         return strahler_order
 
-    def _get_distance(self, dist='path_from_soma', as_dict=True):
+    def _get_distance(self, dist='path_length', as_dict=True):
         """
         Returns the distance. Helper function for the distributions.
-        :param dist: String, defines the distance measure to be used (default is 'path_from_soma'), Options are
-        'path_from_soma', 'radial' and 'branch_order'.
+        :param dist: String, defines the distance measure to be used (default is 'path_length'), Options are
+        'path_length', 'radial' and 'branch_order'.
         :param as_dict: boolean, default = True. Determines whether the distance are returned as a dictionary of the
         form {'node_id': ,distance} or as an numpy.array.
         :return: Dictionary or numpy.array of the defined distance measure from each node to the soma.
         """
-        if dist == 'path_from_soma':
+        if dist == 'path_length':
 
             if as_dict:
                 dist_ = self.get_path_length(weight='path_length')
@@ -845,6 +821,80 @@ class NeuronTree:
 
         segment_length = T.get_edge_attributes(dist)
         return segment_length
+
+    def get_histogram(self, value='branch_order', dist_measure=None, **kwargs):
+        """
+
+        :param value:
+        :param dist_measure:
+        :param kwargs:
+        :return:
+        """
+
+        r = None
+        dim = 1
+        if value == 'branch_order':
+            values = self.get_branch_order()
+
+        elif value == 'strahler_order':
+            values = self.get_strahler_order()
+
+        elif value == 'branch_angle':
+            values = self.get_branch_angles()
+
+        elif value == 'path_angle':
+            values = self.get_path_angles()
+
+        elif value == 'root_angle':
+            if 'angle_type' in kwargs.keys():
+                angle_type = kwargs.pop('angle_type')
+                if angle_type == 'euler':
+                    dim = 3
+                    r = [[0, 180]] * dim
+
+                values = self.get_root_angles(angle_type)
+
+            else:
+                values = self.get_root_angles()
+
+
+        elif value == 'thickness':
+            values = self.get_radii()
+
+        elif value == 'segment_length':
+            values = self.get_segment_length()
+
+        elif value == 'path_length':
+            values = self.get_path_length()
+
+        elif value == 'radial_dist':
+            values = self.get_radial_distance()
+
+        else:
+            raise ValueError("There is value %s defined." % value)
+
+        if dist_measure:
+            distances = self._get_distance(dist_measure, as_dict=True)
+            # if the respective values are given in a dictionary that is indexed by nodes
+            if value in ['branch_order', 'strahler_order', 'branch_angle',
+                         'path_angle', 'thickness', 'path_length', 'radial_dist']:
+                dist = [distances[n] for n in values.keys()]
+            else:  # otherwise
+                dist = [distances[k[1]] for k in values.keys()]
+
+            data = np.array(list(zip(dist, list(values.values()))))
+            hist_data = np.histogramdd(data, range=r, **kwargs)
+
+        else:
+            # just query the values of each dictionary
+            data = np.array(list(values.values()))
+
+            if dim == 1:
+                hist_data = np.histogram(data, range=r, **kwargs)
+            else:
+                hist_data = np.histogramdd(data, range=r, **kwargs)
+
+        return hist_data
 
     def get_kde_distribution(self, key, dist=None):
         """
@@ -941,20 +991,6 @@ class NeuronTree:
         else:
             raise NotImplementedError
 
-
-
-    def get_branch_order_dist(self, **kwargs):
-        """
-            Returns histogram of the branch order distribution
-        :param kwargs: optional parameters passed to histogram calculation (see numpy.histogramdd)
-        :return:
-            hist    1D histogram
-            edges   bin edges of the histogram in hist. Definition as in numpy.histogrammdd
-        """
-        data = list(self.get_branch_order().values())
-
-        return np.histogram(data, **kwargs)
-
     def get_radii(self):
         """
         Returns the radii of each node.
@@ -963,33 +999,6 @@ class NeuronTree:
         # get the thickness of each node
         thickness_dict = self.get_node_attributes('radius')
         return thickness_dict
-
-    def get_thickness_dist(self, dist_measure=None, **kwargs):
-        """
-            Returns the distribution of the neurons thickness in microns in form of a histogram.
-            The distribution can be calculated against a distance measure, namely 'path_from_soma' or 'branch_order'.
-        :param dist_measure:
-        :param kwargs:
-        :return:
-            hist    1D or 2D histogram
-            edges   bin edges used
-        """
-
-        thickness_dict=self.get_radii()
-
-        # delete the soma since it usually skews the distribution
-        thickness_dict.pop(self.get_root())
-
-        thickness = np.array(list(thickness_dict.values()))
-
-        if dist_measure:
-
-            dist = self._get_distance(dist_measure)
-            data = np.array(list(zip(dist, thickness)))
-            return np.histogramdd(data, **kwargs)
-        else:
-
-            return np.histogram(thickness, **kwargs)
 
     def get_path_angles(self):
         """
@@ -1029,42 +1038,6 @@ class NeuronTree:
                     continue
 
         return path_angle
-
-    def get_path_angle_dist(self, dist_measure=None, **kwargs):
-        """
-            Returns the distribution of the path angle, so the angles that are made between two consecutive segments.
-            The distribution can be calculated against a distance measure, namely 'path_from_soma' or 'branch_order'.
-            The path angles are returned in degree.
-        :param dist_measure: string. default = None
-            Defines the distance measure against whom the thickness is calculated. Possible choices are 'path_from_soma'
-            or 'branch_order'.
-        :param kwargs: additional arguments to be passed to histogram calculation
-        :return:
-            hist    1- or 2D histogram
-            edges   bin edges of the histogram in hist. Definition as in numpy.histogrammdd
-        """
-
-        root = self.get_root()
-        successors = nx.dfs_successors(self.get_graph(), root)
-        path_angle = []
-        nodes = []
-        for n1, n2 in self.edges():
-            u = self.get_graph().node[n2]['pos'] - self.get_graph().node[n1]['pos']
-            try:
-                for succ in successors[n2]:
-                    v = self.get_graph().node[succ]['pos'] - self.get_graph().node[n2]['pos']
-                    path_angle.append(angle_between(u, v) * 180 / np.pi)  # convert angles into degree
-                    nodes.append(n2)
-            except KeyError:
-                continue
-
-        if dist_measure:
-            distances = self._get_distance(dist_measure, as_dict=True)
-            dist = [distances[n] for n in nodes]
-            data = np.array(list(zip(dist, path_angle)))
-            return np.histogramdd(data, **kwargs)
-        else:
-            return np.histogram(path_angle, **kwargs)
 
     def get_soma_angles(self):
         """
@@ -1132,58 +1105,6 @@ class NeuronTree:
             branch_angles.update(dict(sorted_angles[:len(branches) - 1]))
 
         return branch_angles
-
-    def get_branch_angle_dist(self, dist_measure=None, **kwargs):
-        """
-            Returns the distribution of the branch angles, so the angles that are made between two branching segments.
-            The distribution is calculated against a distance measure, namely 'path_from_soma' or 'branch_order'.
-            The branch angles are returned in degree.
-        :param dist_measure: string. default = None
-            Defines the distance measure against whom the branch angles are calculated. Possible choices are 'path_from_soma'
-            or 'branch_order'.
-        :param kwargs: additional arguments to be passed to histogram calculation
-        :return:
-            hist    2D histogram
-            edges   bin edges of the histogram in hist. Definition as in numpy.histogrammdd
-        """
-
-        branch_angles = self.get_branch_angles()
-        branchpoints = list(self.get_branchpoints())
-        # remove soma from the list of branch points
-        soma = self.get_root()
-        if soma in branchpoints:
-            branchpoints.remove(soma)
-
-        if dist_measure:
-            distances = self._get_distance(dist_measure, as_dict=True)
-            dist = [distances[n] for n in branchpoints]
-            data = np.array(list(zip(dist, branch_angles)))
-            return np.histogramdd(data, **kwargs)
-        else:
-            return np.histogram(branch_angles, **kwargs)
-
-    def get_segment_length_dist(self, segment_dist='path_length', branch_order=False, **kwargs):
-        """
-        Returns the histogram over segment lengths within the neuron. A segment is the part of a neurite between two
-        branch points.
-        :param segment_dist:    String, default='path_length',
-                                option=['path_length', 'euclidean_dist'] determines if the segment length is measured as
-                                euclidean distance between the end points or as the segment's path length.
-        :param branch_order:   bool, default=False, Defines whether segment path length is calculated as a function of
-                                branch order.
-        :param kwargs: parameters that can be passed to numpy.histogram
-        :return:
-            hist    histogram over segment lengths
-            edges   bins used for the histogram _hist_
-        """
-
-        segment_length = self.get_segment_length(segment_dist)
-        if branch_order:
-            bo = self.get_branch_order()
-            data = np.array([[bo[item[0][1]], item[1]] for item in segment_length.items()])
-            return np.histogramdd(data, **kwargs)
-        else:
-            return np.histogram(list(segment_length.values()), **kwargs)
 
     def get_volume(self):
         """
@@ -1444,30 +1365,6 @@ class NeuronTree:
         T = NeuronTree(node_data=nodes, edge_data=edges[1:], nxversion=self._nxversion)
 
         return T
-
-    def get_histogramdd(self, decomposition='ica', dim=3, proj_axes=None, whiten=True,
-                        nbins=100, r=None, normed=True, sampling_dist=0.01):
-        p = NeuronTree.resample_nodes(self._G, sampling_dist)
-
-        if decomposition:
-            if decomposition == 'pca':
-                # find principal axes of the 3D point cloud using PCA
-                pca = PCA(n_components=dim, whiten=whiten)
-                results = pca.fit_transform(p)
-            elif decomposition == 'ica':
-                ica = FastICA(n_components=dim, whiten=whiten)
-                results = ica.fit_transform(p)
-            else:
-                raise ValueError('decomposition {0} is not implemented.'.format(decomposition))
-        else:
-            if proj_axes:
-                results = p[:, proj_axes]
-            else:
-                results = p
-        if r:
-            return np.histogramdd(results, bins=(nbins,) * dim, range=r, normed=normed)
-        else:
-            return np.histogramdd(results, bins=(nbins,) * dim, normed=normed)
 
     def get_neurites(self, soma_included=True):
         """
