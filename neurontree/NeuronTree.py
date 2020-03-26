@@ -430,13 +430,15 @@ class NeuronTree:
         """
         return nx.get_edge_attributes(self.get_graph(), attribute)
 
-    def get_path_length(self):
+    def get_path_length(self, weight='euclidean_dist'):
         """
         Returns a dictionary containing the path length to the root for each node.
+        :param: weight String (default='euclidean_dist'). Determines which edge attribute ist used. Options are
+        'path_length' and 'eulidean_dist'. Note that in an unreduced tree, both options return the same values.
         :return:
          dict: Dictionary of the form {node_id=path length to soma}
         """
-        pl = nx.single_source_dijkstra_path_length(self.get_graph(), source=self.get_root(), weight='path_length')
+        pl = nx.single_source_dijkstra_path_length(self.get_graph(), source=self.get_root(), weight=weight)
         return pl
 
     def get_cumulative_path_length(self):
@@ -781,7 +783,7 @@ class NeuronTree:
 
     def _get_distance(self, dist='path_from_soma', as_dict=True):
         """
-        Returns the distance
+        Returns the distance. Helper function for the distributions.
         :param dist: String, defines the distance measure to be used (default is 'path_from_soma'), Options are
         'path_from_soma', 'radial' and 'branch_order'.
         :param as_dict: boolean, default = True. Determines whether the distance are returned as a dictionary of the
@@ -791,7 +793,7 @@ class NeuronTree:
         if dist == 'path_from_soma':
 
             if as_dict:
-                dist_ = self.get_path_length()
+                dist_ = self.get_path_length(weight='path_length')
             else:
                 dist_ = np.array(list(self.get_path_length().values()))
         elif dist == 'branch_order':
@@ -938,19 +940,7 @@ class NeuronTree:
         else:
             raise NotImplementedError
 
-    def get_distance_dist(self, **kwargs):
-        """
-            Returns histogram of the distance distribution from soma.
-        :param kwargs: optional parameters passed to histogram calculation (see numpy.histogramdd)
-        :return:
-            hist    1D histogram
-            edges   bin edges of the histogram in hist. Definition as in numpy.histogrammdd
-        """
 
-        dist = np.array(list(nx.single_source_dijkstra_path_length(self.get_graph(), source=self.get_root(),
-                                                                   weight='euclidean_dist').values()))
-
-        return np.histogram(dist, **kwargs)
 
     def get_branch_order_dist(self, **kwargs):
         """
@@ -960,7 +950,7 @@ class NeuronTree:
             hist    1D histogram
             edges   bin edges of the histogram in hist. Definition as in numpy.histogrammdd
         """
-        data = list(self._get_branch_order(1, 0).values())
+        data = list(self.get_branch_order().values())
 
         return np.histogram(data, **kwargs)
 
@@ -1008,7 +998,7 @@ class NeuronTree:
         """
         # get the depth first search successors from the soma (id=1).
         root = self.get_root()
-        branchpoints = self.get_branchpoints()
+        branchpoints = list(self.get_branchpoints())
         if root in branchpoints:
             branchpoints.remove(root)
         successors = nx.dfs_successors(self.get_graph(), root)
@@ -1454,7 +1444,7 @@ class NeuronTree:
         return T
 
     def get_histogramdd(self, decomposition='ica', dim=3, proj_axes=None, whiten=True,
-                        nbins=100, r=None, sampling_dist=0.01):
+                        nbins=100, r=None, normed=True, sampling_dist=0.01):
         p = NeuronTree.resample_nodes(self._G, sampling_dist)
 
         if decomposition:
@@ -1473,9 +1463,9 @@ class NeuronTree:
             else:
                 results = p
         if r:
-            return np.histogramdd(results, bins=(nbins,) * dim, range=r, normed=True)
+            return np.histogramdd(results, bins=(nbins,) * dim, range=r, normed=normed)
         else:
-            return np.histogramdd(results, bins=(nbins,) * dim, normed=True)
+            return np.histogramdd(results, bins=(nbins,) * dim, normed=normed)
 
     def get_neurites(self, soma_included=True):
         """
