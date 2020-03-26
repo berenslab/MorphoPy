@@ -436,26 +436,7 @@ class NeuronTree:
         :return:
          dict: Dictionary of the form {node_id=path length to soma}
         """
-        r = self.get_root()
-
-        edges = self.edges(data=True)
-        nodes = self.nodes()
-        nodes.sort()
-        edges.sort()
-
-        pl = dict(zip(nodes, [0] * len(nodes)))
-        while edges:
-
-            e1, e2, data = edges.pop(0)
-
-            if e1 == r:
-                pl[e2] = data['path_length']
-            elif pl[e1] != 0:
-                pl[e2] = pl[e1] + data['path_length']
-            else:
-                ix = np.random.randint(0, len(edges))
-                edges.insert(ix, (e1, e2, data))
-
+        pl = nx.single_source_dijkstra_path_length(self.get_graph(), source=self.get_root(), weight='path_length')
         return pl
 
     def get_cumulative_path_length(self):
