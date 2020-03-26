@@ -104,13 +104,10 @@ def compute_Morphometric_Statistics(neurontree=None):
     z['total_surface'] = np.sum(list(neurontree.get_surface().values()))
     z['total_volume'] = np.sum(list(neurontree.get_volume().values()))
 
-    z['max_path_dist_to_soma'] = np.max(neurontree.get_distance_dist()[1])
+    z['max_path_dist_to_soma'] = np.max(list(neurontree.get_path_length().values()))
     z['max_branch_order'] = np.max(list(neurontree.get_branch_order().values()))
 
-    path_angles = []
-    for p1 in neurontree.get_path_angles().items():
-        if p1[1].values():
-            path_angles += list(list(p1[1].values())[0].values())
+    path_angles = list(neurontree.get_path_angles().values())
 
     z['max_path_angle'] = np.percentile(path_angles, 99.5)
     z['min_path_angle'] = np.min(path_angles)
@@ -133,7 +130,7 @@ def compute_Morphometric_Statistics(neurontree=None):
     z['log_min_tortuosity'] = np.log(np.min(tortuosity))
     z['log_median_tortuosity'] = np.log(np.median(tortuosity))
 
-    branch_angles = R.get_branch_angles()
+    branch_angles = list(R.get_branch_angles().values())
     z['max_branch_angle'] = np.max(branch_angles)
     z['min_branch_angle'] = np.min(branch_angles)
     z['mean_branch_angle'] = np.mean(branch_angles)
@@ -152,7 +149,7 @@ def compute_Morphometric_Statistics(neurontree=None):
     else:
         z['tree_asymmetry'] = 0
 
-    return pd.DataFrame.from_dict(z, orient='index')
+    return pd.DataFrame.from_dict(z, orient='index').T
 
 def compute_Density_Maps(neurontree=None, conf=None):
     # get the resampled point could along each neurite at distance 1 micron.

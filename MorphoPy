@@ -152,7 +152,7 @@ def main(argv):
                 print(morpho_stats_frame)
                 print("")
                 # Append stats to global dataframe
-                output_data = output_data.append(morpho_stats_frame.T)
+                output_data = output_data.append(morpho_stats_frame)
             except:
                 printException("Failure in computing morphometric statistics!")
 
