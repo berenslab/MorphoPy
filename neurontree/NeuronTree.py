@@ -822,30 +822,36 @@ class NeuronTree:
         segment_length = T.get_edge_attributes(dist)
         return segment_length
 
-    def get_histogram(self, value='branch_order', dist_measure=None, **kwargs):
+    def get_histogram(self, statistic='branch_order', dist_measure=None, **kwargs):
         """
-
-        :param value:
-        :param dist_measure:
-        :param kwargs:
-        :return:
+        Returns the frequency distribution over the queried statistic. If a distance measure is set the distribution
+        is two-dimensional.
+        :param statistic: string (default='branch_order'), allows to query different statistic distributions. Options
+        are 'branch_order', 'strahler_order', 'branch_angle', 'path_angle', 'thickness', 'path_length', 'radial_dist',
+        'segment_length' and 'root_angle'.
+        :param dist_measure: String, (default: None). Optional distance measure against the distribution of values is
+        computed. Possible values are 'path_length', 'radial' and 'branch_order'. If set, the distribution returned is
+        two-dimensional ( statistic vs distance) .
+        :param kwargs: options for the np.histogramdd method and to determine the angle type when 'root_angles' are
+        queried.
+        :return: (hist, edges ) as np.arrays. The histogram and its bin edges. 
         """
 
         r = None
         dim = 1
-        if value == 'branch_order':
+        if statistic == 'branch_order':
             values = self.get_branch_order()
 
-        elif value == 'strahler_order':
+        elif statistic == 'strahler_order':
             values = self.get_strahler_order()
 
-        elif value == 'branch_angle':
+        elif statistic == 'branch_angle':
             values = self.get_branch_angles()
 
-        elif value == 'path_angle':
+        elif statistic == 'path_angle':
             values = self.get_path_angles()
 
-        elif value == 'root_angle':
+        elif statistic == 'root_angle':
             if 'angle_type' in kwargs.keys():
                 angle_type = kwargs.pop('angle_type')
                 if angle_type == 'euler':
@@ -857,26 +863,25 @@ class NeuronTree:
             else:
                 values = self.get_root_angles()
 
-
-        elif value == 'thickness':
+        elif statistic == 'thickness':
             values = self.get_radii()
 
-        elif value == 'segment_length':
+        elif statistic == 'segment_length':
             values = self.get_segment_length()
 
-        elif value == 'path_length':
+        elif statistic == 'path_length':
             values = self.get_path_length()
 
-        elif value == 'radial_dist':
+        elif statistic == 'radial_dist':
             values = self.get_radial_distance()
 
         else:
-            raise ValueError("There is value %s defined." % value)
+            raise ValueError("There is value %s defined." % statistic)
 
         if dist_measure:
             distances = self._get_distance(dist_measure, as_dict=True)
             # if the respective values are given in a dictionary that is indexed by nodes
-            if value in ['branch_order', 'strahler_order', 'branch_angle',
+            if statistic in ['branch_order', 'strahler_order', 'branch_angle',
                          'path_angle', 'thickness', 'path_length', 'radial_dist']:
                 dist = [distances[n] for n in values.keys()]
             else:  # otherwise
