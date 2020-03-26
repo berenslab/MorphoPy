@@ -80,16 +80,16 @@ class NeuronTree:
                         raise ValueError('No points found in swc file!')
                         
                     # sort out node data
-                    n = swc['n'].values # get node ids
+                    n = swc['n'].values.astype(int) # get node ids
                     pos = np.array([swc['x'].values, swc['y'].values, swc['z'].values]).T / scaling
                     radius = swc['radius'].values / scaling
-                    t = swc['type'].values
+                    t = swc['type'].values.astype(int)
                     pid = swc['parent'].values
 
                 elif type(swc) == np.ndarray:
-                    n = swc['n']
+                    n = swc['n'].astype(int)
                     pos = np.array([swc['x'], swc['y'], swc['z']]).T / scaling
-                    t = swc['type']
+                    t = swc['type'].astype(int)
                     radius = swc['radius'] / scaling
                     pid = swc['parent']
 
@@ -749,6 +749,7 @@ class NeuronTree:
         strahler_order = dict(zip(tips, [1] * len(tips)))
 
         for a in active:
+            a = int(a)
             so, counts = np.unique([strahler_order[s] for s in self._G.successors(a)], return_counts=True)
             # the highest child straher order only occurs once
             if counts[-1] == 1:
@@ -801,6 +802,7 @@ class NeuronTree:
         radial_distance = lambda u: np.sqrt(np.dot(u - r, u - r))
 
         for n in self.nodes():
+            n = int(n)
             n_pos = positions[n]
             radial_dist[n] = radial_distance(n_pos)
         return radial_dist
@@ -834,7 +836,7 @@ class NeuronTree:
         two-dimensional ( statistic vs distance) .
         :param kwargs: options for the np.histogramdd method and to determine the angle type when 'root_angles' are
         queried.
-        :return: (hist, edges ) as np.arrays. The histogram and its bin edges. 
+        :return: (hist, edges ) as np.arrays. The histogram and its bin edges.
         """
 
         r = None
