@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
+
 from os import makedirs
 from os.path import exists
 from scipy.io import savemat
@@ -992,9 +993,10 @@ class NeuronTree:
 
     def get_path_angles(self):
         """
-        Returns a dictionary of path angles between two edges. Angles are reported in degree
+        Returns a dictionary of angles between two edges if their connecting point is no branch point.
+        Angles are reported in degree.
         :return: dict of path angles btw two edges.
-                d[u][v][w] returns the angle between edge (u,v) and (v,w)
+                d[v] holds the angle between edge (u,v) and (v,w)
         """
         # get the depth first search successors from the soma (id=1).
         root = self.get_root()
@@ -1012,9 +1014,9 @@ class NeuronTree:
                     e1 = self.get_graph().nodes[v]['pos'] - self.get_graph().nodes[u]['pos']
                 else:
                     e1 = self.get_graph().node[v]['pos'] - self.get_graph().node[u]['pos']
-                path_angle[u] = {}
+
                 try:
-                    path_angle[u][v] = {}
+
                     for w in successors[v]:
                         if self._nxversion == 2:
                             # changed for version 2.x of networkX
@@ -1022,7 +1024,7 @@ class NeuronTree:
                         else:
                             e2 = self.get_graph().node[w]['pos'] - self.get_graph().node[v]['pos']
 
-                        path_angle[u][v][w] = angle_between(e1, e2) * 180 / np.pi
+                        path_angle[v] = angle_between(e1, e2) * 180 / np.pi
                 except KeyError:
                     continue
 
