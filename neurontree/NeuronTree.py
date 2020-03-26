@@ -161,49 +161,6 @@ class NeuronTree:
             nodeindices = np.array(list(self.get_edge_attributes('euclidean_dist').values())) == 0
             edgelist = list(np.array(list(self.get_edge_attributes('euclidean_dist').keys()))[nodeindices])
 
-    def _merge_edges_on_path_by_edge_length(self, start=1, e=0.01):
-        """
-         It removes nodes B on path A-->B-->C that do not change the length of a direct edge A-->C by the amount of
-         epsilon 'e' (in microns). The reduction is done inplace, to preserve the original structure please
-         copy the NeuronTree before.
-         changed for use with networkx v2 (works also in old version: edge -> adj)
-        :param start: node id, default = 1. Denotes the starting point within the NeuronTree.
-        :param e: double, tolerated epsilon (given in microns) of path length that we do not care to remove.
-        """
-        Tree = self._G
-        current_node = start
-        successors = list(Tree.successors(start))
-
-        while (successors):
-
-            pred = list(Tree.predecessors(current_node))
-            succ = successors.pop(0)
-            deg = Tree.out_degree()[current_node]
-
-            if deg == 1:
-                if pred and pred == Tree.predecessors(list(Tree.predecessors(succ))[0]):
-                    p = Tree.node[pred[0]]
-                    s = Tree.node[succ]
-
-                    d = np.sqrt(np.sum((s['pos'] - p['pos']) ** 2))
-
-                    d1 = Tree.adj[pred[0]][current_node]['euclidean_dist']
-                    d2 = Tree.adj[current_node][succ]['euclidean_dist']
-                    dist = d1 + d2
-
-                    if dist - d < e:
-                        for s in Tree.successors(current_node):
-                            path = nx.shortest_path_length(Tree, pred[0], s, weight='path_length')
-                            Tree.add_edge(pred[0], s, euclidean_dist=d, path_length=path)
-
-                        Tree.remove_node(current_node)
-            S = list(Tree.successors(succ))
-            S[len(S):] = successors
-            successors = S
-
-            current_node = succ
-        self._G = Tree
-
     def _get_branch_type(self, B):
         """
         get the type of a branch based on majority vote.
@@ -545,36 +502,6 @@ class NeuronTree:
         else:
             return roots[0]
 
-    def reduce(self, method='mst', e=0.01):
-        """
-        Reduces the number of nodes in the given tree by pruning nodes on paths like A-->B-->C. B is pruned and the
-        resulting edge A-->C is inserted under circumstances defined by the keyword 'method'.
-        :param method: (default 'mst') Defines the method by which the number of nodes is reduced. Possible methods are
-                'mst' -- deletes all nodes in between branch points. Results in the minimal spanning tree of the neuron
-                representation.
-                'dist' -- deletes all nodes B on path A-->B-->C that do not change the length of edge A-->C by the
-                amount of epsilon e
-                (in microns).
-                'disp' -- deletes all nodes B on path A-->B-->C that are maximally e microns displaced from the edge
-                A-->C.
-        :param e: float (default 0.01) error margin for methods 'dist' and 'disp'. e is interpreted in microns.
-        :return: None. The tree is pruned in place. If the original tree is desired to be conserved then copy the tree
-        data beforehand via the copy/deepcopy constructor.
-        """
-
-        if type(self._G) == nx.classes.graph.Graph:
-            self._make_tree()
-
-        if method == 'mst':
-            mst = self.get_topological_minor()
-            self._G = mst.get_graph()
-        elif method == 'dist':
-            self._merge_edges_on_path_by_edge_length(e=e)
-        elif method == 'disp':
-            self._merge_edges_on_path_by_displacement(disp=e)
-        else:
-            raise NotImplementedError('Method {0} is not implemented!'.format(method))
-
     def is_connected(self):
         """
         This function returns True if the neuron is connected and False otherwise. In case of False it means that there
@@ -761,29 +688,20 @@ class NeuronTree:
             extend = np.max(P, axis=0) - np.min(P, axis=0)
         return extend
 
-    def get_root_angle_dist(self, angle_type='axis_angle', **kwargs):
+    def get_root_angles(self, angle_type='axis'):
         """
-               Returns the histogram over the root angle distribution over a tree. Root angle denotes the orientation of
-               each edge with respect to the root (soma).
-               :param self: NeuronTree object
-               :param bins: int
-                    Number of bins used in the histogram. Default is 10.
-               :param angle_type: either 'axis_angle' or 'euler'
-                    Defines the type of angle that is calculated. Euler angles are defined as angles around the canonical
-                    euler axes (x, y and z). Axis angles are defined with respect to the rotation axis between two
-                    vectors.
-               :returns:
-                    hist: histogram over angles
-                    edges: edges of histogram. For further information see numpy.histogramdd()
-           """
-
-        angles = []
-        if angle_type == 'axis_angle':
-            dim = 1
-            func = lambda u,v: angle_between(u, v)
+        Returns a dictionary of the root angle of each edge. Root angle denotes the orientation of each edge with
+        respect to the root (soma).
+        :param angle_type: either 'axis' or 'euler' (default='axis')
+         Defines the type of angle that is calculated. Euler angles are defined as angles around the canonical
+        euler axes (x, y and z). Axis angles are defined with respect to the rotation axis between two vectors.
+        :return: dict of the form {(u,v): root_angle of edge between u and v}
+        """
+        angles = {}
+        if angle_type == 'axis':
+            func = lambda u, v: angle_between(u, v)
         elif angle_type == 'euler':
-            dim =3
-            func = lambda u,v: rotationMatrixToEulerAngles(get_rotation_matrix(u, v))
+            func = lambda u, v: rotationMatrixToEulerAngles(get_rotation_matrix(u, v))
         else:
             raise NotImplementedError('Angle type %s is not implemented' % angle_type)
 
@@ -795,9 +713,31 @@ class NeuronTree:
                 u = self._G.nodes[n2]['pos'] - self._G.nodes[n1]['pos']
                 v = self._G.nodes[n1]['pos'] - self._G.nodes[self.get_root()]['pos']
 
-            angles.append(func(u, v)* 180 / np.pi)
-        angles = np.array(angles)
+            angles.update({(n1,n2): func(u, v) * 180 / np.pi})
+        return angles
+
+    def get_root_angle_dist(self, angle_type='axis', **kwargs):
+        """
+               Returns the histogram over the root angle distribution over a tree. Root angle denotes the orientation of
+               each edge with respect to the root (soma).
+               :param self: NeuronTree object
+               :param bins: int
+                    Number of bins used in the histogram. Default is 10.
+               :param angle_type: either 'axis' or 'euler'
+                    Defines the type of angle that is calculated. Euler angles are defined as angles around the canonical
+                    euler axes (x, y and z). Axis angles are defined with respect to the rotation axis between two
+                    vectors.
+               :returns:
+                    hist: histogram over angles
+                    edges: edges of histogram. For further information see numpy.histogramdd()
+           """
+        angles = np.array(list(self.get_root_angles(angle_type).values()))
+        if angle_type == 'axis':
+            dim = 1
+        elif angle_type == 'euler':
+            dim = 3
         hist = np.histogramdd(angles, range=[[0, 180]]*dim, **kwargs)
+
         return hist
 
     def get_branch_order(self):
