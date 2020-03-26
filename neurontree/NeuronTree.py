@@ -779,34 +779,52 @@ class NeuronTree:
 
         return strahler_order
 
-    def _get_distance(self, dist='path_from_soma', weight='euclidean_dist', as_dict=False):
+    def _get_distance(self, dist='path_from_soma', as_dict=True):
         """
         Returns the distance
         :param dist: String, defines the distance measure to be used (default is 'path_from_soma'), Options are
-        'path_from_soma' and 'branch_order'.
-        :param weight: String. Defines the edge attribute that is considered for the distance. Options are
-        ['euclidean_dist' = default, 'path_length']
-        :param as_dict: boolean, default = False. Determines whether the distance are returned as a dictionary of the
+        'path_from_soma', 'radial' and 'branch_order'.
+        :param as_dict: boolean, default = True. Determines whether the distance are returned as a dictionary of the
         form {'node_id': ,distance} or as an numpy.array.
         :return: Dictionary or numpy.array of the defined distance measure from each node to the soma.
         """
         if dist == 'path_from_soma':
 
             if as_dict:
-                dist_ = nx.single_source_dijkstra_path_length(self.get_graph(), source=self.get_root(),
-                                                              weight=weight)
+                dist_ = self.get_path_length()
             else:
-                dist_ = np.array(list(nx.single_source_dijkstra_path_length(self.get_graph(), source=self.get_root(),
-                                                                            weight=weight).values()))
+                dist_ = np.array(list(self.get_path_length().values()))
         elif dist == 'branch_order':
-            dist_ = self._get_branch_order(1, 0)
+            dist_ = self.get_branch_order()
             if not as_dict:
                 dist_ = np.array(list(dist_.values()))
 
+        elif dist == 'radial':
+            dist_ = self.get_radial_distance()
+            if not as_dict:
+                dist_ = np.array(list(dist_.values()))
         else:
             raise NotImplementedError
 
         return dist_
+
+    def get_radial_distance(self):
+        """
+        Returns a dictionary with radial distance from soma.
+        :return: dict (node: radial distance to soma}
+        """
+        radial_dist = {}
+
+        root = self.get_root()
+        positions = self.get_node_attributes("pos")
+        r = positions[root]
+
+        radial_distance = lambda u: np.sqrt(np.dot(u - r, u - r))
+
+        for n in self.nodes():
+            n_pos = positions[n]
+            radial_dist[n] = radial_distance(n_pos)
+        return radial_dist
 
     def get_segment_length(self, dist='path_length'):
         """
