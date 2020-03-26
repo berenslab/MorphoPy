@@ -134,6 +134,9 @@ def main(argv):
     if float(nx.__version__) >= 2:
         nxversion = 2
 
+    # save output data in a dataframe with all proceeded files for export
+    output_data = pd.DataFrame()
+
     ##### Compute morphometric statistics #####
     if compute == 'stats':
         print('##### Morphometric statistics #####')
@@ -142,14 +145,14 @@ def main(argv):
             print(" Process File: {} ".format(file))
             # compute morphometric stats
             try:
-                # import swc file and compute statistics
+                # import swc file, compute statistics and create an output
                 mytree = file_manager.load_swc_file(directory + file, nxversion)
-                morpho_stats_table = fp.compute_Morphometric_Statistics(mytree)
-                print(morpho_stats_table)
-                # Export of pandas data frame to csv-file in same directory
-                outputfile = output + file + "_morpho_stats.csv"
-                morpho_stats_table.to_csv(outputfile)
-                print("Statistics saved to: " + outputfile)
+                morpho_stats_frame = fp.compute_Morphometric_Statistics(mytree)
+                morpho_stats_frame.columns = [file]
+                print(morpho_stats_frame)
+                print("")
+                # Append stats to global dataframe
+                output_data = output_data.append(morpho_stats_frame.T)
             except:
                 printException("Failure in computing morphometric statistics!")
 
@@ -161,17 +164,19 @@ def main(argv):
             print(" Process File: {} ".format(file))
             # compute persistence data
             try:
-                # import swc file and compute persistence table
+                # import swc file, compute persistence table and give an output
                 mytree = file_manager.load_swc_file(directory + file, nxversion)
-                persistence_table = fp.get_persistence(mytree.get_topological_minor(), f=function)
-                # TODO add filename as identifier
+                persistence_frame = fp.get_persistence(mytree.get_topological_minor(), f=function)
+                persistence_frame.index = (file for x in range(len(persistence_frame)))
+                print(persistence_frame)
+                print()
 
-                # TODO concat
-                print(persistence_table)
+                # Append persistence to global dataframe
+                output_data = output_data.append(persistence_frame)
 
                 # create diagram and save png-file to same directory
-                x = persistence_table['birth']
-                y = persistence_table['death']
+                x = persistence_frame['birth']
+                y = persistence_frame['death']
                 plt.figure()
                 plt.scatter(x, y, alpha=0.5)
                 if function is None:
@@ -210,6 +215,16 @@ def main(argv):
     else:
         print('Unknown compute mode. Use a valid compute parameter')
         help(1)
+
+    if len(output_data) > 0:
+        # output all data in one csv file
+        if len(files) > 1:
+            dirname = os.path.basename(os.path.normpath(directory))
+            output_filename = directory + dirname + "_" + compute + ".csv"
+        else:
+            output_filename = directory + files[0] + "_" + compute + ".csv"
+        output_data.to_csv(output_filename, index_label="filename")
+        print("Statistics saved to: " + output_filename)
 
     # program end
     sys.exit(0)
