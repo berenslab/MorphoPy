@@ -883,9 +883,11 @@ class NeuronTree:
         if dist_measure:
             distances = self._get_distance(dist_measure, as_dict=True)
             # if the respective values are given in a dictionary that is indexed by nodes
-            if statistic in ['branch_order', 'strahler_order', 'branch_angle',
+            if statistic in ['branch_order', 'strahler_order',
                          'path_angle', 'thickness', 'path_length', 'radial_dist']:
                 dist = [distances[n] for n in values.keys()]
+            elif statistic == 'branch_angle':
+                dist = [distances[k[0]] for k in values.keys()]
             else:  # otherwise
                 dist = [distances[k[1]] for k in values.keys()]
 
