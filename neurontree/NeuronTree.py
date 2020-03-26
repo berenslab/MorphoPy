@@ -788,11 +788,16 @@ class NeuronTree:
             raise NotImplementedError('Angle type %s is not implemented' % angle_type)
 
         for n1, n2 in self._G.edges():
-            u = self._G.node[n2]['pos'] - self._G.node[n1]['pos']
-            v = self._G.node[n1]['pos'] - self._G.node[self.get_root()]['pos']
-            angles.append(func(u, v))
+            if self._nxversion == 1:
+                u = self._G.node[n2]['pos'] - self._G.node[n1]['pos']
+                v = self._G.node[n1]['pos'] - self._G.node[self.get_root()]['pos']
+            else:
+                u = self._G.nodes[n2]['pos'] - self._G.nodes[n1]['pos']
+                v = self._G.nodes[n1]['pos'] - self._G.nodes[self.get_root()]['pos']
+
+            angles.append(func(u, v)* 180 / np.pi)
         angles = np.array(angles)
-        hist = np.histogramdd(angles, range=[[0, np.pi]]*dim, **kwargs)
+        hist = np.histogramdd(angles, range=[[0, 180]]*dim, **kwargs)
         return hist
 
     def get_branch_order(self):
@@ -804,7 +809,7 @@ class NeuronTree:
             Dictionary of the form {u: branch_order} for each node.
         """
         root = self.get_root()
-        return self._get_branch_order(root,0)
+        return self._get_branch_order(root, 0)
 
     def _get_branch_order(self, start, bo):
         """
@@ -896,7 +901,7 @@ class NeuronTree:
 
         T = self.get_topological_minor()
 
-        segment_length = self.get_edge_attributes(dist)
+        segment_length = T.get_edge_attributes(dist)
         return segment_length
 
     def get_kde_distribution(self, key, dist=None):
@@ -996,7 +1001,7 @@ class NeuronTree:
 
     def get_distance_dist(self, **kwargs):
         """
-            Returns histogram of the distance distribution from soma
+            Returns histogram of the distance distribution from soma.
         :param kwargs: optional parameters passed to histogram calculation (see numpy.histogramdd)
         :return:
             hist    1D histogram
@@ -1018,8 +1023,16 @@ class NeuronTree:
         """
         data = list(self._get_branch_order(1, 0).values())
 
-        # TODO make it assignable a dist_measure
         return np.histogram(data, **kwargs)
+
+    def get_radii(self):
+        """
+        Returns the radii of each node.
+        :return: dict {u: thickness of u}
+        """
+        # get the thickness of each node
+        thickness_dict = self.get_node_attributes('radius')
+        return thickness_dict
 
     def get_thickness_dist(self, dist_measure=None, **kwargs):
         """
@@ -1032,8 +1045,7 @@ class NeuronTree:
             edges   bin edges used
         """
 
-        # get the thickness of each node
-        thickness_dict = self.get_node_attributes('radius')
+        thickness_dict=self.get_radii()
 
         # delete the soma since it usually skews the distribution
         thickness_dict.pop(self.get_root())
@@ -1057,28 +1069,33 @@ class NeuronTree:
         """
         # get the depth first search successors from the soma (id=1).
         root = self.get_root()
+        branchpoints = self.get_branchpoints()
+        if root in branchpoints:
+            branchpoints.remove(root)
         successors = nx.dfs_successors(self.get_graph(), root)
         path_angle = {}
 
         for u, v in self.edges():
-            if self._nxversion == 2:
-                # changed for version 2.x of networkX
-                e1 = self.get_graph().nodes[v]['pos'] - self.get_graph().nodes[u]['pos']
-            else:
-                e1 = self.get_graph().node[v]['pos'] - self.get_graph().node[u]['pos']
-            path_angle[u] = {}
-            try:
-                path_angle[u][v] = {}
-                for w in successors[v]:
-                    if self._nxversion == 2:
-                        # changed for version 2.x of networkX
-                        e2 = self.get_graph().nodes[w]['pos'] - self.get_graph().nodes[v]['pos']
-                    else:
-                        e2 = self.get_graph().node[w]['pos'] - self.get_graph().node[v]['pos']
 
-                    path_angle[u][v][w] = angle_between(e1, e2) * 180 / np.pi
-            except KeyError:
-                continue
+            if u not in branchpoints:
+                if self._nxversion == 2:
+                    # changed for version 2.x of networkX
+                    e1 = self.get_graph().nodes[v]['pos'] - self.get_graph().nodes[u]['pos']
+                else:
+                    e1 = self.get_graph().node[v]['pos'] - self.get_graph().node[u]['pos']
+                path_angle[u] = {}
+                try:
+                    path_angle[u][v] = {}
+                    for w in successors[v]:
+                        if self._nxversion == 2:
+                            # changed for version 2.x of networkX
+                            e2 = self.get_graph().nodes[w]['pos'] - self.get_graph().nodes[v]['pos']
+                        else:
+                            e2 = self.get_graph().node[w]['pos'] - self.get_graph().node[v]['pos']
+
+                        path_angle[u][v][w] = angle_between(e1, e2) * 180 / np.pi
+                except KeyError:
+                    continue
 
         return path_angle
 
@@ -1146,15 +1163,17 @@ class NeuronTree:
 
     def get_branch_angles(self):
         """
-        Returns the list of branch angles.
+        Returns a dictionary of branch angles.
         changed for use with networkx v2 (works also in old version: edge -> adj)
         :return:
-            branch_angles   list of branch angles.
+            branch_angles   dictionary of branch angles. Its form is {(bp, succ1, succ2): angle between (bp, succ1) and
+            (bp, succ2).
         """
 
         from itertools import combinations
+        from utils import angle_between
 
-        branch_angles = []
+        branch_angles = {}
         branchpoints = list(self.get_branchpoints())
 
         # remove soma from the list of branch points
@@ -1171,13 +1190,16 @@ class NeuronTree:
                     v = self.get_graph().nodes[succ]['pos'] - self.get_graph().nodes[bp]['pos']
                 else:
                     v = self.get_graph().node[succ]['pos'] - self.get_graph().node[bp]['pos']
-                branches.append(v)
-            all_angles = []
+                branches.append((succ, v))
+            all_angles = {}
             for u, v in combinations(branches, 2):
                 # compute the angles between all possible combinations. Only keep the len(branches) - 1 smallest of them
-                all_angles.append(angle_between(u, v) * 180 / np.pi)
-            all_angles.sort()
-            branch_angles += all_angles[:len(branches)-1]
+                all_angles.update({(bp, u[0], v[0]): angle_between(u[1], v[1]) * 180 / np.pi})
+
+            # sort by angles, only keep the lowest X values with x= no. branches -1
+            sorted_angles = sorted(all_angles.items(), key=lambda item: item[1])
+            branch_angles.update(dict(sorted_angles[:len(branches) - 1]))
+
         return branch_angles
 
     def get_branch_angle_dist(self, dist_measure=None, **kwargs):
@@ -1207,7 +1229,7 @@ class NeuronTree:
             data = np.array(list(zip(dist, branch_angles)))
             return np.histogramdd(data, **kwargs)
         else:
-            return np.histogramdd(branch_angles, **kwargs)
+            return np.histogram(branch_angles, **kwargs)
 
     def get_segment_length_dist(self, segment_dist='path_length', branch_order=False, **kwargs):
         """
