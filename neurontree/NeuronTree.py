@@ -810,7 +810,7 @@ class NeuronTree:
 
     def get_segment_length(self, dist='path_length'):
         """
-        Returns the dictionary of the length in microns of each segment where dist denotes the distance measure. A segment
+        Returns the dictionary of the length in microns of each segment where dist_measure denotes the distance measure. A segment
         is defined as the path between two branch points or a branch point and a tip.
          Possible options are 'path_length' an 'euclidean_dist'. The keys of the dictionary denote the
         tuples of the starting and end node of each segment.
@@ -825,11 +825,73 @@ class NeuronTree:
         segment_length = T.get_edge_attributes(dist)
         return segment_length
 
-    def get_histogram(self, statistic='branch_order', dist_measure=None, **kwargs):
+    def _get_distribution_data(self, key='branch_order', dist_measure=None, **kwargs):
+        """
+        Helper function. Returns the data for the functions get_histogram() and get_kde_distribution()
+        :param key:
+        :param dist_measure:
+        :param kwargs:
+        :return:
+        """
+
+        if key == 'branch_order':
+            values = self.get_branch_order()
+
+        elif key == 'strahler_order':
+            values = self.get_strahler_order()
+
+        elif key == 'branch_angle':
+            values = self.get_branch_angles()
+
+        elif key == 'path_angle':
+            values = self.get_path_angles()
+
+        elif key == 'root_angle':
+            if 'angle_type' in kwargs.keys():
+                angle_type = kwargs.pop('angle_type')
+                values = self.get_root_angles(angle_type)
+
+            else:
+                values = self.get_root_angles()
+
+        elif key == 'thickness':
+            values = self.get_radii()
+
+        elif key == 'segment_length':
+            values = self.get_segment_length()
+
+        elif key == 'path_length':
+            values = self.get_path_length()
+
+        elif key == 'radial_dist':
+            values = self.get_radial_distance()
+
+        else:
+            raise ValueError("There is value %s defined." % key)
+
+        if dist_measure:
+            distances = self._get_distance(dist_measure, as_dict=True)
+            # if the respective values are given in a dictionary that is indexed by nodes
+            if key in ['branch_order', 'strahler_order',
+                         'path_angle', 'thickness', 'path_length', 'radial_dist']:
+                dist = [distances[n] for n in values.keys()]
+            elif key == 'branch_angle':
+                dist = [distances[k[0]] for k in values.keys()]
+            else:  # otherwise
+                dist = [distances[k[1]] for k in values.keys()]
+
+            data = np.array(list(zip(dist, list(values.values()))))
+
+        else:
+            data = np.array(list(values.values()))
+
+        return data
+
+    def get_histogram(self, key='branch_order', dist_measure=None, **kwargs):
         """
         Returns the frequency distribution over the queried statistic. If a distance measure is set the distribution
         is two-dimensional.
-        :param statistic: string (default='branch_order'), allows to query different statistic distributions. Options
+        :param key: string (default='branch_order'), allows to query different statistic distributions. Options
         are 'branch_order', 'strahler_order', 'branch_angle', 'path_angle', 'thickness', 'path_length', 'radial_dist',
         'segment_length' and 'root_angle'.
         :param dist_measure: String, (default: None). Optional distance measure against the distribution of values is
@@ -842,63 +904,16 @@ class NeuronTree:
 
         r = None
         dim = 1
-        if statistic == 'branch_order':
-            values = self.get_branch_order()
-
-        elif statistic == 'strahler_order':
-            values = self.get_strahler_order()
-
-        elif statistic == 'branch_angle':
-            values = self.get_branch_angles()
-
-        elif statistic == 'path_angle':
-            values = self.get_path_angles()
-
-        elif statistic == 'root_angle':
+        data = self._get_distribution_data(key,dist_measure,**kwargs)
+        if key == 'root_angle':
             if 'angle_type' in kwargs.keys():
                 angle_type = kwargs.pop('angle_type')
                 if angle_type == 'euler':
                     dim = 3
                     r = [[0, 180]] * dim
-
-                values = self.get_root_angles(angle_type)
-
-            else:
-                values = self.get_root_angles()
-
-        elif statistic == 'thickness':
-            values = self.get_radii()
-
-        elif statistic == 'segment_length':
-            values = self.get_segment_length()
-
-        elif statistic == 'path_length':
-            values = self.get_path_length()
-
-        elif statistic == 'radial_dist':
-            values = self.get_radial_distance()
-
-        else:
-            raise ValueError("There is value %s defined." % statistic)
-
         if dist_measure:
-            distances = self._get_distance(dist_measure, as_dict=True)
-            # if the respective values are given in a dictionary that is indexed by nodes
-            if statistic in ['branch_order', 'strahler_order',
-                         'path_angle', 'thickness', 'path_length', 'radial_dist']:
-                dist = [distances[n] for n in values.keys()]
-            elif statistic == 'branch_angle':
-                dist = [distances[k[0]] for k in values.keys()]
-            else:  # otherwise
-                dist = [distances[k[1]] for k in values.keys()]
-
-            data = np.array(list(zip(dist, list(values.values()))))
             hist_data = np.histogramdd(data, range=r, **kwargs)
-
         else:
-            # just query the values of each dictionary
-            data = np.array(list(values.values()))
-
             if dim == 1:
                 hist_data = np.histogram(data, range=r, **kwargs)
             else:
@@ -906,100 +921,24 @@ class NeuronTree:
 
         return hist_data
 
-    def get_kde_distribution(self, key, dist=None):
+    def get_kde_distribution(self, key, dist_measure=None, **kwargs):
         """
-        Returns a Gaussian kernel density estimate of the distribution of the measure defined by _key_.
+        Returns a Gaussian kernel density estimate of the distribution of the measure defined by key.
         changed for use with networkx v2 (works also in old version: edge -> adj)
-        :param key: String, measure to calculate the kernel density estimate from. Options are: 'thickness',
-        'path_angle', 'branch_angle', 'branch_order', 'strahler_order' and 'distance'.
-        :param dist: Optional. Allows to express the measure as a function of distance. If set to None, the kde is
-        one-dimensional, otherwise it is has two dimensions. Options for available distance measures,
-        see _get_distance().
-        :return: A one- or two-dimensional Gaussian kernel density estimate of measure _key_.
+        :param key: String, measure to calculate the kernel density estimate from. Options are 'branch_order',
+        'strahler_order', 'branch_angle', 'path_angle', 'thickness', 'path_length', 'radial_dist',
+        'segment_length' and 'root_angle'.
+        :param dist_measure: Optional. Allows to express the measure as a function of distance. If set to None, the kde is
+        one-dimensional, otherwise it is has two dimensions. Possible values are 'path_length', 'radial' and 'branch_order'.
+        :return: A one- or two-dimensional Gaussian kernel density estimate of measure specified with key.
         """
 
-        if key == 'thickness':
-            thickness = np.array(list(self.get_node_attributes('radius').values()))
-
-            if dist:
-                data = np.array(list(zip(self._get_distance(dist), thickness)))
-                return stats.gaussian_kde(data)
-
-            else:
-                return stats.gaussian_kde(thickness)
-        elif key == 'path_angle':
-
-            successors = nx.dfs_successors(self.get_graph(), 1)
-            path_angle = []
-            nodes = []
-            for n1, n2 in self.edges():
-                u = self.get_graph().node[n2]['pos'] - self.get_graph().node[n1]['pos']
-                try:
-                    for succ in successors[n2]:
-                        v = self.get_graph().node[succ]['pos'] - self.get_graph().node[n2]['pos']
-                        path_angle.append(angle_between(u, v) * 180 / np.pi)  # convert angles into degree
-                        nodes.append(n2)
-                except KeyError:
-                    continue
-
-            if dist:
-                distance = self._get_distance(dist, as_dict=True)
-                distance = [distance[n] for n in nodes]
-
-                data = np.array(list(zip(distance, path_angle)))
-                return stats.gaussian_kde(data)
-            else:
-                return stats.gaussian_kde(path_angle)
-
-        elif key == 'branch_angle':
-            branch_angles = []
-            branchpoints = self.get_branchpoints()
-            for bp in branchpoints:
-                successors = list(self.get_graph().adj[bp].keys())
-                branches = []
-                for succ in successors:  # create a vector for each branching edge
-                    v = self.get_graph().node[succ]['pos'] - self.get_graph().node[bp]['pos']
-                    branches.append(v)
-                for u, v in combinations(branches, 2):
-                    branch_angles.append(angle_between(u, v) * 180 / np.pi)
-
-            if dist:
-                distance = self._get_distance(dist, as_dict=True)
-                distance = [distance[bp] for bp in branchpoints]
-                data = np.array(list(zip(distance, branch_angles)))
-                return stats.gaussian_kde(data)
-            else:
-                return stats.gaussian_kde(branch_angles)
-
-        elif key == 'branch_order':
-            branch_order = list(self._get_branch_order(1, 0).values())
-
-            if dist:
-                data = np.array(list(zip(self._get_distance(dist), branch_order)))
-                return stats.gaussian_kde(data)
-            else:
-                return stats.gaussian_kde(branch_order)
-
-        elif key == 'strahler_order':
-            strahler_order = list(self.get_strahler_order().values())
-
-            if dist:
-                data = np.array(list(zip(self._get_distance(dist), strahler_order)))
-                return stats.gaussian_kde(data)
-            else:
-                return stats.gaussian_kde(strahler_order)
-
-        elif key == 'distance':
-            distance = np.array(list(nx.single_source_dijkstra_path_length(self.get_graph(), source=self.get_root(),
-                                                                           weight='euclidean_dist').values()))
-
-            if dist:
-                data = np.array(list(zip(self._get_distance(dist), distance)))
-                return stats.gaussian_kde(data)
-            else:
-                return stats.gaussian_kde(distance)
+        data = self._get_distribution_data(key, dist_measure, **kwargs)
+        if len(data.shape) > 1:
+            kde = stats.gaussian_kde(data.T)
         else:
-            raise NotImplementedError
+            kde = stats.gaussian_kde(data)
+        return kde
 
     def get_radii(self):
         """
@@ -1287,7 +1226,7 @@ class NeuronTree:
 
     def _resample_tree_data(self, dist=1):
         """
-        Re-sample new nodes along the tree in equidistant distance dist (given in microns) and calculates the respective
+        Re-sample new nodes along the tree in equidistant distance dist_measure (given in microns) and calculates the respective
         node and edge attributes to generate a new NeuronTree.
         All original branching points are kept!
         :param dist: distance (in microns) at which each neurite is resampled.
@@ -1358,7 +1297,7 @@ class NeuronTree:
 
     def resample_tree(self, dist=1):
         """
-         Re-sample new nodes along the tree in equidistant distance dist (given in microns) and return a new
+         Re-sample new nodes along the tree in equidistant distance dist_measure (given in microns) and return a new
          NeuronTree with the resampled data. Original branch points are kept.
         :param dist: distance (in microns) at which to resample
         :return: NeuronTree
