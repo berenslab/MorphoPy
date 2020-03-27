@@ -36,3 +36,5 @@ def check_neurontree(neurontree=None):
         raise ValueError('Graph has no root defined!')
     if not neurontree.is_connected():
         raise ValueError('Graph has disconnected nodes!')
+
+

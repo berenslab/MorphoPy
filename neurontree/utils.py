@@ -295,7 +295,7 @@ def commuteDist(A):
 
 def computeStat(statType, W, d, maxDist):
     """
-    computes a graph statistic on (sub)graph given by W
+    computes a graph key on (sub)graph given by W
     :param statType: string
         'maxDist' : maximal distance
         'maxDist_norm' : normalized maximal distance
@@ -310,7 +310,7 @@ def computeStat(statType, W, d, maxDist):
     :param maxDist: float
         maximal shortest path distance in graph of which W is a sub-graph of.
     :return: stat: float
-        statistic calculated according to statType
+        key calculated according to statType
     """
 
     numNode = d.size
@@ -339,7 +339,7 @@ def computeStat(statType, W, d, maxDist):
         stat = np.sum(np.sum(W != 0, axis=1) > 2)
 
     else:
-        raise ValueError("Calculation of statistic {0} is not implemented.".format(statType))
+        raise ValueError("Calculation of key {0} is not implemented.".format(statType))
 
     return stat
 

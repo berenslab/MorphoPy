@@ -3,7 +3,6 @@ import random
 import networkx as nx
 import numpy as np
 import pandas as pd
-import configparser as cp
 import matplotlib.pyplot as plt
 import seaborn as sns
 from neurontree.utils import smooth_gaussian
@@ -268,6 +267,7 @@ def compute_Density_Maps(neurontree=None, conf=None):
         plots.append(plt)
 
     return plots
+
 
 def _project_data(proj_axes, data):
     """
