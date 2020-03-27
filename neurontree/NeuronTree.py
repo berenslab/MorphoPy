@@ -2,6 +2,7 @@ import copy
 import sys
 import matplotlib
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -1424,31 +1425,12 @@ class NeuronTree:
 #######################################################################################################################
 #######################################################################################################################
 
-    def get_node_colors(self):
-        """
-        Returns a list of colors for each node as it appears in the graph. Used to give the 2D graph representation
-        node colors.
-        :return: list of color char tags for each node in graph. 'g' for axon, 'y' for dendrite and 'grey' for soma.
-        """
-        axon_nodes = self.get_axon_nodes()
-        dendrite_nodes = self.get_dendrite_nodes()
-
-        colors = []
-        for node in self._G.nodes():
-            if node in axon_nodes:
-                colors.append('g')
-            elif node in dendrite_nodes:
-                colors.append('y')
-            else:
-                colors.append('grey')
-        return colors
-
-    def draw_3D(self, fig=None, ix=111, reverse=True, r_axis='z', axon_color='grey', dendrite_color='darkgrey'):
+    def draw_3D(self, fig=None, ix=111, reverse=False, r_axis='z', axon_color='darkgreen', dendrite_color='darkgrey'):
         """
         Draws a stick figure neuron in 3D.
         :param fig: figure in which to draw. If None a new figure is created.
         :param ix: index of the subplot within the figure 'fig'. Default: 111
-        :param reverse: Default=True. Determines whether the axis specified in 'r_axis' is inverted.
+        :param reverse: Default=False. Determines whether the axis specified in 'r_axis' is inverted.
         :param r_axis: Default = 'z'. Defines the axis that is inverted if 'reverse' is set to True. Possible values are
         'x', 'y' and 'z'.
         :param axon_color: Color, default='grey'. Defines the color of the axon.
@@ -1465,7 +1447,7 @@ class NeuronTree:
             fig = plt.figure()
         ax = fig.add_subplot(ix, projection='3d')
         ax.scatter(nodes[:, 0], nodes[:, 1], nodes[:, 2], c=t, marker='.')
-        plt.hold
+
         root_pos = self._G.node[self.get_root()]['pos']
         ax.scatter(root_pos[0], root_pos[1], root_pos[2], c='k', marker='^')
 
