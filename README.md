@@ -137,6 +137,11 @@ Please try to provide a minimal example that reproduces the bug you want to be f
 If you want to develop the code base further, you can work with git pull requests. Please make sure that you document
 the code and add test and example of how to use your code.
 
+
+## <a name="citation"> Citing MorphoPy </a>
+
+If you are using MorphoPy for your research or your work project please make sure to cite us and this repository.
+
 ## <a name="module">Module description</a> 
 
 **Important:** MorphoPy requires the soma to be one single point. If several soma points are present in the
@@ -160,6 +165,7 @@ These features are not available via the command line tool.
 Descriptions. Frequency histograms can be queried for all single value statistics. One can provide a distance measure (branch order,
 path distance from soma) to investigate their spatial distribution.
 
+You want to compute your own features? Go for it! We recommend you to check out `networkx` and `shapely` for more options.
 
 
 [back to start](#content)
