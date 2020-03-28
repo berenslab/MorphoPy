@@ -60,7 +60,7 @@ def printException(message="Unknown Error"):
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, "c:f:d:o:hv",
+        opts, args = getopt.gnu_getopt(argv, "c:f:d:o:hv",
                                    ["compute=", "func=", "conf=", "file=", "dir=", "output=", "help", "version"])
     except getopt.GetoptError:
         print("Wrong options are specified!")
@@ -79,11 +79,15 @@ def main(argv):
     output = None  # default output directory is none
     conf = None  # default value, no config file is used
 
+    for arg in args:
+        if arg in ['stats', 'density', 'persistence']:
+            compute = arg
+
     # Check arguments
     for opt, arg in opts:
         # argument is missing because next option is in argument
         if arg.startswith("-"):
-            print("Wrong argument in option: " + opt)
+            print(f'Wrong argument in option: {opt}')
             help()
         if opt in ('-c', '--compute'):
             compute = arg
@@ -142,13 +146,13 @@ def main(argv):
         print('##### Morphometric statistics #####')
         # process all files
         for file in files:
-            print(" Process File: {} ".format(file))
+            print(f'... Process File: {file}')
             # compute morphometric stats
             try:
                 # import swc file, compute statistics and create an output
                 mytree = file_manager.load_swc_file(directory + file, nxversion)
                 morpho_stats_frame = fp.compute_Morphometric_Statistics(mytree)
-                morpho_stats_frame.columns = [file]
+                morpho_stats_frame.index = [file]
                 print(morpho_stats_frame)
                 print("")
                 # Append stats to global dataframe
@@ -161,7 +165,7 @@ def main(argv):
         print('##### Persistence barcodes #####')
         # process all files
         for file in files:
-            print(" Process File: {} ".format(file))
+            print(f'... Process File: {file}')
             # compute persistence data
             try:
                 # import swc file, compute persistence table and give an output
@@ -182,12 +186,12 @@ def main(argv):
                 if function is None:
                     plt.title('Persistence Diagram')
                 else:
-                    plt.title('Persistence Diagram ({})'.format(function.__name__))
+                    plt.title(f'Persistence Diagram ({function.__name__})')
                 plt.xlabel('birth')
                 plt.ylabel('death')
-                outputfile = output + file + "_persistence.png"
+                outputfile = f'{output}{file}_persistence.png'
                 plt.savefig(outputfile)
-                print("Persistence saved to: " + outputfile)
+                print(f'Persistence saved to: {outputfile}')
                 plt.close()
             except:
                 printException("Failure in computing persistence data!")
@@ -197,19 +201,19 @@ def main(argv):
         print('##### Density Map #####')
         # process all files
         for file in files:
-            print(" Process File: {} ".format(file))
+            print(f'... Process File: {file}')
             # compute density map
             try:
                 # import swc file and compute density maps
                 mytree = file_manager.load_swc_file(directory + file, nxversion)
                 plots = fp.compute_Density_Maps(mytree, conf=conf)
-                outputfile = output + file + "_density_"
+                outputfile = f'{output}{file}_density_'
                 for idx, plot in enumerate(plots, start=1):
-                    plot.savefig(outputfile + "%s.png" % idx)
+                    plot.savefig(f'{outputfile}{idx}.png')
                     plot.close()
-                print("Density maps saved to %sx.png" % outputfile)
+                print(f'Density maps saved to {outputfile}x.png')
             except FileNotFoundError:
-                print("Failure in computing density map: Config file not found or not readable: {}".format(conf))
+                print(f'Failure in computing density map: Config file not found or not readable: {conf}')
             except:
                 printException("Failure in computing density map!")
     else:
@@ -220,11 +224,11 @@ def main(argv):
         # output all data in one csv file
         if len(files) > 1:
             dirname = os.path.basename(os.path.normpath(directory))
-            output_filename = directory + dirname + "_" + compute + ".csv"
+            output_filename = f'{directory}{dirname}_{compute}.csv'
         else:
-            output_filename = directory + files[0] + "_" + compute + ".csv"
+            output_filename = f'{directory}{files[0]}_{compute}.csv'
         output_data.to_csv(output_filename, index_label="filename")
-        print("Statistics saved to: " + output_filename)
+        print(f'Statistics saved to: {output_filename}')
 
     # program end
     sys.exit(0)

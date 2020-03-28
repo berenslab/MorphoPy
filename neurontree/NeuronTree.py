@@ -994,7 +994,7 @@ class NeuronTree:
         :return: soma_angles    list of angles (in degree).
         """
 
-        from itertools import combinations
+        #from itertools import combinations
 
         r = self.get_root()
         successors = list(self.get_graph().adj[r].keys())
@@ -1023,8 +1023,8 @@ class NeuronTree:
             (bp, succ2).
         """
 
-        from itertools import combinations
-        from utils import angle_between
+        #from itertools import combinations
+        #from utils import angle_between
 
         branch_angles = {}
         branchpoints = list(self.get_branchpoints())
