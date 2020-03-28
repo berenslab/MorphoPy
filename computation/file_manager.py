@@ -42,8 +42,8 @@ def read_config(configfile=None):
     """
     This function reads a config file and returns two dictionaries with all found values
     :param configfile: path to the configfile
-    :return: (global, norm) two dictionaries global params and normalization bound with key, value pairs
-                            or None if no file could be read
+    :return: (config_params) dictionary with global params and normalization bounds with key, value pairs
+                            None will be returned if no file or wrong file was found
     """
     try:
         # read from configfile if available
@@ -51,37 +51,31 @@ def read_config(configfile=None):
             cfg = cp.ConfigParser()
             cfg.read(configfile)
 
-            global_params = {}
+            config_params = {}
             if cfg.has_option("global", "proj_axes"):
-                global_params['proj_axes'] = cfg.get("global", "proj_axes")
+                config_params['proj_axes'] = cfg.get("global", "proj_axes")
             if cfg.has_option("global", "n_bins"):
-                global_params['n_bins'] = cfg.getint("global", "n_bins")
+                config_params['n_bins'] = cfg.getint("global", "n_bins")
             if cfg.has_option("global", "normed"):
-                global_params['normed'] = cfg.getboolean("global", "normed")
+                config_params['normed'] = cfg.getboolean("global", "normed")
             if cfg.has_option("global", "smooth"):
-                global_params['smooth'] = cfg.getboolean("global", "smooth")
+                config_params['smooth'] = cfg.getboolean("global", "smooth")
             if cfg.has_option("global", "sigma"):
-                global_params['sigma'] = cfg.getint("global", "sigma")
+                config_params['sigma'] = cfg.getint("global", "sigma")
 
-            norm_params = {}
-            if cfg.has_option("norm_bound", "r_max_x"):
-                norm_params["r_max_x"] = cfg.getfloat("norm_bound", "r_max_x")
-            if cfg.has_option("norm_bound", "r_max_y"):
-                norm_params["r_max_y"] = cfg.getfloat("norm_bound", "r_max_y")
-            if cfg.has_option("norm_bound", "r_max_z"):
-                norm_params["r_max_z"] = cfg.getfloat("norm_bound", "r_max_z")
-            if cfg.has_option("norm_bound", "r_min_x"):
-                norm_params["r_min_x"] = cfg.getfloat("norm_bound", "r_min_x")
-            if cfg.has_option("norm_bound", "r_min_y"):
-                norm_params["r_min_y"] = cfg.getfloat("norm_bound", "r_min_y")
-            if cfg.has_option("norm_bound", "r_min_z"):
-                norm_params["r_min_z"] = cfg.getfloat("norm_bound", "r_min_z")
+            if cfg.has_section("norm_bound"):
+                config_params["r_max_x"] = cfg.getfloat("norm_bound", "r_max_x", fallback=0)
+                config_params["r_max_y"] = cfg.getfloat("norm_bound", "r_max_y", fallback=0)
+                config_params["r_max_z"] = cfg.getfloat("norm_bound", "r_max_z", fallback=0)
+                config_params["r_min_x"] = cfg.getfloat("norm_bound", "r_min_x", fallback=0)
+                config_params["r_min_y"] = cfg.getfloat("norm_bound", "r_min_y", fallback=0)
+                config_params["r_min_z"] = cfg.getfloat("norm_bound", "r_min_z", fallback=0)
 
-            return global_params, norm_params
+            return config_params
         else:
-            return None, None
+            return None
     except FileNotFoundError:
         print(f'Failure in computing density map: Config file not found or not readable: {configfile}')
-        return None, None
+        return None
 
 

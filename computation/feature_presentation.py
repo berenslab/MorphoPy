@@ -77,7 +77,7 @@ def get_persistence(neurontree=None, f=None):
     return pd.DataFrame(D)
 
 
-def compute_Morphometric_Statistics(neurontree=None):
+def compute_morphometric_statistics(neurontree=None):
     z = dict()
     z['branch_points'] = neurontree.get_branchpoints().size
 
@@ -150,118 +150,117 @@ def compute_Morphometric_Statistics(neurontree=None):
 
     return pd.DataFrame.from_dict(z, orient='index').T
 
-def compute_Density_Maps(neurontree=None, global_params=None, norm_params=None):
+def compute_density_maps(neurontree=None, config_params=None):
     # get the resampled point could along each neurite at distance 1 micron.
     # pc is an array of 3D coordinates for each resampled node
     pc = neurontree.resample_nodes(d=1)
 
-    # holds all density plots to return to user
-    plots = []
-    plt.figure()
-    plt.scatter(pc[:, 0], pc[:, 2], s=1)
-    sns.despine()
-    plt.title('Density Map with resampled nodes')
-    plots.append(plt)
-
     ###### PARAMETER ################
-    # read from config and set default values if no config available:
-    # r holds the normalization bounds
-    if norm_params is None:
-        r = dict(min=np.min(pc, axis=0), max=np.max(pc, axis=0))
-    else:
-        min = np.array([norm_params["r_min_x"], norm_params["r_min_y"], norm_params["r_min_z"]])
-        max = np.array([norm_params["r_max_x"], norm_params["r_max_y"], norm_params["r_max_z"]])
-        r = dict(min=min, max=max)
-
     # which axes to project on and other global parameters
-    if global_params is None:
-        proj_axes = '02'
-        n_bins =20
+    proj_axes = ['0', '1', '2']
+    # dictonary for labeling projection
+    axes = {'0':'x', '1':'y', '2':'z', '01':'xy', '02':'xz', '12':'yz'}
+    # read from config and set default values if no config available:
+    if config_params is None:
+        proj_axes.append('01')
+        proj_axes.append('02')
+        n_bins = 20
         normed = True
         smooth = False
         sigma = 1
+        min=np.min(pc, axis=0)
+        max=np.max(pc, axis=0)
     else:
-        # if config available use params else default values
-        proj_axes = global_params.get('proj_axes', '02')
-        n_bins = global_params.get('n_bins', 20)
-        normed = global_params.get('normed', True)
-        smooth = global_params.get('smooth', False)
-        sigma = global_params.get('sigma', 1)
+        if 'r_min_x' in config_params.keys():
+            min = np.array([config_params["r_min_x"], config_params["r_min_y"], config_params["r_min_z"]])
+            max = np.array([config_params["r_max_x"], config_params["r_max_y"], config_params["r_max_z"]])
+        else:
+            min = np.min(pc, axis=0)
+            max = np.max(pc, axis=0)
 
-    dim = len(proj_axes)
+        # if config available use params else default values
+        proj_axes.append(config_params.get('proj_axes', '02'))
+        n_bins = config_params.get('n_bins', 20)
+        normed = config_params.get('normed', True)
+        smooth = config_params.get('smooth', False)
+        sigma = config_params.get('sigma', 1)
+
+    # r holds the normalization bounds
+    r = dict(min=min, max=max)
 
     ######## COMPUTATION ############
     # normalize point cloud
     ext = (r['max'] - r['min'])
     ext[ext == 0] = 1
-    pc = (pc - r['min'])/ ext
+    pc = (pc - r['min']) / ext
 
-    # holds the range for binning of the histogram. So far the cells are noramlized to be between max --> 1 and min --> 0
-    # I can therefore know, that the point will lie between 0 and 1. However, the range could also be a parameter set
-    # in the config file.
-    range_ = [[-.1, 1.1]] * dim
-    data = _project_data(proj_axes, pc)
+    # all computed density maps will be stored in a dictonary
+    densities = {}
+    for p_ax in proj_axes:
 
-    # compute histogram hence density map
-    H_20, edges_20 = np.histogramdd(data, bins=(n_bins,) * dim,
-                                    range=range_, normed=normed)
-
-    H_10, edges_10 = np.histogramdd(data, bins=(10,) * dim,
-                                    range=range_, normed=normed)
-
-    # perform smoothing
-    if smooth:
-        H_20 = smooth_gaussian(H_20, dim=dim, sigma=sigma)
-        H_10 = smooth_gaussian(H_10, dim=dim, sigma=sigma)
-
-
-    # plot maps and store in array
-    plt.figure(figsize=(15, 5))
-    plt.title('Histogram hence density map')
-
-
-    plt.subplot(121)
-    plt.imshow(H_20.T)
-    plt.gca().invert_yaxis()
-    plt.title('20 bins')
-
-    plt.subplot(122)
-    plt.imshow(H_10.T)
-    plt.gca().invert_yaxis()
-    plt.title('10 bins')
-    plots.append(plt)
-
-    for proj_axes, ax in [('0', 'x'), ('1', 'y'), ('2', 'z')]:
-
-        plt.figure()
-        plt.title('Histogram hence density map')
-        dim = len(proj_axes)
-
+        dim = len(p_ax)
         # holds the range for binning of the histogram. So far the cells are noramlized to be between max --> 1 and min --> 0
         # I can therefore know, that the point will lie between 0 and 1. However, the range could also be a parameter set
         # in the config file.
         range_ = [[-.1, 1.1]] * dim
-        data = _project_data(proj_axes, pc)
+        data = _project_data(p_ax, pc)
 
-        for k, bins in enumerate([10,n_bins ], start=1):
+        for bins in [10, n_bins]:
             # compute histogram hence density map
-            H, edges = np.histogramdd(data, bins=(bins,) * dim,
-                                      range=range_, normed=normed)
-
+            h, edges = np.histogramdd(data, bins=(bins,) * dim, range=range_, normed=normed)
             # perform smoothing
             if smooth:
-                H = smooth_gaussian(H, dim=dim, sigma=sigma)
+                h = smooth_gaussian(h, dim=dim, sigma=sigma)
+            densities[f'H{bins}_{axes[p_ax]}_proj'] = {'data': h, 'edges': edges}
 
-            plt.subplot(2, 2, k)
-            plt.plot(H)
-            sns.despine()
-            plt.xlabel(ax)
-            plt.title('%i bins' % bins)
+    return densities
 
-        plt.suptitle('Projection onto the %s axis' % ax, weight='bold')
+def plot_density_maps(densities=None):
+
+    # holds all density plots to return to user
+    plots = []
+    #plt.figure()
+    #plt.scatter(pc[:, 0], pc[:, 2], s=1)
+    #sns.despine()
+    #plt.title('Density Map with resampled nodes')
+    #plots.append(plt)
+
+    # for subplot indexing in matplot
+    k = 2 if (len(densities) > 8) else 5
+    # get bins from density keys
+    names = list(densities)
+    bin_a = names[0].split('_')[0]
+    bin_b = names[1].split('_')[0]
+    # 2 plots for 10 bins and 20 or custom bins
+    for b in [bin_a, bin_b]:
+        plt.figure()
+        plt.suptitle(f'{b} bins', weight='bold')
+        # subplot position for drawing
+        idx = 1
+        for name, density in densities.items():
+            name = name.split('_')
+            bins = name[0]
+            if bins != b:
+                continue
+            p_axes = name[1]
+            dim = len(p_axes)
+
+            if len(p_axes) > 1:
+                plt.subplot(2, 6, (idx, idx+k))
+                idx = idx + k + 1
+                plt.imshow(density['data'])
+                plt.gca().invert_yaxis()
+            else:
+                plt.subplot(2, 6, idx)
+                idx += 2
+                plt.plot(density['data'])
+                sns.despine()
+            plt.xlabel(p_axes)
+        plt.tight_layout(rect=[0, 0.03, 1, 0.95])
         plots.append(plt)
 
     return plots
+
 
 
 def _project_data(proj_axes, data):

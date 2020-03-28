@@ -6,8 +6,8 @@ import fnmatch
 import traceback
 import pandas as pd
 import networkx as nx
+import scipy.io as sio
 import matplotlib as mpl
-
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 import computation.file_manager as file_manager
@@ -151,7 +151,7 @@ def main(argv):
             try:
                 # import swc file, compute statistics and create an output
                 mytree = file_manager.load_swc_file(directory + file, nxversion)
-                morpho_stats_frame = fp.compute_Morphometric_Statistics(mytree)
+                morpho_stats_frame = fp.compute_morphometric_statistics(mytree)
                 morpho_stats_frame.index = [file]
                 print(morpho_stats_frame)
                 print("")
@@ -207,17 +207,26 @@ def main(argv):
                 # import swc file and initialize NeuronTree
                 mytree = file_manager.load_swc_file(directory + file, nxversion)
                 # read configfile if available, else set dicts None
-                global_params, norm_params = file_manager.read_config(configfile)
-
+                config_params = file_manager.read_config(configfile)
                 # compute density maps and use config if available
-                plots = fp.compute_Density_Maps(mytree, global_params, norm_params)
-
+                densities = fp.compute_density_maps(mytree, config_params)
+                # plot all maps
+                plots = fp.plot_density_maps(densities)
+                # get bins from density keys
+                names = list(densities)
+                bin_a = names[0].split('_')[0]
+                bin_b = names[1].split('_')[0]
                 # build output path and save plots there
                 outputfile = f'{output}{file}_density_'
-                for idx, plot in enumerate(plots, start=1):
-                    plot.savefig(f'{outputfile}{idx}.png')
+                for plot, bin in zip(plots, [bin_b, bin_a]):
+                    plot.savefig(f'{outputfile}_{bin}.png')
                     plot.close()
-                print(f'Density maps saved to {outputfile}x.png')
+                print(f'Density maps plotted to {outputfile}_xbins.png')
+                # build output path and save density data
+                outputfile = f'{output}{file}_reconstruction_density.mat'
+                sio.savemat(outputfile, densities)
+                print(f'Density map data saved to {outputfile}')
+
             except:
                 printException("Failure in computing density map!")
     else:
@@ -228,11 +237,11 @@ def main(argv):
         # output all data in one csv file
         if len(files) > 1:
             dirname = os.path.basename(os.path.normpath(directory))
-            output_filename = f'{directory}{dirname}_{compute}.csv'
+            output_filename = f'{output}{dirname}_{compute}.csv'
         else:
-            output_filename = f'{directory}{files[0]}_{compute}.csv'
+            output_filename = f'{output}{files[0]}_{compute}.csv'
         output_data.to_csv(output_filename, index_label="filename")
-        print(f'Statistics saved to: {output_filename}')
+        print(f'Data saved to: {output_filename}')
 
     # program end
     sys.exit(0)
