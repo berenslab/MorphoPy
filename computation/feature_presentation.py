@@ -150,7 +150,7 @@ def compute_Morphometric_Statistics(neurontree=None):
 
     return pd.DataFrame.from_dict(z, orient='index').T
 
-def compute_Density_Maps(neurontree=None, conf=None):
+def compute_Density_Maps(neurontree=None, global_params=None, norm_params=None):
     # get the resampled point could along each neurite at distance 1 micron.
     # pc is an array of 3D coordinates for each resampled node
     pc = neurontree.resample_nodes(d=1)
@@ -164,34 +164,29 @@ def compute_Density_Maps(neurontree=None, conf=None):
     plots.append(plt)
 
     ###### PARAMETER ################
-    # read from config if available
-    if conf is not None:
-        cfg = cp.ConfigParser()
-        cfg.read(conf)
-
-        min = np.array([cfg.getfloat("norm_bound", "r_min_x"),
-                       cfg.getfloat("norm_bound", "r_min_y"),
-                       cfg.getfloat("norm_bound", "r_min_z")])
-        max = np.array([cfg.getfloat("norm_bound", "r_max_x"),
-                       cfg.getfloat("norm_bound", "r_max_y"),
-                       cfg.getfloat("norm_bound", "r_max_z")])
+    # read from config and set default values if no config available:
+    # r holds the normalization bounds
+    if norm_params is None:
+        r = dict(min=np.min(pc, axis=0), max=np.max(pc, axis=0))
+    else:
+        min = np.array([norm_params["r_min_x"], norm_params["r_min_y"], norm_params["r_min_z"]])
+        max = np.array([norm_params["r_max_x"], norm_params["r_max_y"], norm_params["r_max_z"]])
         r = dict(min=min, max=max)
 
-        proj_axes = cfg.get("global", "proj_axes")
-        n_bins = cfg.getint("global", "n_bins")
-        normed = cfg.getboolean("global", "normed")
-        smooth = cfg.getboolean("global", "smooth")
-        sigma = cfg.getint("global", "sigma")
-    else:
-        # set default values if no config available:
-        # r holds the normalization bounds
-        r = dict(min=np.min(pc, axis=0), max=np.max(pc, axis=0))
-        # which axes to project on
+    # which axes to project on and other global parameters
+    if global_params is None:
         proj_axes = '02'
-        n_bins = 20
+        n_bins =20
         normed = True
         smooth = False
         sigma = 1
+    else:
+        # if config available use params else default values
+        proj_axes = global_params.get('proj_axes', '02')
+        n_bins = global_params.get('n_bins', 20)
+        normed = global_params.get('normed', True)
+        smooth = global_params.get('smooth', False)
+        sigma = global_params.get('sigma', 1)
 
     dim = len(proj_axes)
 

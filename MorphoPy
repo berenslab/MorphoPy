@@ -77,7 +77,7 @@ def main(argv):
     file = ""  # default no file -> directory is used
     function = None  # default function none
     output = None  # default output directory is none
-    conf = None  # default value, no config file is used
+    configfile = None  # default value, no config file is used
 
     for arg in args:
         if arg in ['stats', 'density', 'persistence']:
@@ -98,7 +98,7 @@ def main(argv):
         elif opt in ('-o', '--output'):
             output = arg
         elif opt in '--conf':
-            conf = arg
+            configfile = arg
         elif opt in '--func':
             # check if valid function selected and set pointer
             # if unknown, computing without special function
@@ -204,16 +204,20 @@ def main(argv):
             print(f'... Process File: {file}')
             # compute density map
             try:
-                # import swc file and compute density maps
+                # import swc file and initialize NeuronTree
                 mytree = file_manager.load_swc_file(directory + file, nxversion)
-                plots = fp.compute_Density_Maps(mytree, conf=conf)
+                # read configfile if available, else set dicts None
+                global_params, norm_params = file_manager.read_config(configfile)
+
+                # compute density maps and use config if available
+                plots = fp.compute_Density_Maps(mytree, global_params, norm_params)
+
+                # build output path and save plots there
                 outputfile = f'{output}{file}_density_'
                 for idx, plot in enumerate(plots, start=1):
                     plot.savefig(f'{outputfile}{idx}.png')
                     plot.close()
                 print(f'Density maps saved to {outputfile}x.png')
-            except FileNotFoundError:
-                print(f'Failure in computing density map: Config file not found or not readable: {conf}')
             except:
                 printException("Failure in computing density map!")
     else:
