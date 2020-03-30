@@ -1224,76 +1224,139 @@ class NeuronTree:
         w = dict(zip(psad.keys(), [degree[n] > 3 for n in psad.keys()]))
         return w, psad
 
-    def _resample_tree_data(self, dist=1):
+    def _resample_tree_data(self, d=1):
         """
         Re-sample new nodes along the tree in equidistant distance dist_measure (given in microns) and calculates the respective
-        node and edge attributes to generate a new NeuronTree.
+        node and edge attributes to generate a new NeuronTree. If dist is longer than a segment (path from branch point
+        to branch point) there is no additional point sampled.
         All original branching points are kept!
         :param dist: distance (in microns) at which each neurite is resampled.
-        :return:
-            POS     list of positions
-            PID     list of parent ids
-            TYPE    list of types for each resampled node
-            RADIUS  list of radii for each resampled node
-            DIST
+        :return: swc pandas.DataFrame containing the new tree data
         """
-        P = []
-        PID = []
-        TYPE = []
-        RADIUS = []
-        DIST = []
 
-        pid = -1
+        ### set up variables
+        soma = self.get_root()
+        branchpoints = list(self.get_branchpoints())
+        if soma in branchpoints:
+            branchpoints.remove(soma)
+        branchpoints.insert(0, soma)  # make sure soma is on first place
+        tips = self.get_tips()
+        radii = self.get_radii()
+        pos = self.get_node_attributes("pos")
+        types = self.get_node_attributes("type")
 
-        for (u, v, edata) in self._G.edges(data=True):
-            n1 = self._G.node[u]
-            n2 = self._G.node[v]
-            e = edata['euclidean_dist']
-            v = n2['pos'] - n1['pos']
+        def sample_new_points(pred, s, edge_length, dist, d):
+            v = pos[s] - pos[pred]
             v /= np.linalg.norm(v)
 
             # line between two nodes
-            g = lambda x: x * v + n1['pos']
+            g = lambda x: x * v + pos[pred]
 
-            # radius function
-
-            if n1['radius'] == n2['radius']:
-                r = lambda x: n2['radius']
+            # get radius progression between both nodes:
+            if radii[pred] == radii[s]:
+                r = lambda x: radii[pred]
             else:
-                x = [0, e]
-                y = [n1['radius'], n2['radius']]
+                x = [0, edge_length]
+                y = [radii[pred], radii[s]]
                 r = interp1d(x, y)
 
-            n = list(n1['pos'])
+            d_ = dist - edge_length
+            if d_ == 0:
+                d_ = d
+            # sample along the path
+            x = []
+            y = []
+            z = []
+            ra = []
+            t = []
+            while d_ <= dist:
+                x += [g(d_)[0]]
+                y += [g(d_)[1]]
+                z += [g(d_)[2]]
+                ra += [r(d_)]
+                t += [types[s]]
+                d_ += d
 
-            if n in P:
-                pid = P.index(n)
-            else:
-                P.append(n)
-                PID.append(pid)
-                pid += 1
-                TYPE.append(n1['type'])
-                DIST.append(0)
-                RADIUS.append(n1['radius'])
+            return x, y, z, ra, t
 
-            for a in range(1, int(e / dist)):
-                P.append(list(g(a * dist)))
-                PID.append(pid)
-                pid = len(P) - 1
-                TYPE.append(n2['type'])
-                DIST.append(dist)
-                RADIUS.append(np.array([r(a * dist)])[0])
+        new_swc = pd.DataFrame()
+        active_nodes = [soma]
 
-            P.append(list(n2['pos']))
-            PID.append(pid)
-            pid += 1
-            TYPE.append(n2['type'])
-            DIST.append(e % dist)
-            RADIUS.append(n2['radius'])
+        parent_stack = [-1]
+        n_id = 1
 
-        P = np.array(P)
+        while active_nodes:
 
-        return P, PID, TYPE, RADIUS, DIST
+            bp = active_nodes.pop(0)
+
+            # add branch point
+            new_entry = pd.DataFrame(dict(n=n_id, x=pos[bp][0], y=pos[bp][1], z=pos[bp][2],
+                                          type=types[bp], radius=radii[bp], parent=parent_stack.pop(0)), index=[0])
+            new_swc = new_swc.append(new_entry)
+
+            out_edges = self.edges(bp, data=True)
+            for k in range(len(out_edges)):
+                parent_stack.insert(0, n_id)  # add to the front
+            n_id += 1
+
+            for p, s, data in out_edges:
+
+                dist = data['path_length']
+                pred = p
+                parent = parent_stack.pop(0)
+                while s not in branchpoints and s not in tips:
+                    if dist < d:
+
+                        pred, s, data = self.edges(s, data=True)[0]
+                        dist += data['path_length']
+                    else:
+                        # now dist >= d --> sample new point(s) along the path of (pred, succ)
+                        s_x, s_y, s_z, s_rad, s_type = sample_new_points(pred, s, data['path_length'], dist, d)
+
+                        node_ids = list(range(n_id, n_id + len(s_x)))
+                        parents = [parent] + node_ids[:-1]
+
+                        new_entries = pd.DataFrame(dict(n=node_ids, x=s_x, y=s_y, z=s_z,
+                                                        type=s_type, radius=s_rad, parent=parents))
+                        new_swc = new_swc.append(new_entries)
+
+                        # keep last node as parent node
+                        parent = node_ids[-1]
+                        n_id = node_ids[-1] + 1
+                        # keep the rest as new distance
+                        dist = dist % d
+
+                if s in branchpoints:
+                    active_nodes += [s]
+                    if dist > d:
+                        s_x, s_y, s_z, s_rad, s_type = sample_new_points(pred, s, data['path_length'], dist, d)
+
+                        node_ids = list(range(n_id, n_id + len(s_x)))
+                        parents = [parent] + node_ids[:-1]
+
+                        new_entries = pd.DataFrame(dict(n=node_ids, x=s_x, y=s_y, z=s_z,
+                                                        type=s_type, radius=s_rad, parent=parents))
+                        new_swc = new_swc.append(new_entries)
+
+                        # keep last node as parent node
+                        parent = node_ids[-1]
+                        n_id = node_ids[-1] + 1
+
+                    parent_stack += [parent]  # append in the back
+                if s in tips:
+                    if dist >= d:
+                        s_x, s_y, s_z, s_rad, s_type = sample_new_points(pred, s, data['path_length'], dist, d)
+
+                        node_ids = list(range(n_id, n_id + len(s_x)))
+                        parents = [parent] + node_ids[:-1]
+
+                        new_entries = pd.DataFrame(dict(n=node_ids, x=s_x, y=s_y, z=s_z,
+                                                        type=s_type, radius=s_rad, parent=parents))
+                        new_swc = new_swc.append(new_entries)
+
+                        n_id = node_ids[-1] + 1
+
+        return new_swc
 
     def resample_tree(self, dist=1):
         """
@@ -1303,15 +1366,8 @@ class NeuronTree:
         :return: NeuronTree
         """
 
-        (pos, pid, t, r, d) = self._resample_tree_data(dist)
-        n_attr = [dict(pos=pos[i], type=t[i], radius=r[i]) for i in range(len(d))]
-
-        nodes = list(zip(range(1, len(pid) + 1), n_attr))
-
-        e_attr = [dict(euclidean_dist=d[i], path_length=d[i]) for i in range(len(d))]
-        edges = list(zip(np.array(pid) + 1, range(1, len(pid) + 1), e_attr))
-
-        T = NeuronTree(node_data=nodes, edge_data=edges[1:], nxversion=self._nxversion)
+        swc = self._resample_tree_data(dist)
+        T = NeuronTree(swc=swc, nxversion=self._nxversion)
 
         return T
 
