@@ -38,6 +38,7 @@ def check_neurontree(neurontree=None):
     if not neurontree.is_connected():
         raise ValueError('Graph has disconnected nodes!')
 
+
 def read_config(configfile=None):
     """
     This function reads a config file and returns two dictionaries with all found values
@@ -75,7 +76,7 @@ def read_config(configfile=None):
         else:
             return None
     except FileNotFoundError:
-        print(f'Failure in computing density map: Config file not found or not readable: {configfile}')
+        print('Failure in computing density map: Config file not found or not readable: %s'%configfile)
         return None
 
 
