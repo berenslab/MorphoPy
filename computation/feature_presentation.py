@@ -150,6 +150,7 @@ def compute_morphometric_statistics(neurontree=None):
 
     return pd.DataFrame.from_dict(z, orient='index').T
 
+
 def compute_density_maps(neurontree=None, config_params=None):
     # get the resampled point could along each neurite at distance 1 micron.
     # pc is an array of 3D coordinates for each resampled node
@@ -222,7 +223,10 @@ def plot_density_maps(densities=None):
     plots = []
 
     # for subplot indexing in matplot
-    k = 2 if (len(densities) > 8) else 5
+    if (len(densities) > 8):
+        k = 2
+    else:
+        k = 5
     # get bins from density keys
     names = list(densities)
     bin_a = names[0].split('_')[0]
