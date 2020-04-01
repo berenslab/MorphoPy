@@ -1260,16 +1260,15 @@ class NeuronTree:
                 y = [radii[pred], radii[s]]
                 r = interp1d(x, y)
 
-            d_ = dist - edge_length
-            if d_ == 0:
-                d_ = d
+            d_ = d - (dist - edge_length)
+
             # sample along the path
             x = []
             y = []
             z = []
             ra = []
             t = []
-            while d_ <= dist:
+            while d_ <= edge_length:
                 x += [g(d_)[0]]
                 y += [g(d_)[1]]
                 z += [g(d_)[2]]
