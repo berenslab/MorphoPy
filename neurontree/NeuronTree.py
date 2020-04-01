@@ -856,7 +856,7 @@ class NeuronTree:
 
         elif key == 'thickness':
             values = self.get_radii()
-
+            values.pop(self.get_root()) # remove the soma
         elif key == 'segment_length':
             values = self.get_segment_length()
 
