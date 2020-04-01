@@ -211,19 +211,15 @@ def compute_density_maps(neurontree=None, config_params=None):
             # perform smoothing
             if smooth:
                 h = smooth_gaussian(h, dim=dim, sigma=sigma)
-            densities[f'H{bins}_{axes[p_ax]}_proj'] = {'data': h, 'edges': edges}
+            densities['H%s_%s_proj'%(bins,axes[p_ax] )] = {'data': h, 'edges': edges}
 
     return densities
+
 
 def plot_density_maps(densities=None):
 
     # holds all density plots to return to user
     plots = []
-    #plt.figure()
-    #plt.scatter(pc[:, 0], pc[:, 2], s=1)
-    #sns.despine()
-    #plt.title('Density Map with resampled nodes')
-    #plots.append(plt)
 
     # for subplot indexing in matplot
     k = 2 if (len(densities) > 8) else 5
@@ -234,7 +230,7 @@ def plot_density_maps(densities=None):
     # 2 plots for 10 bins and 20 or custom bins
     for b in [bin_a, bin_b]:
         plt.figure()
-        plt.suptitle(f'{b} bins', weight='bold')
+        plt.suptitle(b + ' bins', weight='bold')
         # subplot position for drawing
         idx = 1
         for name, density in densities.items():
@@ -245,7 +241,7 @@ def plot_density_maps(densities=None):
             p_axes = name[1]
             dim = len(p_axes)
 
-            if len(p_axes) > 1:
+            if dim > 1:
                 plt.subplot(2, 6, (idx, idx+k))
                 idx = idx + k + 1
                 plt.imshow(density['data'])
@@ -260,7 +256,6 @@ def plot_density_maps(densities=None):
         plots.append(plt)
 
     return plots
-
 
 
 def _project_data(proj_axes, data):
