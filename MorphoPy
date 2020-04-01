@@ -87,7 +87,7 @@ def main(argv):
     for opt, arg in opts:
         # argument is missing because next option is in argument
         if arg.startswith("-"):
-            print(f'Wrong argument in option: {opt}')
+            print('Wrong argument in option: %s'%opt)
             help()
         if opt in ('-c', '--compute'):
             compute = arg
@@ -146,7 +146,7 @@ def main(argv):
         print('##### Morphometric statistics #####')
         # process all files
         for file in files:
-            print(f'... Process File: {file}')
+            print('... Process File: ', file)
             # compute morphometric stats
             try:
                 # import swc file, compute statistics and create an output
@@ -165,7 +165,7 @@ def main(argv):
         print('##### Persistence barcodes #####')
         # process all files
         for file in files:
-            print(f'... Process File: {file}')
+            print('... Process File: ', file)
             # compute persistence data
             try:
                 # import swc file, compute persistence table and give an output
@@ -186,12 +186,12 @@ def main(argv):
                 if function is None:
                     plt.title('Persistence Diagram')
                 else:
-                    plt.title(f'Persistence Diagram ({function.__name__})')
+                    plt.title('Persistence Diagram (%s)'%function.__name__)
                 plt.xlabel('birth')
                 plt.ylabel('death')
-                outputfile = f'{output}{file}_persistence.png'
+                outputfile = output + file + '_persistence.png'
                 plt.savefig(outputfile)
-                print(f'Persistence saved to: {outputfile}')
+                print('Persistence saved to: ', outputfile)
                 plt.close()
             except:
                 printException("Failure in computing persistence data!")
@@ -201,7 +201,7 @@ def main(argv):
         print('##### Density Map #####')
         # process all files
         for file in files:
-            print(f'... Process File: {file}')
+            print('... Process File: %s'%file)
             # compute density map
             try:
                 # import swc file and initialize NeuronTree
@@ -217,15 +217,15 @@ def main(argv):
                 bin_a = names[0].split('_')[0]
                 bin_b = names[1].split('_')[0]
                 # build output path and save plots there
-                outputfile = f'{output}{file}_density_'
+                outputfile = '%s%s_density_'%(output,file)
                 for plot, bin in zip(plots, [bin_b, bin_a]):
-                    plot.savefig(f'{outputfile}_{bin}.png')
+                    plot.savefig('%s_%s.png'%(outputfile, bin))
                     plot.close()
-                print(f'Density maps plotted to {outputfile}_xbins.png')
+                print('Density maps plotted to %s_xbins.png'%outputfile)
                 # build output path and save density data
-                outputfile = f'{output}{file}_reconstruction_density.mat'
+                outputfile = '%s%s_reconstruction_density.mat'%(outputfile, file)
                 sio.savemat(outputfile, densities)
-                print(f'Density map data saved to {outputfile}')
+                print('Density map data saved to %s'%outputfile)
 
             except:
                 printException("Failure in computing density map!")
@@ -237,11 +237,11 @@ def main(argv):
         # output all data in one csv file
         if len(files) > 1:
             dirname = os.path.basename(os.path.normpath(directory))
-            output_filename = f'{output}{dirname}_{compute}.csv'
+            output_filename = '%s%s_%s.csv'%(output,dirname, compute)
         else:
-            output_filename = f'{output}{files[0]}_{compute}.csv'
+            output_filename = '%s%s_%s.csv'%(output,files[0], compute)
         output_data.to_csv(output_filename, index_label="filename")
-        print(f'Data saved to: {output_filename}')
+        print('Data saved to: %s'%output_filename)
 
     # program end
     sys.exit(0)
