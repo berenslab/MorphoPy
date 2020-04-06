@@ -132,10 +132,10 @@ Help:
 ## <a name="contributing">Contributing to MorphoPy </a>
 
 We tested MorphoPy to the best of our knowledge and abilities in the scope of several projects. If you still find a bug
-or you miss a feature, please do not hesitate to let us know via [GitHub issues](https://github.com/berenslab/MorphoPy/issues).
+or you are missing a feature, please do not hesitate to contact us via [GitHub issues](https://github.com/berenslab/MorphoPy/issues).
 Please try to provide a minimal example that reproduces the bug you want to be fixed.
 If you want to develop the code base further, you can work with git pull requests. Please make sure that you document
-the code and add test and example of how to use your code.
+the code and add tests and examples of how to use your code.
 
 
 ## <a name="citation"> Citing MorphoPy </a>
@@ -150,6 +150,9 @@ MorphoPy currently only supports neurites that connect back to the soma. This me
 structures can not be handled.
 
 All data is stored in the tidy data format (http://vita.had.co.nz/papers/tidy-data.pdf).
+
+Please also refer to our [tutorial](./notebooks/MORPHOPY Tutorial.ipynb).
+
 ### Density maps
 Changing config
 
@@ -157,13 +160,29 @@ Changing config
 changing distance function. Adding a distance function
 
 ### Morphometric statistics
-Explanation of basic statistics
+Available morphometric statistics are:
+- branch orders
+- Strahler order
+- branch angles
+- path angles
+- root angles
+- thickness
+- segment lengths
+- path length to soma
+- radial distance
+
+
 Changing the Code
 
 ### Morphometric distributions
-These features are not available via the command line tool.
-Descriptions. Frequency histograms can be queried for all single value statistics. One can provide a distance measure (branch order,
-path distance from soma) to investigate their spatial distribution.
+These features are not (yet) available via the command line tool.
+Frequency histograms or Gaussian kernel density estimates can be queried for all single value statistics using the
+methods `get_histogram(key)` or `get_kde_distribution(key)`. If you provide a distance measure (e.g. branch order,
+path distance from soma or radial distance) the returned distribution will be two-dimensional and allows to investigate
+a features' development across space.
+
+
+### Not enough? ###
 
 You want to compute your own features? Go for it! We recommend you to check out `networkx` and `shapely` for more options.
 
