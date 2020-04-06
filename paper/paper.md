@@ -52,21 +52,39 @@ TODO
 Add brief summary of functionality
 Write about command line tool
 
+`MorphoPy` can read in files or entire batches and compute a specified feature representation using the command line:
 ```bash
-MorphoPy -c [density|persistence|stats] -f ./data/C4.swc
+MorphoPy -c [density|persistence|stats] -f ./data/C4.swc TODO make the same as below
 ```
 
-`MorphoPy` builds on the functionality of the networkx package [CITATION] and represents each neuron internally as a
-directed acylic tree graph with node and edge attributes (see Fig. 1a). One can also query dendrites, the axon or all
-individual neurites extending from the soma separately.
-The package allows you to query a variety of morphometric values and distributions (see Fig. 1),
+![Neural reconstructions are represented as direct acylic graphs with node and edge attributes.\label{fig:attributes}](./figures/Fig1_attributes.png)
+
+`MorphoPy` builds on the functionality of the networkx package [CITATION] and internally represents each neuron as a
+directed acylic tree graph with node and edge attributes (see Fig. \autoref{fig:attributes}). The package supports a
+plotting routine that shows all three two-dimensional projections at once.
+```python
+import MorphoPy.NeuronTree as nt
+from MorphoPy.computation import file_manager as fm
+
+N = fm.load_swc_file("../data/EC3-80604.CNG.swc") TODO
+
+from neurontree.plotting import show_threeview
+fig = plt.figure(figsize=(10,10))
+show_threeview(N, fig)
+```
+
+Density maps are computed on the basis of a configuration file (or dictionary) that controls parameters such as bin size,
+normalization ranges and which cardinal axes to project on.
+
+A variety of statistics can be computed on the nodes and edges of each reconstruction (Fig. \autoref{fig:morphometrics}).
+![Node and edge related morphometric statistics. \label{fig:morphometrics}](./figures/fig_morphometrics.png)
 
 
-Each node within this graph is assigned a type-label that determines whether a node belongs
-to the soma, the axon or the (apical) dendrites. Additionally each node is
+If wanted, a reconstruction can also be split into its different parts (axon or dendrites only) using the methods
+`get_axonal_tree()` or `get_dendritic_tree()`.
 
 
-For a full description of the packages functionality please refer to our documentation and tutorial
+For a full description of the package's functionality please refer to our documentation and tutorial
 
 `MorphoPy` has been developed in the context of a benchmarking study for cortical interneuron cell type classification
 based on their morphology [@laturnus:2019]. It has already been used in a series of scientific publications that tried
@@ -74,7 +92,6 @@ to relate transcriptome, electrophysiology and morphology of cortical interneuro
 
 
 # Acknowledgements
-We want to acknowledge contributions from Ziwei Huang in the beginning of the project.
 
 This work was funded by the German Ministry of Education and Research(FKZ 01GQ1601), the German Research Foundation (DFG)
 under Germany’s Excellence Strategy (EXC2064/1 – 390727645; BE5601/4-1, SFB 1233 “Robust Vision”, Project number 276693517),
