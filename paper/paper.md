@@ -41,22 +41,16 @@ However, the quantitative analysis of neuronal morphologies persists to be a har
 particular feature representation in order to make individual morphologies amenable to classical data analysis. Many
 different feature representations have been suggested in the literature, such as density maps [jefferis:2007], single valued summary
 statistics (morphometrics) [scorcioni:2008; @NeuroM] or, more recently, persistence images [@li:2017; @kanari:2018].
-The tools for extracting them, however, are often focused on solely one such representation and written in various
+The tools for extracting them, however, are often focused on solely one such representation and scattered across various
 programming languages.
 
 Our software package `MorphoPy` is meant to easily extract different feature representations from neural morphologies for
 downstream statistical analysis. It bundles common representations such as density maps, morphometrics, morphometric distributions
-and persistence images in one simple open source framework to make them accessible to a large community. `MorphoPy`
-can be used either as a standalone command line tool or as a Python package within a scientific workflow.
+and persistence images in one simple open source framework to make them accessible to a large community.
 
-TODO
-Add brief summary of functionality
-Write about command line tool
-Idea: take one file and show the data representations
+![Neural reconstructions are represented as direct acylic graphs with node and edge attributes.\label{fig:attributes}](./figures/Fig1_attributes.png | width=300)
 
-![Neural reconstructions are represented as direct acylic graphs with node and edge attributes.\label{fig:attributes}](./figures/Fig1_attributes.png =100x20)
-
-`MorphoPy` builds on the functionality of the networkx package [CITATION] and represents each neuron as a
+`MorphoPy` builds on the functionality of the networkx package CITATION and represents each neuron as a
 directed acylic tree graph with node and edge attributes (\autoref{fig:attributes}). The package supports a
 plotting routine that shows all three two-dimensional projections at once.
 ```python
@@ -71,7 +65,8 @@ fig = plt.figure(figsize=(10,10))
 show_threeview(N, fig)
 ```
 ![Plotting reconstructions in 2D. \label{fig:plot}](./figures/threeview_dendrites.png)
-As can be seen in the code snippet, it is possible to split the reconstruction into its different parts (axon or dendrites only)
+
+As shown in the code snippet above, it is possible to split the reconstruction into its different parts (axon or dendrites only)
 and operate on each neurite type separately.
 
 Density maps are computed on the basis of a configuration file (or dictionary) that controls parameters such as bin size,
@@ -87,13 +82,14 @@ Additionally, it is possible to query the entire distribution of each statistic 
 Gaussian kernel density estimate (kde). Fig. XXX, for example, shows the kde of radial distances, branch angles and their
 combination for the dendrites shown in \autoref{fig:plot}.
 
-Persistence. Persistence diagrams are a fairly recent way of describing neural morphologies [CITATIONS]. MorphoPy supports the generation of 2D persistence diagrams.
+Persistence. Persistence diagrams are a fairly recent way of describing neural morphologies CITATION. MorphoPy supports the generation of 2D persistence diagrams.
 Defined on the basis of a distance function f. We offer four functions to choose from by default but users can specify
 their own.
 
 
 For a full description of `MorphoPy`'s functionality please refer to our documentation and tutorial on our [gitHub page](https://github.com/berenslab/MorphoPy).
 
+`MorphoPy` can be used either as a standalone command line tool or as a Python package within a scientific workflow.
 `MorphoPy` can read in files or entire batches and compute a specified feature representation using the command line:
 ```bash
 MorphoPy -c [density|persistence|stats] -f ./data/EC3-80604.CNG.swc
