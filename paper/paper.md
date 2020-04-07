@@ -75,13 +75,12 @@ As can be seen in the code snippet, it is possible to split the reconstruction i
 and operate on each neurite type separately.
 
 Density maps are computed on the basis of a configuration file (or dictionary) that controls parameters such as bin size,
-normalization ranges and which cardinal axes to project on. The xy-density map of the dendrite plotted above, for example,
-would look like ...
+normalization ranges and which cardinal axes to project on. Additionally, users can specify whether and to which degree
+they want smoothing \autoref{fig:dms}
+![XY-density map of the dendrite plotted above with different degrees of Gaussian smoothing. \label{fig:dms}](./figures/density_map_smoothing.png)
 
-TODO Add density map figure (maybe just xy with different bin sizes and w and wo smoothing)
-
-![Node and edge related morphometric statistics. \label{fig:morphometrics}](./figures/fig_morphometrics.png)
 A variety of statistics can be computed on the nodes and edges of each reconstruction (\autoref{fig:morphometrics}).
+![Node and edge related morphometric statistics. \label{fig:morphometrics}](./figures/fig_morphometrics.png)
 The `get_morphometric_statistics()`-method offers a precompiled single valued selection of these statistics, but in principle,
 they can be adjusted to the user's personal preference.
 Additionally, it is possible to query the entire distribution of each statistic either in form of a histogram or as a
