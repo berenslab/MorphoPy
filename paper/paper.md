@@ -52,8 +52,8 @@ and persistence images in one simple open source framework to make them accessib
 ![Neural reconstructions are represented as direct acylic graphs with node and edge attributes.\label{fig:attributes}](./figures/Fig1_attributes_small.png)
 
 `MorphoPy` builds on the functionality of the networkx package [@hagberg:2008] and represents each neuron as a directed
-acylic tree graph with node and edge attributes \autoref{fig:attributes}. The package supports a plotting routine that
-shows all three two-dimensional projections at once.
+acylic tree graph with node and edge attributes \autoref{fig:attributes}. The package supports 2D plotting routines and the
+generation of different feature representations.
 ```python
 import MorphoPy.NeuronTree as nt
 from MorphoPy.computation import file_manager as fm
@@ -94,18 +94,27 @@ pre-implemented distance functions (radial distance, path length, height or bran
 from computation.persistence_functions import radial_distance
 from computation.feature_presentation import get_persistence
 
-df = get_persistence(Dendrites.get_topological_minor(), f=radial_distance)
-```
-TODO add persistence image
+import numpy as np
+def custom_distance(G, u, v):
+    """
+    Returns a distance between nodes u and v, which both are part of the graph given in G.
+    """
+    n = G.node[u]['pos']
+    r = G.node[v]['pos']
+    return np.dot(n, r)
 
-To make `MorphoPy` accessible to a non-programming audience it can also be called from the command line to operate on
+df = get_persistence(Dendrites.get_topological_minor(), f=radial_distance)
+df_custom = get_persistence(Dendrites.get_topological_minor(), f=custom_distance)
+```
+
+To make `MorphoPy` accessible to a non-programming audience it can be called from the command line to operate on
 single files or entire batches.
 ```bash
 MorphoPy -c [density|persistence|stats] -f 'path_to_folder'
 ```
 For a full description of `MorphoPy`'s functionality please refer to our documentation and tutorial on our [gitHub page](https://github.com/berenslab/MorphoPy).
 
-SUMMARIZING SENTENCE.
+SUMMARIZING SENTENCE??
 
 `MorphoPy` has been developed in the context of a benchmarking study for cortical interneuron cell type classification
 based on their morphology [@laturnus:2019]. It has already been used in a series of scientific publications that tried
