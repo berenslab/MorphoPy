@@ -47,12 +47,13 @@ programming languages.
 Our software package `MorphoPy` is meant to easily extract different feature representations from neural morphologies for
 downstream statistical analysis. It bundles common representations such as density maps, morphometrics, morphometric distributions
 and persistence images in one simple open source framework to make them accessible to a large community.
+`MorphoPy` can be used either as a standalone command line tool or as a Python package within a scientific workflow.
 
-![Neural reconstructions are represented as direct acylic graphs with node and edge attributes.\label{fig:attributes}](./figures/Fig1_attributes.png | width=300)
+![Neural reconstructions are represented as direct acylic graphs with node and edge attributes.\label{fig:attributes}](./figures/Fig1_attributes_small.png)
 
-`MorphoPy` builds on the functionality of the networkx package CITATION and represents each neuron as a
-directed acylic tree graph with node and edge attributes (\autoref{fig:attributes}). The package supports a
-plotting routine that shows all three two-dimensional projections at once.
+`MorphoPy` builds on the functionality of the networkx package [@hagberg:2008] and represents each neuron as a directed
+acylic tree graph with node and edge attributes \autoref{fig:attributes}. The package supports a plotting routine that
+shows all three two-dimensional projections at once.
 ```python
 import MorphoPy.NeuronTree as nt
 from MorphoPy.computation import file_manager as fm
@@ -64,36 +65,46 @@ from neurontree.plotting import show_threeview
 fig = plt.figure(figsize=(10,10))
 show_threeview(N, fig)
 ```
+
 ![Plotting reconstructions in 2D. \label{fig:plot}](./figures/threeview_dendrites.png)
 
-As shown in the code snippet above, it is possible to split the reconstruction into its different parts (axon or dendrites only)
+As shown in the code snippet above, it is also possible to split the reconstruction into its different parts (axon or dendrites only)
 and operate on each neurite type separately.
 
 Density maps are computed on the basis of a configuration file (or dictionary) that controls parameters such as bin size,
 normalization ranges and which cardinal axes to project on. Additionally, users can specify whether and to which degree
-they want smoothing \autoref{fig:dms}
+they want to smooth each density map \autoref{fig:dms}.
 ![XY-density map of the dendrite plotted above with different degrees of Gaussian smoothing. \label{fig:dms}](./figures/density_map_smoothing.png)
 
 A variety of statistics can be computed on the nodes and edges of each reconstruction (\autoref{fig:morphometrics}).
-![Node and edge related morphometric statistics. \label{fig:morphometrics}](./figures/fig_morphometrics.png)
 The `get_morphometric_statistics()`-method offers a precompiled single valued selection of these statistics, but in principle,
 they can be adjusted to the user's personal preference.
+![Node and edge related morphometric statistics. \label{fig:morphometrics}](./figures/fig_morphometrics.png)
 Additionally, it is possible to query the entire distribution of each statistic either in form of a histogram or as a
-Gaussian kernel density estimate (kde). Fig. XXX, for example, shows the kde of radial distances, branch angles and their
+Gaussian kernel density estimate (kde). Fig. \autoref{fig:morphdist}, for example, shows the kde of radial distances, branch angles and their
 combination for the dendrites shown in \autoref{fig:plot}.
+![\label{fig:morphdist}](./figures/2D_morph_dist.png)
 
-Persistence. Persistence diagrams are a fairly recent way of describing neural morphologies CITATION. MorphoPy supports the generation of 2D persistence diagrams.
-Defined on the basis of a distance function f. We offer four functions to choose from by default but users can specify
-their own.
+Furthermore, `MorphoPy` supports the generation of 2D persistence diagrams. Persistence diagrams are a fairly recent way of describing
+the branching of neural morphologies [@li:2017; @kanari:2018] with respect to a specified distance function. By default,
+`MorphoPy` computes a persistence diagram based on the radial distance from the soma, but users can choose from four different
+pre-implemented distance functions (radial distance, path length, height or branch order) or provide their own.
 
+```python
+from computation.persistence_functions import radial_distance
+from computation.feature_presentation import get_persistence
 
+df = get_persistence(Dendrites.get_topological_minor(), f=radial_distance)
+```
+TODO add persistence image
+
+To make `MorphoPy` accessible to a non-programming audience it can also be called from the command line to operate on
+single files or entire batches.
+```bash
+MorphoPy -c [density|persistence|stats] -f 'path_to_folder'
+```
 For a full description of `MorphoPy`'s functionality please refer to our documentation and tutorial on our [gitHub page](https://github.com/berenslab/MorphoPy).
 
-`MorphoPy` can be used either as a standalone command line tool or as a Python package within a scientific workflow.
-`MorphoPy` can read in files or entire batches and compute a specified feature representation using the command line:
-```bash
-MorphoPy -c [density|persistence|stats] -f ./data/EC3-80604.CNG.swc
-```
 SUMMARIZING SENTENCE.
 
 `MorphoPy` has been developed in the context of a benchmarking study for cortical interneuron cell type classification
