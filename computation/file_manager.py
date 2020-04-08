@@ -30,7 +30,6 @@ def check_neurontree(neurontree=None):
     """
     This function checks a neurontree
     :param filename: path to swc file as string
-    :param nxversion: version of installed networkX passed to NeuronTree
     :return: NeuronTree object
     """
     if not neurontree.has_root():
@@ -53,8 +52,8 @@ def read_config(configfile=None):
             cfg.read(configfile)
 
             config_params = {}
-            if cfg.has_option("global", "proj_axes"):
-                config_params['proj_axes'] = cfg.get("global", "proj_axes")
+            if cfg.has_option("global", "distance"):
+                config_params['distance'] = cfg.getint("global", "distance")
             if cfg.has_option("global", "n_bins"):
                 config_params['n_bins'] = cfg.getint("global", "n_bins")
             if cfg.has_option("global", "normed"):

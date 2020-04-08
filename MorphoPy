@@ -16,6 +16,10 @@ import computation.persistence_functions as pf
 
 
 def help(exitcode=0):
+    """
+    Print help page and exit application depending on error passed
+    :param exitcode: Errorcode which will be returned at Exit or 0 if no error occured
+    """
     print('')
     print('Usage: MorphoPy -c <compute_feature> [--func <persistence_function> | --conf <config_file>]')
     print('                   [-f <swc_file> | -d <directory>] [-o <output directory>]')
@@ -44,11 +48,18 @@ def help(exitcode=0):
 
 
 def version():
+    """
+    Print version of Morphopy to command line - nothing else will be done
+    """
     print('MorphoPy version 0.1')
     sys.exit(0)
 
 
 def printException(message="Unknown Error"):
+    """
+    Helper function for processing Exceptions in main function
+    :param message: pass message for user defined Exception
+    """
     tb = traceback.format_exc()
     tb = tb.split("\n", 3)[3];
     print()
@@ -59,6 +70,11 @@ def printException(message="Unknown Error"):
 
 
 def main(argv):
+    """
+    Callable from command line with several arguments
+    see help page for more information
+    :type argv: arguments passed for processing swc-files
+    """
     try:
         opts, args = getopt.gnu_getopt(argv, "c:f:d:o:hv",
                                    ["compute=", "func=", "conf=", "file=", "dir=", "output=", "help", "version"])
@@ -186,10 +202,10 @@ def main(argv):
                 if function is None:
                     plt.title('Persistence Diagram')
                 else:
-                    plt.title('Persistence Diagram (%s)'%function.__name__)
+                    plt.title('Persistence Diagram (%s)' % function.__name__)
                 plt.xlabel('birth')
                 plt.ylabel('death')
-                outputfile = output + file + '_persistence.png'
+                outputfile = '%s%s_persistence.png' % (output, file)
                 plt.savefig(outputfile)
                 print('Persistence saved to: ', outputfile)
                 plt.close()
@@ -210,20 +226,17 @@ def main(argv):
                 config_params = file_manager.read_config(configfile)
                 # compute density maps and use config if available
                 densities = fp.compute_density_maps(mytree, config_params)
-                # plot all maps
-                plots = fp.plot_density_maps(densities)
+                # plot densities
+                plot = fp.plot_density_maps(densities)
                 # get bins from density keys
-                names = list(densities)
-                bin_a = names[0].split('_')[0]
-                bin_b = names[1].split('_')[0]
+                bins = (list(densities))[0].split('_')[0]
                 # build output path and save plots there
-                outputfile = '%s%s_density_'%(output,file)
-                for plot, bin in zip(plots, [bin_b, bin_a]):
-                    plot.savefig('%s_%s.png'%(outputfile, bin))
-                    plot.close()
-                print('Density maps plotted to %s_xbins.png'%outputfile)
+                outputfile = '%s%s_density_' % (output, file)
+                plot.savefig('%s_%s.png' % (outputfile, bins))
+                plt.close()
+                print('Density maps plotted to %s_xbins.png' % outputfile)
                 # build output path and save density data
-                outputfile = '%s%s_reconstruction_density.mat'%(outputfile, file)
+                outputfile = '%s%s_reconstruction_density.mat' % (outputfile, file)
                 sio.savemat(outputfile, densities)
                 print('Density map data saved to %s'%outputfile)
 
@@ -237,11 +250,11 @@ def main(argv):
         # output all data in one csv file
         if len(files) > 1:
             dirname = os.path.basename(os.path.normpath(directory))
-            output_filename = '%s%s_%s.csv'%(output,dirname, compute)
+            output_filename = '%s%s_%s.csv' % (output, dirname, compute)
         else:
-            output_filename = '%s%s_%s.csv'%(output,files[0], compute)
+            output_filename = '%s%s_%s.csv' % (output, files[0], compute)
         output_data.to_csv(output_filename, index_label="filename")
-        print('Data saved to: %s'%output_filename)
+        print('Data saved to: %s' % output_filename)
 
     # program end
     sys.exit(0)
@@ -251,7 +264,8 @@ if __name__ == '__main__':
     '''
     callable from command line
     Can open data of the following file format:
-    - .swc
+    - .swc or batch processing whole directories
+    - see help page for more information
     '''
     print(sys.argv)
     main(sys.argv[1:])
