@@ -181,10 +181,8 @@ def compute_density_maps(neurontree=None, config_params=None):
     pc = neurontree.resample_nodes(d=distance)
 
     ###### PARAMETER ################
-    # which axes to project on and other global parameters
-    proj_axes = ['0', '1', '2', '01', '02', '12']
-    # dictonary for labeling projection
-    axes = {'0':'x', '1':'y', '2':'z', '01':'xy', '02':'xz', '12':'yz'}
+    # dictonary for axes and all labels of projection
+    axes = {'0': 'x', '1': 'y', '2': 'z', '01': 'xy', '02': 'xz', '12': 'yz'}
 
     # read all missing params from config and set default values if no config available:
     if config_params is None:
@@ -219,7 +217,8 @@ def compute_density_maps(neurontree=None, config_params=None):
 
     # all computed density maps will be stored in a dictonary
     densities = {}
-    for p_ax in proj_axes:
+    # loop over all axes
+    for p_ax, ax in axes.items():
 
         dim = len(p_ax)
         # holds the range for binning of the histogram. So far the cells are noramlized to be between max --> 1 and min --> 0
@@ -233,7 +232,7 @@ def compute_density_maps(neurontree=None, config_params=None):
         # perform smoothing
         if smooth:
             h = smooth_gaussian(h, dim=dim, sigma=sigma)
-        densities['H%s_%s_proj' % (n_bins, axes[p_ax])] = {'data': h, 'edges': edges}
+        densities['H%s_%s_proj' % (n_bins, ax)] = {'data': h, 'edges': edges}
 
     return densities
 
