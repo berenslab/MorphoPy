@@ -443,31 +443,44 @@ class NeuronTree:
         pl = nx.single_source_dijkstra_path_length(self.get_graph(), source=self.get_root(), weight=weight)
         return pl
 
-    def get_cumulative_path_length(self):
+    def get_cumulative_path_length(self, weight='path_length'):
         """
         Returns a dictionary that hold the cumulative path length of the subtree attached to node n. The root holds
         the total path length within the tree whereas the cumulative path length of all tips is equal to zero.
+        :param: weight, String (default='path_length'). Determines which edge attribute ist used. Options are
+        'path_length', 'eulidean_dist' or None.
         :return:
         dict: Dictionary holding the cumulative path length of the subtree connected to each node.
         """
 
         tips = self.get_tips()
         G = self.get_graph()
-        nodes = self.nodes()
+        root = self.get_root()
+
+        # sort leaves by length to soma descending
+        pl_dict = dict(nx.all_pairs_dijkstra_path_length(G, weight=weight))[root]
+        tip_order = np.argsort([pl_dict[l] for l in tips])[::-1]
+        active_nodes = list(tips[tip_order])
+
+        nodes = G.nodes()
         c_pl = dict(zip(nodes, [0] * len(nodes)))
 
-        active_nodes = list(tips)
         while len(active_nodes) > 0:
             a = active_nodes.pop(0)
 
             edges = G.edges(a, data=True)
             # for add pl of each edge coming from a
             for e1, e2, data in edges:
-                c_pl[e1] += (c_pl[e2] + data['path_length'])
-
+                if weight is None:
+                    c_pl[e1] += (c_pl[e2] + 1)
+                else:
+                    c_pl[e1] += (c_pl[e2] + data[weight])
             # insert the parents
-            parents = G.predecessors(a)
-            active_nodes += parents
+            parent = list(G.predecessors(a))
+            if parent:  # in case a is the root and the parent list is empty
+                if parent[0] not in active_nodes:
+                    active_nodes += parent
+
         return c_pl
 
     def get_root(self, return_all=False):
@@ -1407,7 +1420,7 @@ class NeuronTree:
             if not soma_included:
                 nodes.remove(r)
             s = nx.subgraph(G, nodes)
-            subgraphs.append(NeuronTree(graph=s))
+            subgraphs.append(NeuronTree(graph=s, nxversion=self._nxversion))
 
         return subgraphs
 
