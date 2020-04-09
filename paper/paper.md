@@ -110,7 +110,7 @@ df_custom = get_persistence(Dendrites.get_topological_minor(), f=custom_distance
 To make `MorphoPy` accessible to a non-programming audience it can be called from the command line to operate on
 single files or entire batches.
 ```bash
-MorphoPy -c [density|persistence|stats] -f 'path_to_folder'
+MorphoPy -c [density|persistence|stats] -f '[path_to_file|path_to_folder]'
 ```
 For a full description of `MorphoPy`'s functionality please refer to our documentation and tutorial on our [gitHub page](https://github.com/berenslab/MorphoPy).
 
