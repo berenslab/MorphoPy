@@ -14,10 +14,11 @@ def get_persistence(neurontree=None, f=None):
     _Quantifying topological invariants of neuronal morphologies_ from Lida Kanari et al
     (https://arxiv.org/abs/1603.08432).
     changed for use with networkx v2 (works also in old version: list(G.neighbors()))
+    :param neurontree: instance of a NeuronTree class which holds the data of the swc file
+    :param f: user defined function for computing persitence (see persistence_functions.py)
     :return: pandas.DataFrame with entries node_id | birth | death . Where birth and death are defined in radial
         distance from soma.
     """
-
     # Initialization
     L = neurontree.get_tips()
     R = neurontree.get_root()
@@ -78,6 +79,14 @@ def get_persistence(neurontree=None, f=None):
 
 
 def compute_morphometric_statistics(neurontree=None):
+    """
+    Compute various morphometric statistics of a NeuronTree which is passed as an object
+    :param neurontree: NeuronTree instance, holds complete data of an swc file
+    :return: pandas dataframe object with dictionary of all statistics
+    """
+    if neurontree is None:
+        return None
+
     z = dict()
     z['branch_points'] = neurontree.get_branchpoints().size
 
@@ -152,25 +161,37 @@ def compute_morphometric_statistics(neurontree=None):
 
 
 def compute_density_maps(neurontree=None, config_params=None):
-    # get the resampled point could along each neurite at distance 1 micron.
+    """
+    function for computing density maps which can be specified by a config and passed with a neurontree
+    several projections are computed: x,y,z,xy,xz,yz
+    :param neurontree:      NeuronTree object wich holds a swc file data
+    :param config_params:   configuration params passed as dictionary which was load from file
+                            containing all customizable params for density maps
+    :return:                returns a dictionary with all density maps computed with all projections (x,y,z,xy,xz,yz)
+    """
+    # read distance from config and set default if no config available:
+    if config_params is None:
+        distance = 1
+    else:
+        distance = config_params.get('distance', 1)
+
+    # get the resampled point could along each neurite
+    # at specific distance default: 1 micron.
     # pc is an array of 3D coordinates for each resampled node
-    pc = neurontree.resample_nodes(d=1)
+    pc = neurontree.resample_nodes(d=distance)
 
     ###### PARAMETER ################
-    # which axes to project on and other global parameters
-    proj_axes = ['0', '1', '2']
-    # dictonary for labeling projection
-    axes = {'0':'x', '1':'y', '2':'z', '01':'xy', '02':'xz', '12':'yz'}
-    # read from config and set default values if no config available:
+    # dictonary for axes and all labels of projection
+    axes = {'0': 'x', '1': 'y', '2': 'z', '01': 'xy', '02': 'xz', '12': 'yz'}
+
+    # read all missing params from config and set default values if no config available:
     if config_params is None:
-        proj_axes.append('01')
-        proj_axes.append('02')
         n_bins = 20
         normed = True
         smooth = False
         sigma = 1
-        min=np.min(pc, axis=0)
-        max=np.max(pc, axis=0)
+        min = np.min(pc, axis=0)
+        max = np.max(pc, axis=0)
     else:
         if 'r_min_x' in config_params.keys():
             min = np.array([config_params["r_min_x"], config_params["r_min_y"], config_params["r_min_z"]])
@@ -180,7 +201,6 @@ def compute_density_maps(neurontree=None, config_params=None):
             max = np.max(pc, axis=0)
 
         # if config available use params else default values
-        proj_axes.append(config_params.get('proj_axes', '02'))
         n_bins = config_params.get('n_bins', 20)
         normed = config_params.get('normed', True)
         smooth = config_params.get('smooth', False)
@@ -197,7 +217,8 @@ def compute_density_maps(neurontree=None, config_params=None):
 
     # all computed density maps will be stored in a dictonary
     densities = {}
-    for p_ax in proj_axes:
+    # loop over all axes
+    for p_ax, ax in axes.items():
 
         dim = len(p_ax)
         # holds the range for binning of the histogram. So far the cells are noramlized to be between max --> 1 and min --> 0
@@ -206,60 +227,56 @@ def compute_density_maps(neurontree=None, config_params=None):
         range_ = [[-.1, 1.1]] * dim
         data = _project_data(p_ax, pc)
 
-        for bins in [10, n_bins]:
-            # compute histogram hence density map
-            h, edges = np.histogramdd(data, bins=(bins,) * dim, range=range_, normed=normed)
-            # perform smoothing
-            if smooth:
-                h = smooth_gaussian(h, dim=dim, sigma=sigma)
-            densities['H%s_%s_proj'%(bins,axes[p_ax] )] = {'data': h, 'edges': edges}
+        # compute histogram hence density map
+        h, edges = np.histogramdd(data, bins=(n_bins,) * dim, range=range_, normed=normed)
+        # perform smoothing
+        if smooth:
+            h = smooth_gaussian(h, dim=dim, sigma=sigma)
+        densities['H%s_%s_proj' % (n_bins, ax)] = {'data': h, 'edges': edges}
 
     return densities
 
 
-def plot_density_maps(densities=None):
+def plot_density_maps(densities=None, figure=None):
+    """
+        functions to plot density maps from densities dictionary with data from x,y,z,xy,xz,yz projections
 
-    # holds all density plots to return to user
-    plots = []
+        :return:            figure will be returned with all ploted maps from densities
+        :param densities:   dictionary which holds all projections for the plots
+        :param figure:      you can pass a figure if you want to use a custom plot format
+    """
+    # if figure is not passed create a new one
+    if figure is None:
+        figure = plt.figure()
 
-    # for subplot indexing in matplot
-    if (len(densities) > 8):
-        k = 2
-    else:
-        k = 5
+    if densities is None:
+        return figure
+
     # get bins from density keys
-    names = list(densities)
-    bin_a = names[0].split('_')[0]
-    bin_b = names[1].split('_')[0]
-    # 2 plots for 10 bins and 20 or custom bins
-    for b in [bin_a, bin_b]:
-        plt.figure()
-        plt.suptitle(b + ' bins', weight='bold')
-        # subplot position for drawing
-        idx = 1
-        for name, density in densities.items():
-            name = name.split('_')
-            bins = name[0]
-            if bins != b:
-                continue
-            p_axes = name[1]
-            dim = len(p_axes)
+    bins = (list(densities))[0].split('_')[0]
 
-            if dim > 1:
-                plt.subplot(2, 6, (idx, idx+k))
-                idx = idx + k + 1
-                plt.imshow(density['data'])
-                plt.gca().invert_yaxis()
-            else:
-                plt.subplot(2, 6, idx)
-                idx += 2
-                plt.plot(density['data'])
-                sns.despine()
-            plt.xlabel(p_axes)
-        plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-        plots.append(plt)
+    # write header in plot
+    figure.suptitle(bins + ' bins', weight='bold')
+    # subplot position for drawing
+    idx = 1
+    # loop over all densities, keys contain type of data
+    for name, density in densities.items():
+        # get name and split projection axes from it
+        p_axes = name.split('_')[1]
+        dim = len(p_axes)
 
-    return plots
+        if dim > 1:
+            ax = figure.add_subplot(2, 3, idx)
+            ax.imshow(density['data'])
+            ax.invert_yaxis()
+        else:
+            ax = figure.add_subplot(2, 3, idx)
+            ax.plot(density['data'])
+            sns.despine()
+        idx += 1
+        ax.set_xlabel(p_axes)
+    figure.tight_layout(rect=[0, 0.03, 1, 0.95])
+    return figure
 
 
 def _project_data(proj_axes, data):
@@ -268,8 +285,8 @@ def _project_data(proj_axes, data):
 
         :param proj_axes:   str that holds the axes that are projected to as number, e.g. '01' for projection onto xy
                             or '02' for projection onto xz.
+        :param data:
     """
-
     p_a = proj_axes
     dim = len(proj_axes)
 
