@@ -71,8 +71,8 @@ show_threeview(N, fig)
 As shown in the code snippet above, it is also possible to split the reconstruction into its different parts (axon or dendrites only)
 and operate on each neurite type separately.
 
-Density maps are computed on the basis of a configuration file (or dictionary) that controls parameters such as bin size,
-normalization ranges and which cardinal axes to project on. Additionally, users can specify whether and to which degree
+Density maps are computed on the basis of a configuration file (or dictionary) that controls parameters such as bin size
+and normalization ranges. Additionally, users can specify whether and to which degree
 they want to smooth each density map \autoref{fig:dms}.
 ![XY-density map of the dendrite plotted above with different degrees of Gaussian smoothing. \label{fig:dms}](./figures/density_map_smoothing.png)
 
