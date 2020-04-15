@@ -31,10 +31,11 @@
 <td width="100%"><dl><dt><a name="-check_neurontree"><strong>check_neurontree</strong></a>(neurontree=None)</dt><dd><tt>This&nbsp;function&nbsp;checks&nbsp;a&nbsp;neurontree<br>
 :param&nbsp;filename:&nbsp;path&nbsp;to&nbsp;swc&nbsp;file&nbsp;as&nbsp;string<br>
 :return:&nbsp;NeuronTree&nbsp;object</tt></dd></dl>
- <dl><dt><a name="-load_swc_file"><strong>load_swc_file</strong></a>(filename=None, nxversion=1)</dt><dd><tt>This&nbsp;function&nbsp;imports&nbsp;a&nbsp;swc&nbsp;file&nbsp;to&nbsp;a&nbsp;pandas&nbsp;dataframe&nbsp;and&nbsp;then&nbsp;uses&nbsp;utils&nbsp;to&nbsp;standardize&nbsp;it.<br>
+ <dl><dt><a name="-load_swc_file"><strong>load_swc_file</strong></a>(filename=None, nxversion=1, **kwargs)</dt><dd><tt>This&nbsp;function&nbsp;imports&nbsp;a&nbsp;swc&nbsp;file&nbsp;to&nbsp;a&nbsp;pandas&nbsp;dataframe&nbsp;and&nbsp;then&nbsp;uses&nbsp;utils&nbsp;to&nbsp;standardize&nbsp;it.<br>
 This&nbsp;dataframe&nbsp;is&nbsp;then&nbsp;used&nbsp;to&nbsp;initialize&nbsp;a&nbsp;new&nbsp;NeuronTree&nbsp;object&nbsp;and&nbsp;returns&nbsp;it&nbsp;to&nbsp;the&nbsp;caller.<br>
 :param&nbsp;filename:&nbsp;path&nbsp;to&nbsp;swc&nbsp;file&nbsp;as&nbsp;string<br>
 :param&nbsp;nxversion:&nbsp;version&nbsp;of&nbsp;installed&nbsp;networkX&nbsp;passed&nbsp;to&nbsp;NeuronTree<br>
+:param&nbsp;**kargs:&nbsp;optional&nbsp;parameters&nbsp;passed&nbsp;to&nbsp;the&nbsp;utils.get_standardized_swc()s<br>
 :return:&nbsp;NeuronTree&nbsp;object</tt></dd></dl>
  <dl><dt><a name="-read_config"><strong>read_config</strong></a>(configfile=None)</dt><dd><tt>This&nbsp;function&nbsp;reads&nbsp;a&nbsp;config&nbsp;file&nbsp;and&nbsp;returns&nbsp;two&nbsp;dictionaries&nbsp;with&nbsp;all&nbsp;found&nbsp;values<br>
 :param&nbsp;configfile:&nbsp;path&nbsp;to&nbsp;the&nbsp;configfile<br>

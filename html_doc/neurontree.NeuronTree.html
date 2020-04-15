@@ -116,8 +116,10 @@ that&nbsp;are&nbsp;crossed&nbsp;when&nbsp;tracing&nbsp;the&nbsp;path&nbsp;back&n
 <dl><dt><a name="NeuronTree-get_branchpoints"><strong>get_branchpoints</strong></a>(self)</dt><dd><tt>Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;branch&nbsp;point&nbsp;ids&nbsp;of&nbsp;the&nbsp;neuron.<br>
 :return:&nbsp;list&nbsp;of&nbsp;node&nbsp;ids&nbsp;of&nbsp;all&nbsp;branch&nbsp;points&nbsp;(nodes&nbsp;that&nbsp;have&nbsp;more&nbsp;than&nbsp;one&nbsp;successor).</tt></dd></dl>
 
-<dl><dt><a name="NeuronTree-get_cumulative_path_length"><strong>get_cumulative_path_length</strong></a>(self)</dt><dd><tt>Returns&nbsp;a&nbsp;dictionary&nbsp;that&nbsp;hold&nbsp;the&nbsp;cumulative&nbsp;path&nbsp;length&nbsp;of&nbsp;the&nbsp;subtree&nbsp;attached&nbsp;to&nbsp;node&nbsp;n.&nbsp;The&nbsp;root&nbsp;holds<br>
+<dl><dt><a name="NeuronTree-get_cumulative_path_length"><strong>get_cumulative_path_length</strong></a>(self, weight='path_length')</dt><dd><tt>Returns&nbsp;a&nbsp;dictionary&nbsp;that&nbsp;hold&nbsp;the&nbsp;cumulative&nbsp;path&nbsp;length&nbsp;of&nbsp;the&nbsp;subtree&nbsp;attached&nbsp;to&nbsp;node&nbsp;n.&nbsp;The&nbsp;root&nbsp;holds<br>
 the&nbsp;total&nbsp;path&nbsp;length&nbsp;within&nbsp;the&nbsp;tree&nbsp;whereas&nbsp;the&nbsp;cumulative&nbsp;path&nbsp;length&nbsp;of&nbsp;all&nbsp;tips&nbsp;is&nbsp;equal&nbsp;to&nbsp;zero.<br>
+:param:&nbsp;weight,&nbsp;String&nbsp;(default='path_length').&nbsp;Determines&nbsp;which&nbsp;edge&nbsp;attribute&nbsp;ist&nbsp;used.&nbsp;Options&nbsp;are<br>
+'path_length',&nbsp;'eulidean_dist'&nbsp;or&nbsp;None.<br>
 :return:<br>
 dict:&nbsp;Dictionary&nbsp;holding&nbsp;the&nbsp;cumulative&nbsp;path&nbsp;length&nbsp;of&nbsp;the&nbsp;subtree&nbsp;connected&nbsp;to&nbsp;each&nbsp;node.</tt></dd></dl>
 
@@ -335,5 +337,12 @@ Data descriptors defined here:<br>
 <dl><dt><strong>__weakref__</strong></dt>
 <dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
 </dl>
-</td></tr></table></td></tr></table>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>__warningregistry__</strong> = {'version': 12, ('Setting the datapath via matplotlibrc is deprecated 3.2 and will be removed in in 3.3. ', &lt;class 'matplotlib.cbook.deprecation.MatplotlibDeprecationWarning'&gt;, 3): True, ('<font color="#c040c0">\n</font>The datapath rcparam was deprecated in Matplotl...2.1 and will be removed two minor releases later.', &lt;class 'matplotlib.cbook.deprecation.MatplotlibDeprecationWarning'&gt;, 3): True}</td></tr></table>
 </body></html>
