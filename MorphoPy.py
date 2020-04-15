@@ -13,15 +13,17 @@ import matplotlib.pyplot as plt
 import computation.file_manager as file_manager
 import computation.feature_presentation as fp
 import computation.persistence_functions as pf
-
+### global MorphoPy version
+__version__ = 0.2
 
 def help(exitcode=0):
     """
     Print help page and exit application depending on error passed
     :param exitcode: Errorcode which will be returned at Exit or 0 if no error occured
     """
+    version()
     print('')
-    print('Usage: MorphoPy -c <compute_feature> [--func <persistence_function> | --conf <config_file>]')
+    print('Usage: MorphoPy.py -c <compute_feature> [--func <persistence_function> | --conf <config_file>]')
     print('                   [-f <swc_file> | -d <directory>] [-o <output directory>]')
     print('')
     print('Options:')
@@ -51,8 +53,9 @@ def version():
     """
     Print version of Morphopy to command line - nothing else will be done
     """
-    print('MorphoPy version 0.1')
-    sys.exit(0)
+    print('MorphoPy version %s' % __version__)
+    print('Copyright (C) 2020 by Sophie Laturnus, Adam von Daranyi and others.')
+    print('https://github.com/berenslab/MorphoPy')
 
 
 def printException(message="Unknown Error"):
@@ -79,12 +82,12 @@ def main(argv):
         opts, args = getopt.gnu_getopt(argv, "c:f:d:o:hv",
                                    ["compute=", "func=", "conf=", "file=", "dir=", "output=", "help", "version"])
     except getopt.GetoptError:
-        print("Wrong options are specified!")
+        print("Error: Wrong options are specified!")
         help(1)
 
     # check if arguments are empty
     if len(argv) < 1:
-        print("No arguments are used! At least the compute mode has to be passed.")
+        print("Error: No arguments are used! At least the compute mode has to be passed.")
         help(1)
 
     # default values:
@@ -103,7 +106,7 @@ def main(argv):
     for opt, arg in opts:
         # argument is missing because next option is in argument
         if arg.startswith("-"):
-            print('Wrong argument in option: %s'%opt)
+            print('Error: Wrong argument in option: %s'%opt)
             help()
         if opt in ('-c', '--compute'):
             compute = arg
@@ -122,6 +125,7 @@ def main(argv):
                 function = getattr(pf, arg)
         elif opt in ('-v', '--version'):
             version()
+            exit(0)
         elif opt in ('-h', '--help'):
             help()
 
@@ -146,7 +150,7 @@ def main(argv):
 
     # no valid files found
     if len(files) < 1:
-        print('No valid file is specified or no file found in current directory!')
+        print('Error: No valid file is specified or no file found in current directory!')
         help(1)
 
     # set version of networkX
@@ -234,7 +238,7 @@ def main(argv):
                 outputfile = '%s%s_density_' % (output, file)
                 plot.savefig('%s_%s.png' % (outputfile, bins))
                 plt.close()
-                print('Density maps plotted to %s_xbins.png' % outputfile)
+                print('Density maps plotted to %s_%sbins.png' % (outputfile, bins))
                 # build output path and save density data
                 outputfile = '%s%s_reconstruction_density.mat' % (outputfile, file)
                 sio.savemat(outputfile, densities)
@@ -243,7 +247,7 @@ def main(argv):
             except:
                 printException("Failure in computing density map!")
     else:
-        print('Unknown compute mode. Use a valid compute parameter')
+        print('Error: Unknown compute mode. Use a valid compute parameter')
         help(1)
 
     if len(output_data) > 0:

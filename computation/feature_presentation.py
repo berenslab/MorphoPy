@@ -1,5 +1,6 @@
 import copy
 import random
+import collections
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -182,6 +183,7 @@ def compute_density_maps(neurontree=None, config_params=None):
 
     ###### PARAMETER ################
     # dictonary for axes and all labels of projection
+    axes = collections.OrderedDict()
     axes = {'0': 'x', '1': 'y', '2': 'z', '01': 'xy', '02': 'xz', '12': 'yz'}
 
     # read all missing params from config and set default values if no config available:
@@ -216,7 +218,7 @@ def compute_density_maps(neurontree=None, config_params=None):
     pc = (pc - r['min']) / ext
 
     # all computed density maps will be stored in a dictonary
-    densities = {}
+    densities = collections.OrderedDict()
     # loop over all axes
     for p_ax, ax in axes.items():
 

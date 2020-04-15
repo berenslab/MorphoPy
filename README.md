@@ -1,9 +1,10 @@
 # Morphopy
-(c) 2020
+(c) 2020 by Sophie Laturnus, Adam von Daranyi, Ziwei Huang and Philipp Berens.
 ********
 
 ## <a name="content">Content</a> 
 - [Overview](#overview)
+- [Requirements](#requirements)
 - [Installation](#installation)
 - [Uninstallation](#uninstallation)
 - [Usage](#usage)
@@ -11,18 +12,33 @@
 
 ## <a name="overview">Overview</a> 
 
+MorphoPy is a Python3 package that uses networkX to compute and show information about neurites.
+The input can be passed with single swc-files or it can handle whole directories with multiple files at once.
+You can use MorphoPy imported in Python or from command line as batch-tool as well.
+
+The current working build is version 0.2 and was tested on Linux (Debian and CentOS) and Windows 10.
+You can always find the latest working build in the "/dist" directory of this repository.
+
 [back to start](#content)
 
-## <a name="installation">Installation:</a>
+
 In the following, all commands written in boxes need to be entered into your terminal.
-### Software Requirements
-#### Mac:
+## <a name="requirements">Software Requirements</a>
+### Mac:
 You need python with pip installed and graphviz wich can be downloaded with MacPorts
- - python 3
- - pip 3
- - graphviz-devel
+ - python >3.4
+ - pip
+ - graphviz
+ - pygraphviz
  
-#### Linux:
+Use brew to install graphviz, then add install option when using pip to install pygraphviz
+
+	brew install graphviz
+
+	pip install pygraphviz –install-option=”–include-path=/usr/local/lib/graphviz/” –install-option=”–library-path=/usr/local/lib/graphviz”
+    
+This should be the way on OSX but wasn't tested with MorphoPy until now. So we can't guarantee that it will work.
+### Linux:
 Debian/Ubuntu packages:
 
  - git
@@ -47,44 +63,54 @@ RedHat/CentOS/Fedora packages:
 You can install them with this command:
 
 	yum install git gcc-c++ python36 python36-pip python36-devel geos-devel graphviz-devel
-#### Windows:
+
+That's it. All requirements are met and you can continue with the Morphopy installation. See below. 
+### Windows:
 
  - git: you can find it [here](https://git-scm.com/download/win)
- - python >3.7: download from Microsoft store or  [here](https://www.python.org/downloads/windows/)
- - pip >3.7: be sure you selected to install it with the base package
+ - python >3.5 (x64): download from [here](https://www.python.org/downloads/windows/)
+ - pip >18 : be sure you selected to install it with the base package
  - Microsoft Build Tools >14.0 you can download them [here](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
- - graphviz development (x64)
-###  Install the python package
+ - graphviz (x64) [download here](https://github.com/mahkoCosmo/GraphViz_x64/)
+ - pygraphviz (x64) [from here](https://github.com/pygraphviz/pygraphviz)
+ - patch of pygraphviz from [Kagami@Pygraphviz](https://github.com/Kagami/pygraphviz/commit/fe442dc16accb629c3feaf157af75f67ccabbd6e)
+
+Install python with pip selected and be sure to check the option to add python paths to enviroment variable.
+
+If Python is working, Microsoft Build Tools are installed and Graphviz(x64) is unpacked you can build pygraphviz for your system like this:
+
+	git clone https://github.com/pygraphviz/pygraphviz
+
+Change the two files according to the patch from Kagami as listed above inside of your pygraphviz sources(just change the mentioned lines).
+
+Then use following command to build pygraphviz inside the base directory of the git clone of pygraphviz (use the directories of the unpacked graphviz files):
+
+	python setup.py install --user --include-path="C:\\...\\graphviz\\include" --library-path="C:\\...\\graphviz\\lib"
+
+Pygraphviz is now build without any errors and all requirements are met, see below for continue with MorphoPy installation.
+
+[back to start](#content)
+## <a name="installation">Installation:</a>
+
+###  Install the MorphoPy package (Unix/Mac):
 
 **1)** Clone the GitHub repository into your local directory:
 
 	git clone https://github.com/berenslab/MorphoPy
-Note: If the git command does not work under Mac OS, you have to install the missing package via xcode.
-
-**2)** Now the last step: install the package from the new created GitHub folder. And make sure you are using pip3 (install it if it is missing):
-
-	pip3 install MorphoPy/dist/morphopy-0.1-py3-none-any.whl
-	
-The installation is finished and MorphoPy should be available from everywhere on the command prompt.
-
-###  Install the python package (Windows)
-
-**1)** Be sure that you have python and pip in the correct version available in your command prompt:
-
-	python -V
-	pip -V
-		
-You should get a python version >3.6 and a compatible pip. You should see the same major version of python in brackets at the end of the line.
 
 **2)** Clone the GitHub repository into your local directory:
+
+	pip3 install MorphoP/dist/morphopy-0.2-py3-none-any.whl
+
+###  Install the python package (Windows):
+
+**1)** Clone the GitHub repository into your local directory:
 
 	git clone https://github.com/berenslab/MorphoPy
 
 **2)** Clone the GitHub repository into your local directory:
 
-	pip install MorphoPy\dist\morphopy-0.1-py3-none-any.whl
-	
-[back to start](#content)
+	pip install MorphoPy\dist\morphopy-0.2-py3-none-any.whl
 
 ## <a name="uninstallation">Uninstallation:</a>
 
@@ -98,10 +124,10 @@ You can simply uninstall the package with pip3:
 ## <a name="usage">Usage</a> 
 Just call everywhere on the command line:
 
-	MorphoPy <options>
+	MorphoPy.py <options>
 Help:
 
-	Usage: MorphoPy -c <compute_feature> [--func <persistence_function> | --conf <config_file>]
+	Usage: MorphoPy.py -c <compute_feature> [--func <persistence_function> | --conf <config_file>]
 	                   [-f <swc_file> | -d <directory>] [-o <output directory>]
 
 	Options:

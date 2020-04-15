@@ -7,8 +7,8 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
       name='morphopy',
-      version='0.1',
-      scripts=['MorphoPy'] ,
+      version='0.2',
+      scripts=['MorphoPy.py'] ,
       author="Adam von Daranyi",
       author_email="adam.von-daranyi@uni-tuebingen.de",
       description="morphology command line tool",
