@@ -4,12 +4,13 @@ import neurontree.NeuronTree as nt
 import neurontree.utils as utils
 
 
-def load_swc_file(filename=None, nxversion=1):
+def load_swc_file(filename=None, nxversion=1, **kwargs):
     """
     This function imports a swc file to a pandas dataframe and then uses utils to standardize it.
     This dataframe is then used to initialize a new NeuronTree object and returns it to the caller.
     :param filename: path to swc file as string
     :param nxversion: version of installed networkX passed to NeuronTree
+    :param **kargs: optional parameters passed to the utils.get_standardized_swc()s
     :return: NeuronTree object
     """
     f = lambda x: float(x.replace(",", "."))
@@ -20,7 +21,7 @@ def load_swc_file(filename=None, nxversion=1):
     if swc is None or type(swc) != pd.DataFrame or swc.size == 0:
         raise ValueError('No points found in swc file, please check format of data!')
 
-    swc = utils.get_standardized_swc(swc)
+    swc = utils.get_standardized_swc(swc, **kwargs)
     my_tree = nt.NeuronTree(swc=swc, nxversion=nxversion)
     check_neurontree(my_tree)
     return my_tree
