@@ -16,7 +16,12 @@ MorphoPy is a Python3 package that uses networkX to compute and show information
 The input can be passed with single swc-files or it can handle whole directories with multiple files at once.
 You can use MorphoPy imported in Python or from command line as batch-tool as well.
 
-The current working build is version 0.2 and was tested on Linux (Debian and CentOS) and Windows 10.
+The current working build:
+ 
+ **version 0.2**
+ 
+All builds are tested on Linux (Debian and CentOS) and Windows 10.
+
 You can always find the latest working build in the "/dist" directory of this repository.
 
 [back to start](#content)
@@ -49,27 +54,27 @@ Debian/Ubuntu packages:
 
 You can install them with this command:
 
-	apt-get install python3 python3-pip git libgeos-dev libgraphviz-dev
+	apt-get install git python3 python3-pip libgeos-dev libgraphviz-dev
 
 RedHat/CentOS/Fedora packages:
 
- - python 3.6
- - pip 3.6
- - python 3.6 development
+ - git
+ - python >3.6
+ - python development >3.6
  - gcc-c++ compiler
  - graphviz development
  - geometry library development
 
-You can install them with this command:
+You can install them with this command (perhaps python version differs):
 
-	yum install git gcc-c++ python36 python36-pip python36-devel geos-devel graphviz-devel
+	yum install git gcc-c++ python36 python36-devel geos-devel graphviz-devel
 
 That's it. All requirements are met and you can continue with the Morphopy installation. See below. 
 ### Windows:
 
  - git: you can find it [here](https://git-scm.com/download/win)
  - python >3.5 (x64): download from [here](https://www.python.org/downloads/windows/)
- - pip >18 : be sure you selected to install it with the base package
+ - pip >18 : be sure you selected to install it with the base python package
  - Microsoft Build Tools >14.0 you can download them [here](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
  - graphviz (x64) [download here](https://github.com/mahkoCosmo/GraphViz_x64/)
  - pygraphviz (x64) [from here](https://github.com/pygraphviz/pygraphviz)
@@ -98,9 +103,9 @@ Pygraphviz is now build without any errors and all requirements are met, see bel
 
 	git clone https://github.com/berenslab/MorphoPy
 
-**2)** Clone the GitHub repository into your local directory:
+**2)** Install the python package from the latest build (replace x.x with the latest build version):
 
-	pip3 install MorphoP/dist/morphopy-0.2-py3-none-any.whl
+	pip3 install MorphoPy/dist/morphopy-x.x-py3-none-any.whl
 
 ###  Install the python package (Windows):
 
@@ -108,15 +113,15 @@ Pygraphviz is now build without any errors and all requirements are met, see bel
 
 	git clone https://github.com/berenslab/MorphoPy
 
-**2)** Clone the GitHub repository into your local directory:
+**2)** Install the python package from the latest build (replace x.x with the latest build version):
 
-	pip install MorphoPy\dist\morphopy-0.2-py3-none-any.whl
+	pip install MorphoPy\dist\morphopy-x.x-py3-none-any.whl
 
 ## <a name="uninstallation">Uninstallation:</a>
 
-You can simply uninstall the package with pip3:
+You can simply uninstall the package with pip/pip3:
 
-	pip3 uninstall morphopy
+	pip uninstall morphopy
 
 	
 [back to start](#content)
