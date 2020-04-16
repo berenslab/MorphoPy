@@ -36,9 +36,15 @@ You need python with pip installed and graphviz wich can be downloaded with MacP
  - graphviz
  - pygraphviz
  
-Use brew to install graphviz, then add install option when using pip to install pygraphviz
+Use homebrew to install, if it is not installed you can do it from your terminal with this command:
 
-	brew install graphviz
+    ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+    
+Then you can easily install python and graphviz like this:
+
+	brew install python graphviz
+	
+In the last step you need to build pygraphyviz with the installed graphviz library:
 
 	pip install pygraphviz –install-option=”–include-path=/usr/local/lib/graphviz/” –install-option=”–library-path=/usr/local/lib/graphviz”
     
