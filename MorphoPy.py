@@ -14,7 +14,7 @@ import computation.file_manager as file_manager
 import computation.feature_presentation as fp
 import computation.persistence_functions as pf
 ### global MorphoPy version
-__version__ = 0.2
+__version__ = 0.3
 
 def help(exitcode=0):
     """
