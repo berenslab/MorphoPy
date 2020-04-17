@@ -78,24 +78,24 @@ That's it. All requirements are met and you can continue with the Morphopy insta
 ### Windows:
 
  - python >3.5 (x64): download from [here](https://www.python.org/downloads/windows/)
- - pip >18 : be sure you selected to install it with the base python package
+ - pip >18 : be sure you selected it during installation with the base python package
  - Microsoft Build Tools >14.0 you can download them [here](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
  - Graphviz (x64) [download here](https://github.com/mahkoCosmo/GraphViz_x64/)
  - Pygraphviz (x64) [from here](https://github.com/pygraphviz/pygraphviz/releases)
  - patched pygraphviz files from [Kagami@Pygraphviz](https://github.com/Kagami/pygraphviz/commit/fe442dc16accb629c3feaf157af75f67ccabbd6e)
 
-**1)** Install python with pip selected and be sure to check the option to add python paths to enviroment variable.
+**1)** Install python with pip and be sure to check the option to add python paths to enviroment variable.
 
 **2)** Install Microsoft Build Tools with the automatic installation tool from the website above
 
-**3)** Now unpack graphviz(x64) and pygraphviz(x64) and download the patched files from Kagami to a folder you can choose.
+**3)** Now download and unpack graphviz(x64), pygraphviz(x64) and the patched files from Kagami to any folder.
 
-**4)** Then replace in pygraphviz the two needed files with the patched ones:
+**4)** Then replace in pygraphviz the files with the two patched ones:
 
        ...\Kagami\pygraphviz\graphviz.i -> ...\pygraphviz-1.x\pygraphviz\graphviz.i
        ...\Kagami\pygraphviz\graphviz_wrap.c -> ...\pygraphviz-1.x\pygraphviz\graphviz_wrap.c
 
-**5)** Now you can use this command in the base directory of pygraphviz-1.x to build it (use the directories of the unpacked graphviz files):
+**5)** Now you can use this command in the base directory of pygraphviz-1.x to build it (use the full path to the directories of the unpacked graphviz files):
 
 	python setup.py install --user --include-path="C:\\...\\graphviz\\include" --library-path="C:\\...\\graphviz\\lib"
 
@@ -106,13 +106,13 @@ Pygraphviz is now build without any errors and all requirements are met, see bel
 
 ###  Install the MorphoPy package (all platforms):
 
-Install the python package with and get the latest build:
+Install the python package with pip/pip3 and get the latest build:
 
 	pip install morphopy
 
 ## <a name="uninstallation">Uninstallation:</a>
 
-You can simply uninstall the package with pip:
+You can simply uninstall the package with pip/pip3:
 
 	pip uninstall morphopy
 
