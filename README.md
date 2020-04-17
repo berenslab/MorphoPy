@@ -77,23 +77,25 @@ You can install them with this command (perhaps python version differs):
 That's it. All requirements are met and you can continue with the Morphopy installation. See below. 
 ### Windows:
 
- - git: you can find it [here](https://git-scm.com/download/win)
  - python >3.5 (x64): download from [here](https://www.python.org/downloads/windows/)
  - pip >18 : be sure you selected to install it with the base python package
  - Microsoft Build Tools >14.0 you can download them [here](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
- - graphviz (x64) [download here](https://github.com/mahkoCosmo/GraphViz_x64/)
- - pygraphviz (x64) [from here](https://github.com/pygraphviz/pygraphviz)
- - patch of pygraphviz from [Kagami@Pygraphviz](https://github.com/Kagami/pygraphviz/commit/fe442dc16accb629c3feaf157af75f67ccabbd6e)
+ - Graphviz (x64) [download here](https://github.com/mahkoCosmo/GraphViz_x64/)
+ - Pygraphviz (x64) [from here](https://github.com/pygraphviz/pygraphviz/releases)
+ - patched pygraphviz files from [Kagami@Pygraphviz](https://github.com/Kagami/pygraphviz/commit/fe442dc16accb629c3feaf157af75f67ccabbd6e)
 
-Install python with pip selected and be sure to check the option to add python paths to enviroment variable.
+**1)** Install python with pip selected and be sure to check the option to add python paths to enviroment variable.
 
-If Python is working, Microsoft Build Tools are installed and Graphviz(x64) is unpacked you can build pygraphviz for your system like this:
+**2)** Install Microsoft Build Tools with the automatic installation tool from the website above
 
-	git clone https://github.com/pygraphviz/pygraphviz
+**3)** Now unpack graphviz(x64) and pygraphviz(x64) and download the patched files from Kagami to a folder you can choose.
 
-Change the two files according to the patch from Kagami as listed above inside of your pygraphviz sources(just change the mentioned lines).
+**4)** Then replace in pygraphviz the two needed files with the patched ones:
 
-Then use following command to build pygraphviz inside the base directory of the git clone of pygraphviz (use the directories of the unpacked graphviz files):
+       ...\Kagami\pygraphviz\graphviz.i -> ...\pygraphviz-1.x\pygraphviz\graphviz.i
+       ...\Kagami\pygraphviz\graphviz_wrap.c -> ...\pygraphviz-1.x\pygraphviz\graphviz_wrap.c
+
+**5)** Now you can use this command in the base directory of pygraphviz-1.x to build it (use the directories of the unpacked graphviz files):
 
 	python setup.py install --user --include-path="C:\\...\\graphviz\\include" --library-path="C:\\...\\graphviz\\lib"
 
