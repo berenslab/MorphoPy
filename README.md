@@ -30,8 +30,7 @@ You can always find the latest working build in the "/dist" directory of this re
 In the following, all commands written in boxes need to be entered into your terminal.
 ## <a name="requirements">Software Requirements</a>
 ### Mac:
-You need python with pip installed and graphviz:
-
+You need python with pip installed and graphviz wich can be downloaded with MacPorts
  - python >3.4
  - pip
  - graphviz
@@ -53,6 +52,7 @@ This should be the way on OSX but wasn't tested with MorphoPy until now. So we c
 ### Linux:
 Debian/Ubuntu packages:
 
+ - git
  - python 3
  - pip 3
  - graphviz development
@@ -60,10 +60,11 @@ Debian/Ubuntu packages:
 
 You can install them with this command:
 
-	apt-get install python3 python3-pip libgeos-dev libgraphviz-dev
+	apt-get install git python3 python3-pip libgeos-dev libgraphviz-dev
 
 RedHat/CentOS/Fedora packages:
 
+ - git
  - python >3.6
  - python development >3.6
  - gcc-c++ compiler
@@ -72,7 +73,7 @@ RedHat/CentOS/Fedora packages:
 
 You can install them with this command (perhaps python version differs):
 
-	yum install gcc-c++ python36 python36-devel geos-devel graphviz-devel
+	yum install git gcc-c++ python36 python36-devel geos-devel graphviz-devel
 
 That's it. All requirements are met and you can continue with the Morphopy installation. See below. 
 ### Windows:
@@ -102,15 +103,29 @@ Pygraphviz is now build without any errors and all requirements are met, see bel
 [back to start](#content)
 ## <a name="installation">Installation:</a>
 
-###  Install the MorphoPy package (all plattforms):
+###  Install the MorphoPy package (Unix/Mac):
 
-Install the python package with pip in the latest build:
+**1)** Clone the GitHub repository into your local directory:
 
-	pip install morphopy
+	git clone https://github.com/berenslab/MorphoPy
+
+**2)** Install the python package from the latest build (replace x.x with the latest build version):
+
+	pip3 install MorphoPy/dist/morphopy-x.x-py3-none-any.whl
+
+###  Install the python package (Windows):
+
+**1)** Clone the GitHub repository into your local directory:
+
+	git clone https://github.com/berenslab/MorphoPy
+
+**2)** Install the python package from the latest build (replace x.x with the latest build version):
+
+	pip install MorphoPy\dist\morphopy-x.x-py3-none-any.whl
 
 ## <a name="uninstallation">Uninstallation:</a>
 
-You can simply uninstall the package with pip:
+You can simply uninstall the package with pip/pip3:
 
 	pip uninstall morphopy
 
