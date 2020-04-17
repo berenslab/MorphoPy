@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
       name='morphopy',
-      version='0.2',
+      version='0.3',
       scripts=['MorphoPy.py'] ,
       author="Adam von Daranyi",
       author_email="adam.von-daranyi@uni-tuebingen.de",
@@ -15,6 +15,7 @@ setuptools.setup(
       long_description=long_description,
       long_description_content_type="text/markdown",
       url="https://github.com/berenslab/MorphoPy",
+      download_url="https://github.com/berenslab/MorphoPy/archive/v0.3.tar.gz",
       packages=setuptools.find_packages(),
       classifiers=[
          "Programming Language :: Python :: 3",
