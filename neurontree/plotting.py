@@ -1,4 +1,4 @@
-from NeuronTree import NeuronTree
+from neurontree import NeuronTree
 import matplotlib.pyplot as plt
 from matplotlib_scalebar.scalebar import ScaleBar
 
