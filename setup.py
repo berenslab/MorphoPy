@@ -24,6 +24,7 @@ setuptools.setup(
       ],
       install_requires=[
          'matplotlib',
+         'matplotlib_scalebar',
          'scipy',
          'numpy',
          'pandas',

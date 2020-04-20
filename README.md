@@ -37,19 +37,22 @@ You need python with pip installed and graphviz/pygraphviz:
  - graphviz
  - pygraphviz
  
-Use homebrew to install, if it is not installed you can do it from your terminal with this command:
+**1)** Use homebrew to install, if it is not installed you can do it from your terminal with this command:
 
     ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
     
-Then you can easily install python and graphviz like this:
+**2)** Then you can easily install python and graphviz like this:
 
 	brew install python graphviz
 	
-In the last step you need to build pygraphyviz with the installed graphviz library:
-
+	# if you get an error that graphviz can't be found you can use this to install:
 	pip install pygraphviz –install-option=”–include-path=/usr/local/lib/graphviz/” –install-option=”–library-path=/usr/local/lib/graphviz”
+	
+**3)** In the last step you need to build pygraphyviz with the installed graphviz library:
+
+	pip install pygraphviz
     
-This should be the way on OSX but wasn't tested with MorphoPy until now. So we can't guarantee that it will work.
+Now you should be able to continue with the MophoPy installation. See below.
 ### Linux:
 Debian/Ubuntu packages:
 

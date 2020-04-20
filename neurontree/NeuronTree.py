@@ -278,6 +278,7 @@ class NeuronTree:
             node_data = self.get_graph().nodes
         else:
             node_data = self.get_graph().node
+
         node_data_new = [(node, node_data[node]) for node in np.append(other_points, tips)]
 
         # get parent of each node and create edge_data
@@ -704,12 +705,13 @@ class NeuronTree:
             raise NotImplementedError('Angle type %s is not implemented' % angle_type)
 
         for n1, n2 in self._G.edges():
-            if self._nxversion == 1:
-                u = self._G.node[n2]['pos'] - self._G.node[n1]['pos']
-                v = self._G.node[n1]['pos'] - self._G.node[self.get_root()]['pos']
-            else:
+            if self._nxversion == 2:
+                # changed for version 2.x of networkX
                 u = self._G.nodes[n2]['pos'] - self._G.nodes[n1]['pos']
                 v = self._G.nodes[n1]['pos'] - self._G.nodes[self.get_root()]['pos']
+            else:
+                u = self._G.node[n2]['pos'] - self._G.node[n1]['pos']
+                v = self._G.node[n1]['pos'] - self._G.node[self.get_root()]['pos']
 
             angles.update({(n1,n2): func(u, v) * 180 / np.pi})
         return angles
@@ -1137,8 +1139,13 @@ class NeuronTree:
 
         # get the coordinates of the points
         for e in G.edges():
-            p1 = np.round(G.node[e[0]]['pos'], 2)
-            p2 = np.round(G.node[e[1]]['pos'], 2)
+            if self._nxversion == 2:
+                # changed for version 2.x of networkX
+                p1 = np.round(G.nodes[e[0]]['pos'], 2)
+                p2 = np.round(G.nodes[e[1]]['pos'], 2)
+            else:
+                p1 = np.round(G.node[e[0]]['pos'], 2)
+                p2 = np.round(G.node[e[1]]['pos'], 2)
             coordinates.append((p1[indx], p2[indx]))
 
         # remove illegal points
@@ -1150,7 +1157,11 @@ class NeuronTree:
             center = np.array(lines.convex_hull.centroid.coords[0])
             p_circle = Point(center)
         elif centroid == 'soma':
-            center = G.node[self.get_root()]['pos'][indx]
+            if self._nxversion == 2:
+                # changed for version 2.x of networkX
+                center = G.nodes[self.get_root()]['pos'][indx]
+            else:
+                center = G.node[self.get_root()]['pos'][indx]
             p_circle = Point(center)
         else:
             raise ValueError("Centroid %s is not defined" % centroid)
@@ -1213,10 +1224,11 @@ class NeuronTree:
 
         branchpoints = self.get_branchpoints()
         nodes = self.nodes()
-        if self._nxversion == 1:
-            out_degree = nx.DiGraph.out_degree(G)
-        else:
+        if self._nxversion == 2:
+            # changed for version 2.x of networkX
             out_degree = dict(G.out_degree())
+        else:
+            out_degree = nx.DiGraph.out_degree(G)
 
         degree = dict(zip(nodes, [0] * len(nodes)))
         for n in nodes:
@@ -1455,14 +1467,23 @@ class NeuronTree:
         ax = fig.add_subplot(ix, projection='3d')
         ax.scatter(nodes[:, 0], nodes[:, 1], nodes[:, 2], c=t, marker='.')
 
-        root_pos = self._G.node[self.get_root()]['pos']
+        if self._nxversion == 2:
+            # changed for version 2.x of networkX
+            root_pos = self._G.nodes[self.get_root()]['pos']
+        else:
+            root_pos = self._G.node[self.get_root()]['pos']
         ax.scatter(root_pos[0], root_pos[1], root_pos[2], c='k', marker='^')
 
         colors = ['k', axon_color, dendrite_color]
 
         for k, e in enumerate(self._G.edges()):
-            n1 = self._G.node[e[0]]
-            n2 = self._G.node[e[1]]
+            if self._nxversion == 2:
+                # changed for version 2.x of networkX
+                n1 = self._G.nodes[e[0]]
+                n2 = self._G.nodes[e[1]]
+            else:
+                n1 = self._G.node[e[0]]
+                n2 = self._G.node[e[1]]
             v = np.array([n1['pos'], n2['pos']])
 
             ax.plot3D(v[:, 0], v[:, 1], v[:, 2], c=colors[int(n2['type']) - 1])
@@ -1520,15 +1541,15 @@ class NeuronTree:
         colors = ['k', axon_color, dendrite_color, apical_dendrite_color]
 
         cs = []
-        
-        if self._nxversion ==1:
-            node_dict = G.node
-        else:
-            node_dict= G.nodes()
-        
+
         for k, e in enumerate(G.edges()):
-            n1 = node_dict[e[0]]
-            n2 = node_dict[e[1]]
+            if self._nxversion == 2:
+                # changed for version 2.x of networkX
+                n1 = G.nodes[e[0]]
+                n2 = G.nodes[e[1]]
+            else:
+                n1 = G.node[e[0]]
+                n2 = G.node[e[1]]
             V[k, 0] = n1['pos']
             V[k, 1] = n2['pos']
             cs.append(colors[int(n2['type']) - 1])
@@ -1571,7 +1592,7 @@ class NeuronTree:
 
         # create dataframe with graph data
         G = self._G
-        ids = [int(k) for k in G.nodes()]
+        ids = [int(k) for k in G.nodes(data=True)]
         ids.sort()
         pos_dict = self.get_node_attributes('pos')
         r_dict = self.get_node_attributes('radius')
