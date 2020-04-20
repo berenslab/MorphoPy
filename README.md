@@ -18,7 +18,7 @@ You can use MorphoPy imported in Python or from command line as batch-tool as we
 
 The current working build:
  
- **version 0.3**
+ **version 0.4**
  
 All builds are tested on Linux (Debian and CentOS) and Windows 10.
 
