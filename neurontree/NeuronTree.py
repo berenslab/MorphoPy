@@ -14,7 +14,7 @@ from scipy.interpolate import interp1d
 from scipy import stats
 from shapely.geometry import MultiLineString, LineString, Point
 from itertools import combinations
-from sklearn.decomposition import PCA, FastICA
+from collections import OrderedDict
 from neurontree.utils import angle_between, get_rotation_matrix, rotationMatrixToEulerAngles
 
 sys.setrecursionlimit(100000)
@@ -50,7 +50,7 @@ class NeuronTree:
     # creates a networkX Tree out of a swc file.
     # scaling denotes the conversion factor needed to convert the units given in swc file to microns
     # soma_rad denotes the radius of the soma given in microns
-    def __init__(self, swc=None, scaling=1., node_data=[], edge_data=[], graph=None, nxversion=1):
+    def __init__(self, swc=None, scaling=1., node_data=[], edge_data=[], graph=None):
         """
         Creates a NeuronTree object that contains a networkx.DiGraph with node attributes 'pos' [x,y,z],
         'type' [1:soma,2:axon,3: dendrite], 'radius' and edge attributes 'euclidean_dist' and 'path_length'.
@@ -65,7 +65,7 @@ class NeuronTree:
         :param graph: networkx.DiGraph. It is assumed that the graph contains the required labels.
         """
         # set version of networkX
-        self._nxversion = nxversion
+        self._nxversion = int(float(nx.__version__))
         # initialize tree DIRECTED
         if graph:
             G = graph
@@ -302,7 +302,7 @@ class NeuronTree:
                 edge_data_new.append((pred, current_node, dict(euclidean_dist=ec, path_length=path_length)))
 
                 nodes.add(pred)  # adds the predecessor only once since nodes is a set
-        return NeuronTree(node_data=node_data_new, edge_data=edge_data_new, nxversion=self._nxversion)
+        return NeuronTree(node_data=node_data_new, edge_data=edge_data_new)
 
     def smooth_neurites(self, dim=1, window_size=21):
 
@@ -358,7 +358,7 @@ class NeuronTree:
         nx.set_edge_attributes(G, 'euclidean_dist', dict(zip(G.edges(), e_attr)))
         nx.set_edge_attributes(G, 'path_length', dict(zip(G.edges(), e_attr)))
 
-        S = NeuronTree(node_data=G.nodes(data=True), edge_data=G.edges(data=True), nxversion=self._nxversion)
+        S = NeuronTree(node_data=G.nodes(data=True), edge_data=G.edges(data=True))
         return S
 
     def rename_nodes(self, label=None):
@@ -491,7 +491,7 @@ class NeuronTree:
         root it is returned as an int.
         :return: int or list , node id(s) of the tree roots.
         """
-        if self._nxversion == 2:
+        if self._nxversion >= 2:
             # changed for version 2.2 of networkX
             roots = [n for n, d in self._G.in_degree() if d == 0]
         else:
@@ -543,7 +543,7 @@ class NeuronTree:
             nodes.remove(t)
 
         while total_no_nodes - no_trunc_nodes < len(nodes):
-            T = NeuronTree(graph=T.get_graph().subgraph(nodes), nxversion=self._nxversion)
+            T = NeuronTree(graph=T.get_graph().subgraph(nodes))
             nodes = T.nodes()
 
             tips = T.get_tips()
@@ -650,7 +650,7 @@ class NeuronTree:
         nodes = list(self.get_dendrite_nodes(type_ix=type_ix))
         nodes.insert(0, self.get_root())
         subgraph = nx.subgraph(self._G, nodes)
-        return NeuronTree(graph=subgraph, nxversion=self._nxversion)
+        return NeuronTree(graph=subgraph)
 
     def get_axonal_tree(self):
         """
@@ -660,7 +660,7 @@ class NeuronTree:
         nodes = list(self.get_axon_nodes())
         nodes.insert(0, self.get_root())
         subgraph = nx.subgraph(self._G, nodes)
-        return NeuronTree(graph=subgraph, nxversion=self._nxversion)
+        return NeuronTree(graph=subgraph)
 
     def get_adjacency_matrix(self, weight=None):
         """
@@ -1391,7 +1391,7 @@ class NeuronTree:
         """
 
         swc = self._resample_tree_data(dist)
-        T = NeuronTree(swc=swc, nxversion=self._nxversion)
+        T = NeuronTree(swc=swc)
 
         return T
 
@@ -1407,7 +1407,7 @@ class NeuronTree:
         soma_nodes = self.nodes(type_ix=1)
         r = [x for x in roots if x in soma_nodes][0]  # get somatic root node
 
-        neurite_paths = dict()
+        neurite_paths = OrderedDict()
         G = self.get_graph()
 
         # get the path of each neurite extending from the soma
@@ -1432,7 +1432,7 @@ class NeuronTree:
             if not soma_included:
                 nodes.remove(r)
             s = nx.subgraph(G, nodes)
-            subgraphs.append(NeuronTree(graph=s, nxversion=self._nxversion))
+            subgraphs.append(NeuronTree(graph=s))
 
         return subgraphs
 

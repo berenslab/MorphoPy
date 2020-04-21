@@ -155,11 +155,6 @@ def main(argv):
         print('Error: No valid file is specified or no file found in current directory!')
         help(1)
 
-    # set version of networkX
-    nxversion = 1
-    if float(nx.__version__) >= 2:
-        nxversion = 2
-
     # save output data in a dataframe with all proceeded files for export
     output_data = pd.DataFrame()
 
@@ -172,7 +167,7 @@ def main(argv):
             # compute morphometric stats
             try:
                 # import swc file, compute statistics and create an output
-                mytree = file_manager.load_swc_file(directory + file, nxversion)
+                mytree = file_manager.load_swc_file(directory + file)
                 morpho_stats_frame = fp.compute_morphometric_statistics(mytree)
                 morpho_stats_frame.index = [file]
                 print(morpho_stats_frame)
@@ -191,7 +186,7 @@ def main(argv):
             # compute persistence data
             try:
                 # import swc file, compute persistence table and give an output
-                mytree = file_manager.load_swc_file(directory + file, nxversion)
+                mytree = file_manager.load_swc_file(directory + file)
                 persistence_frame = fp.get_persistence(mytree.get_topological_minor(), f=function)
                 persistence_frame.index = (file for x in range(len(persistence_frame)))
                 print(persistence_frame)
@@ -227,7 +222,7 @@ def main(argv):
             # compute density map
             try:
                 # import swc file and initialize NeuronTree
-                mytree = file_manager.load_swc_file(directory + file, nxversion)
+                mytree = file_manager.load_swc_file(directory + file)
                 # read configfile if available, else set dicts None
                 config_params = file_manager.read_config(configfile)
                 # compute density maps and use config if available

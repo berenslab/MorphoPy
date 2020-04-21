@@ -190,7 +190,7 @@ def compute_density_maps(neurontree=None, config_params=None):
     if config_params is None:
         n_bins = 20
         normed = True
-        smooth = False
+        smooth = True
         sigma = 1
         min = np.min(pc, axis=0)
         max = np.max(pc, axis=0)
