@@ -19,9 +19,9 @@ def show_threeview(nt, fig=None, **kwargs):
     ax3 = plt.subplot2grid((4, 4), (3, 1), rowspan=1, colspan=3)
     ax4 = plt.subplot2grid((4, 4), (3, 0), rowspan=1, colspan=1)
 
-    nt.draw_2D(fig, ax=ax2, projection='zx', **kwargs)
-    nt.draw_2D(fig, ax=ax3, projection='yz', **kwargs)
-    nt.draw_2D(fig, ax=ax1, projection='yx', **kwargs)
+    nt.draw_2D(fig, ax=ax2, projection='zy', **kwargs)
+    nt.draw_2D(fig, ax=ax3, projection='xz', **kwargs)
+    nt.draw_2D(fig, ax=ax1, projection='xy', **kwargs)
 
     scalebar = ScaleBar(1, units='um', location='lower left', box_alpha=0)
     ax1.add_artist(scalebar)
