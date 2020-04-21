@@ -182,7 +182,7 @@ def compute_density_maps(neurontree=None, config_params=None):
     pc = neurontree.resample_nodes(d=distance)
 
     ###### PARAMETER ################
-    # dictonary for axes and all labels of projection
+    # dictionary for axes and all labels of projection
     axes = collections.OrderedDict()
     axes = {'0': 'x', '1': 'y', '2': 'z', '01': 'xy', '02': 'xz', '12': 'yz'}
 
@@ -205,7 +205,7 @@ def compute_density_maps(neurontree=None, config_params=None):
         # if config available use params else default values
         n_bins = config_params.get('n_bins', 20)
         normed = config_params.get('normed', True)
-        smooth = config_params.get('smooth', False)
+        smooth = config_params.get('smooth', True)
         sigma = config_params.get('sigma', 1)
 
     # r holds the normalization bounds
