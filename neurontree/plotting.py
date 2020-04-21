@@ -27,3 +27,5 @@ def show_threeview(nt, fig=None, **kwargs):
     scalebar = ScaleBar(1, units='um', location='lower left', box_alpha=0)
     ax1.add_artist(scalebar)
     ax4.axis('off')
+    ax1.set_xticklabels([])
+    ax1.set_yticklabels([])
