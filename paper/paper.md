@@ -41,7 +41,7 @@ However, the quantitative analysis of neuronal morphologies persists to be a har
 particular feature representation in order to make individual morphologies amenable to classical data analysis. Many
 different feature representations have been suggested in the literature, such as density maps [jefferis:2007], single valued summary
 statistics (morphometrics) [scorcioni:2008; @NeuroM] or, more recently, persistence images [@li:2017; @kanari:2018].
-The tools for extracting them, however, are often focused on solely one such representation and scattered across various
+Unfortunately, the tools for extracting them are often focused on solely one such representation and scattered across various
 programming languages.
 
 Our software package `MorphoPy` is meant to easily extract different feature representations from neural morphologies for
@@ -107,14 +107,11 @@ df = get_persistence(Dendrites.get_topological_minor(), f=radial_distance)
 df_custom = get_persistence(Dendrites.get_topological_minor(), f=custom_distance)
 ```
 
-To make `MorphoPy` accessible to a non-programming audience it can be called from the command line to operate on
-single files or entire batches.
+Additionally, `MorphoPy` can be called from the command line to operate on single files or entire batches.
 ```bash
 MorphoPy.py -c [density|persistence|stats] -f ['path_to_file'] | -d ['path_to_folder']
 ```
 For a full description of `MorphoPy`'s functionality please refer to our documentation and tutorial on our [gitHub page](https://github.com/berenslab/MorphoPy).
-
-SUMMARIZING SENTENCE??
 
 `MorphoPy` has been developed in the context of a benchmarking study for cortical interneuron cell type classification
 based on their morphology [@laturnus:2019]. It has already been used in a series of scientific publications that tried

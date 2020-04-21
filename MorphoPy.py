@@ -13,8 +13,10 @@ import matplotlib.pyplot as plt
 import computation.file_manager as file_manager
 import computation.feature_presentation as fp
 import computation.persistence_functions as pf
-### global MorphoPy version
-__version__ = 0.3
+# load global about variables
+import about
+# set global version
+__version__ = about.__version__
 
 def help(exitcode=0):
     """
@@ -53,9 +55,9 @@ def version():
     """
     Print version of Morphopy to command line - nothing else will be done
     """
-    print('MorphoPy version %s' % __version__)
-    print('Copyright (C) 2020 by Sophie Laturnus, Adam von Daranyi and others.')
-    print('https://github.com/berenslab/MorphoPy')
+    print('MorphoPy version %s' % about.__version__)
+    print('(c) %s' % about.__copyright__)
+    print(about.__url__)
 
 
 def printException(message="Unknown Error"):
