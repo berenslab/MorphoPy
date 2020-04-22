@@ -174,14 +174,12 @@ def compute_density_maps(neurontree=None, config_params=None):
     pc = neurontree.resample_nodes(d=distance)
 
     ###### PARAMETER ################
-    # dictionary for axes and all labels of projection in right order
-    axes = collections.OrderedDict()
-    for key, value in [('0', 'x'), ('1', 'y'), ('2', 'z'), ('01', 'xy'), ('02', 'xz'), ('12', 'yz')]:
-        axes.update({key: value})
 
     # read all missing params from config and set default values if no config available:
     if config_params is None:
-        n_bins = 20
+        n_bins_x = 20
+        n_bins_y = 20
+        n_bins_z = 20
         normed = True
         smooth = True
         sigma = 1
@@ -192,7 +190,9 @@ def compute_density_maps(neurontree=None, config_params=None):
         min_ = np.min(pc, axis=0)
         max_ = np.max(pc, axis=0)
         # if config available use params else default values
-        n_bins = config_params.get('n_bins', 20)
+        n_bins_x = config_params.get('n_bins_x', 20)
+        n_bins_y = config_params.get('n_bins_y', 20)
+        n_bins_z = config_params.get('n_bins_z', 20)
         normed = config_params.get('normed', True)
         smooth = config_params.get('smooth', True)
         sigma = config_params.get('sigma', 1)
@@ -212,6 +212,15 @@ def compute_density_maps(neurontree=None, config_params=None):
     # r holds the normalization bounds
     r = dict(min=min, max=max)
 
+    # dictionary for axes and all labels of projection in right order
+    axes = collections.OrderedDict()
+    for key, value in [('0', 'x'), ('1', 'y'), ('2', 'z'), ('01', 'xy'), ('02', 'xz'), ('12', 'yz')]:
+        axes.update({key: value})
+
+    # holds binning per projection
+    bins = {'x': (n_bins_x,), 'y': (n_bins_y,), 'z': (n_bins_z,),
+            'xy': (n_bins_x, n_bins_y), 'xz': (n_bins_x, n_bins_z), 'yz': (n_bins_y, n_bins_z)}
+
     ######## COMPUTATION ############
     # normalize point cloud
     ext = (r['max'] - r['min'])
@@ -229,13 +238,14 @@ def compute_density_maps(neurontree=None, config_params=None):
         # in the config file.
         range_ = [[-.1, 1.1]] * dim
         data = _project_data(p_ax, pc)
+        n_bins = bins[ax]
 
         # compute histogram hence density map
-        h, edges = np.histogramdd(data, bins=(n_bins,) * dim, range=range_, normed=normed)
+        h, edges = np.histogramdd(data, bins=n_bins, range=range_, density=normed)
         # perform smoothing
         if smooth:
             h = smooth_gaussian(h, dim=dim, sigma=sigma)
-        densities['H%s_%s_proj' % (n_bins, ax)] = {'data': h, 'edges': edges}
+        densities['%s_proj' %ax] = {'data': h, 'edges': edges, 'bins':n_bins}
 
     return densities
 
@@ -256,29 +266,36 @@ def plot_density_maps(densities=None, figure=None):
         return figure
 
     # get bins from density keys
-    bins = (list(densities))[0].split('_')[0]
+    x_bins = densities['x_proj']['bins'][0]
+    y_bins = densities['y_proj']['bins'][0]
+    z_bins = densities['z_proj']['bins'][0]
+    title = 'bins \n x: %i  y: %i  z: %i'%(x_bins, y_bins, z_bins)
 
     # write header in plot
-    figure.suptitle(bins + ' bins', weight='bold')
+    figure.suptitle(title, weight='bold')
     # subplot position for drawing
     idx = 1
     # loop over all densities, keys contain type of data
     for name, density in densities.items():
         # get name and split projection axes from it
-        p_axes = name.split('_')[1]
+        p_axes = name.split('_')[0]
         dim = len(p_axes)
 
         if dim > 1:
             ax = figure.add_subplot(2, 3, idx)
             ax.imshow(density['data'].T)
             ax.invert_yaxis()
+            ax.set_xlabel(p_axes[0])
+            ax.set_ylabel(p_axes[1])
         else:
             ax = figure.add_subplot(2, 3, idx)
             ax.plot(density['data'])
+            ax.set_xlabel(p_axes)
             sns.despine()
+
         idx += 1
-        ax.set_xlabel(p_axes)
-    figure.tight_layout(rect=[0, 0.03, 1, 0.95])
+
+    figure.tight_layout(rect=[0, 0.03, 1, 0.9])
     return figure
 
 
