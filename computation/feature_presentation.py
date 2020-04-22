@@ -7,7 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from neurontree.utils import smooth_gaussian
-from persistence_functions import radial_distance
+from computation.persistence_functions import radial_distance
 
 
 def get_persistence(neurontree=None, f=None):
@@ -174,9 +174,10 @@ def compute_density_maps(neurontree=None, config_params=None):
     pc = neurontree.resample_nodes(d=distance)
 
     ###### PARAMETER ################
-    # dictionary for axes and all labels of projection
+    # dictionary for axes and all labels of projection in right order
     axes = collections.OrderedDict()
-    axes = {'0': 'x', '1': 'y', '2': 'z', '01': 'xy', '02': 'xz', '12': 'yz'}
+    for key, value in [('0', 'x'), ('1', 'y'), ('2', 'z'), ('01', 'xy'), ('02', 'xz'), ('12', 'yz')]:
+        axes.update({key: value})
 
     # read all missing params from config and set default values if no config available:
     if config_params is None:
@@ -187,18 +188,26 @@ def compute_density_maps(neurontree=None, config_params=None):
         min = np.min(pc, axis=0)
         max = np.max(pc, axis=0)
     else:
-        if 'r_min_x' in config_params.keys():
-            min = np.array([config_params["r_min_x"], config_params["r_min_y"], config_params["r_min_z"]])
-            max = np.array([config_params["r_max_x"], config_params["r_max_y"], config_params["r_max_z"]])
-        else:
-            min = np.min(pc, axis=0)
-            max = np.max(pc, axis=0)
 
+        min_ = np.min(pc, axis=0)
+        max_ = np.max(pc, axis=0)
         # if config available use params else default values
         n_bins = config_params.get('n_bins', 20)
         normed = config_params.get('normed', True)
         smooth = config_params.get('smooth', True)
         sigma = config_params.get('sigma', 1)
+
+        # normalization ranges
+        r_min_x = config_params.get('r_min_x', min_[0])
+        r_min_y = config_params.get('r_min_y', min_[1])
+        r_min_z = config_params.get('r_min_z', min_[2])
+
+        r_max_x = config_params.get('r_max_x', max_[0])
+        r_max_y = config_params.get('r_max_y', max_[1])
+        r_max_z = config_params.get('r_max_z', max_[2])
+
+        min = np.array([r_min_x, r_min_y, r_min_z])
+        max = np.array([r_max_x, r_max_y, r_max_z])
 
     # r holds the normalization bounds
     r = dict(min=min, max=max)
@@ -209,7 +218,7 @@ def compute_density_maps(neurontree=None, config_params=None):
     ext[ext == 0] = 1
     pc = (pc - r['min']) / ext
 
-    # all computed density maps will be stored in a dictonary
+    # all computed density maps will be stored in a dictionary
     densities = collections.OrderedDict()
     # loop over all axes
     for p_ax, ax in axes.items():
@@ -261,7 +270,7 @@ def plot_density_maps(densities=None, figure=None):
 
         if dim > 1:
             ax = figure.add_subplot(2, 3, idx)
-            ax.imshow(density['data'])
+            ax.imshow(density['data'].T)
             ax.invert_yaxis()
         else:
             ax = figure.add_subplot(2, 3, idx)
