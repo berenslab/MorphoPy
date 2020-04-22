@@ -3,19 +3,28 @@ import numpy as np
 
 # Array for selecting the functions in generating persistence
 functions = ["None",  "radial_distance", "height", "path_length", "branch_order"]
-
+nx_version = int(float(nx.__version__))
 
 # A selection of filter functions
 def radial_distance(G, u, v):
-    n = G.node[u]['pos']
-    r = G.node[v]['pos']
+    if nx_version > 1:
+        # changed for version 2.x of networkX
+        n = G.nodes[u]['pos']
+        r = G.nodes[v]['pos']
+    else:
+        n = G.node[u]['pos']
+        r = G.node[v]['pos']
 
     return np.sqrt(np.dot(n - r, n - r))
 
 
 def height(G, u, v):
-    n = G.node[u]['pos']
-    r = G.node[v]['pos']
+    if nx_version > 1:
+        n = G.nodes[u]['pos']
+        r = G.nodes[v]['pos']
+    else:
+        n = G.node[u]['pos']
+        r = G.node[v]['pos']
     return np.abs((n - r))[2]
 
 

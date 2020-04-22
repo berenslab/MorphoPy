@@ -7,6 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from neurontree.utils import smooth_gaussian
+from persistence_functions import radial_distance
 
 
 def get_persistence(neurontree=None, f=None):
@@ -32,16 +33,7 @@ def get_persistence(neurontree=None, f=None):
 
     if f is None:
         # radial distance function
-        def f(G, u, v):
-            if neurontree._nxversion == 2:
-                # changed for version 2.x of networkX
-                n = G.nodes[u]['pos']
-                r = G.nodes[v]['pos']
-            else:
-                n = G.node[u]['pos']
-                r = G.node[v]['pos']
-
-            return np.sqrt(np.dot(n - r, n - r))
+        f = radial_distance
 
     # set the initial value for leaf nodes
     for l in L:
