@@ -18,106 +18,82 @@ You can use MorphoPy imported in Python or from command line as batch-tool as we
 
 The current working build:
  
- **version 0.5**
+ **version 0.6**
  
 All builds are tested on Linux (Debian and CentOS) and Windows 10.
 
-You can always find the latest working build in the "/dist" directory of this repository.
+You can find the all working builds at [pypi.org](https://pypi.org/project/morphopy/).
 
 [back to start](#content)
-
 
 In the following, all commands written in boxes need to be entered into your terminal.
 ## <a name="requirements">Software Requirements</a>
 ### Mac:
-You need python with pip installed and graphviz/pygraphviz:
 
- - python >3.4
+ - homebrew (to install latest version of python3)
+ - python >3.4: without homebrew you can find python [here](https://www.python.org/downloads/mac-osx/)
  - pip
- - graphviz
- - pygraphviz
  
-**1)** Use homebrew to install, if it is not installed you can do it from your terminal with this command:
+**1)** If you want the latest python3 version you need to install homebrew,
+       for that just run this command in your terminal:
 
     ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
     
-**2)** Then you can easily install python and graphviz like this:
+**2)** Then you can easily install the newest version of python3:
 
-	brew install python graphviz
-	
-	# if you get an error that graphviz can't be found you can use this to install:
-	pip install pygraphviz –install-option=”–include-path=/usr/local/lib/graphviz/” –install-option=”–library-path=/usr/local/lib/graphviz”
-	
-**3)** In the last step you need to build pygraphyviz with the installed graphviz library:
+	brew install python
 
-	pip install pygraphviz
-    
-Now you should be able to continue with the MophoPy installation. See below.
+**3)** Now you should have python3 and pip3 installed. You can check the version like this:
+
+	python3 --version
+	pip3 -V
+
+If both are enough you can continue with installing MorphoPy, see below.
+
 ### Linux:
-Debian/Ubuntu packages:
 
- - python 3
- - pip 3
- - graphviz development
- - geometry library development
+ - python >3.4
+ - pip 3 
 
-You can install them with this command:
+Install Python3 on **Debian/Ubuntu** systems:
 
-	apt-get install python3 python3-pip libgeos-dev libgraphviz-dev
+	apt-get install python3 python3-pip
 
-RedHat/CentOS/Fedora packages:
+Install Python3 on **RedHat/CentOS/Fedora systems** (perhaps python version differs):
 
- - python >3.6
- - python development >3.6
- - gcc-c++ compiler
- - graphviz development
- - geometry library development
+	yum install python36 python3-pip
 
-You can install them with this command (perhaps python version differs):
+That's it. All requirements are met and you can continue with the MorphoPy installation. See below. 
 
-	yum install gcc-c++ python36 python36-devel geos-devel graphviz-devel
-
-That's it. All requirements are met and you can continue with the Morphopy installation. See below. 
 ### Windows:
 
  - python >3.5 (x64): download from [here](https://www.python.org/downloads/windows/)
- - pip >18 : be sure you selected it during installation with the base python package
- - Microsoft Build Tools >14.0 you can download them [here](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
- - Graphviz (x64) [download here](https://github.com/mahkoCosmo/GraphViz_x64/)
- - Pygraphviz (x64) [from here](https://github.com/pygraphviz/pygraphviz/releases)
- - patched pygraphviz files from [Kagami@Pygraphviz](https://github.com/Kagami/pygraphviz/commit/fe442dc16accb629c3feaf157af75f67ccabbd6e)
+ - pip : be sure you selected it during installation with the base python package
+ - Microsoft Build Tools >14.0 you can download them [here](https://visualstudio.microsoft.com/visual-cpp-build-tools/) 
 
-**1)** Install python with pip and be sure to check the option to add python paths to enviroment variable.
+**1)** Install python with pip by executing the downloaded installation file and
+       be sure to check the option to add python paths to enviroment variable at the first step!
+       
+**2)** Install Microsoft Build Tools with the automatic installation tool from the website above.
+       Select C/C++ Compiler Tools at the selection page
 
-**2)** Install Microsoft Build Tools with the automatic installation tool from the website above
-
-**3)** Now download and unpack graphviz(x64), pygraphviz(x64) and the patched files from Kagami to any folder.
-
-**4)** Then replace in pygraphviz the files with the two patched ones:
-
-       ...\Kagami\pygraphviz\graphviz.i -> ...\pygraphviz-1.x\pygraphviz\graphviz.i
-       ...\Kagami\pygraphviz\graphviz_wrap.c -> ...\pygraphviz-1.x\pygraphviz\graphviz_wrap.c
-
-**5)** Now you can use this command in the base directory of pygraphviz-1.x to build it (use the full path to the directories of the unpacked graphviz files):
-
-	python setup.py install --user --include-path="C:\\...\\graphviz\\include" --library-path="C:\\...\\graphviz\\lib"
-
-Pygraphviz is now build without any errors and all requirements are met, see below for continue with MorphoPy installation.
+All requirements are met now, see below for continue with MorphoPy installation.
 
 [back to start](#content)
+
 ## <a name="installation">Installation:</a>
 
 ###  Install the MorphoPy package (all platforms):
 
-Install the python package with pip/pip3 and get the latest build:
+Install the python package with pip3 and get the latest build:
 
-	pip install morphopy
+	pip3 install morphopy
 
 ## <a name="uninstallation">Uninstallation:</a>
 
-You can simply uninstall the package with pip/pip3:
+You can simply uninstall the package with pip3:
 
-	pip uninstall morphopy
+	pip3 uninstall morphopy
 
 	
 [back to start](#content)
@@ -153,6 +129,33 @@ Help:
 	                                results in. (default: same as source)
 
 
+Available functions for persistence at the moment are:
+ - radial_distance (default function)
+ - height
+ - path_length
+ - branch_order
+
+A sample config file for density maps looks like this (stored in a text file):
+
+	[global]
+	# specific distance for resampling nodes:
+    distance: 1
+    # number of bins for all dimensions
+    n_bins: 100
+    # if true: probabilty density function at the bin
+    normed: True
+    # smoothing the density data
+    smooth: True
+    # sigma used at smoothing
+    sigma: 2
+    # normalization bounds for density map:
+    [norm_bound]
+    r_max_x: 238.85
+    r_max_y: 140.95
+    r_max_z: 285.97
+    r_min_x: -236.17
+    r_min_y: -24.2
+    r_min_z: -173.72
 
 [back to start](#content)
 

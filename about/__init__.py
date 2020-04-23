@@ -10,9 +10,9 @@ __all__ = [
 ]
 
 __title__ = "morphopy"
-__summary__ = "Python tool for showing and computing morphology information about neurites"
+__summary__ = "Python package to display morphologies of neurons and compute statistical measures and representations"
 __url__ = "https://github.com/berenslab/MorphoPy"
-__version__ = "0.5"
+__version__ = "0.6"
 __author__ = "Sophie Laturnus, Adam von Daranyi, Ziwei Huang and Philipp Berens"
 __email__ = "adam.von-daranyi@uni-tuebingen.de"
 __license__ = "GNU GENERAL PUBLIC LICENSE, Version 3.0"

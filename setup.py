@@ -34,7 +34,6 @@ setuptools.setup(
          'networkx',
          'seaborn',
          'sklearn',
-         'shapely',
-         'pygraphviz'
+         'shapely'
       ],
 )

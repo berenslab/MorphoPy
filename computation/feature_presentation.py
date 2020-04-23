@@ -213,9 +213,7 @@ def compute_density_maps(neurontree=None, config_params=None):
     r = dict(min=min, max=max)
 
     # dictionary for axes and all labels of projection in right order
-    axes = collections.OrderedDict()
-    for key, value in [('0', 'x'), ('1', 'y'), ('2', 'z'), ('01', 'xy'), ('02', 'xz'), ('12', 'yz')]:
-        axes.update({key: value})
+    axes = collections.OrderedDict([('0', 'x'), ('1', 'y'), ('2', 'z'), ('01', 'xy'), ('02', 'xz'), ('12', 'yz')])
 
     # holds binning per projection
     bins = {'x': (n_bins_x,), 'y': (n_bins_y,), 'z': (n_bins_z,),
