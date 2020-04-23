@@ -274,7 +274,7 @@ def plot_density_maps(densities=None, figure=None):
     """
     # if figure is not passed create a new one
     if figure is None:
-        figure = plt.figure()
+        figure = plt.figure(figsize=(8,8))
 
     if densities is None:
         return figure
@@ -283,12 +283,21 @@ def plot_density_maps(densities=None, figure=None):
     x_bins = densities['x_proj']['bins'][0]
     y_bins = densities['y_proj']['bins'][0]
     z_bins = densities['z_proj']['bins'][0]
-    title = 'bins \n x: %i  y: %i  z: %i'%(x_bins, y_bins, z_bins)
+    title = 'No. bins are  x: %i  y: %i  z: %i'%(x_bins, y_bins, z_bins)
 
     # write header in plot
     figure.suptitle(title, weight='bold')
-    # subplot position for drawing
-    idx = 1
+    # set the axes layout right
+    ax_x = plt.subplot2grid((4, 4), (0, 1), rowspan=1, colspan=2)
+    ax_y = plt.subplot2grid((4, 4), (1, 3), rowspan=2, colspan=1)
+    ax_z = plt.subplot2grid((4, 4), (3, 3), rowspan=1, colspan=1)
+
+    ax_xy = plt.subplot2grid((4, 4), (1, 1), rowspan=2, colspan=2, sharex=ax_x, sharey=ax_y)
+    ax_xz = plt.subplot2grid((4, 4), (3, 1), rowspan=1, colspan=2, sharex=ax_x, sharey=ax_z)
+    ax_yz = plt.subplot2grid((4, 4), (1, 0), rowspan=2, colspan=1, sharey=ax_y)
+    axes = {'x': ax_x, 'y': ax_y, 'z': ax_z, 'xy': ax_xy, 'xz': ax_xz, 'yz': ax_yz}
+
+
     # loop over all densities, keys contain type of data
     for name, density in densities.items():
         # get name and split projection axes from it
@@ -296,7 +305,7 @@ def plot_density_maps(densities=None, figure=None):
         dim = len(p_axes)
 
         if dim > 1:
-            ax = figure.add_subplot(2, 3, idx)
+            ax = axes[p_axes]
             x_edges = density['edges'][0]
             y_edges = density['edges'][1]
 
@@ -305,17 +314,26 @@ def plot_density_maps(densities=None, figure=None):
             y_min = np.floor(np.min(y_edges))
             y_max = np.ceil(np.max(y_edges))
 
-            ax.imshow(density['data'].T, extent=(x_min, x_max, y_max, y_min))
+            if p_axes == 'yz':
+                ax.imshow(density['data'], extent=(y_min, y_max, x_max, x_min))
+                ax.set_xlabel(p_axes[1].capitalize())
+                ax.set_ylabel(p_axes[0].capitalize(), rotation=0)
+            else:
+                ax.imshow(density['data'].T, extent=(x_min, x_max, y_max, y_min))
+                ax.set_xlabel(p_axes[0].capitalize())
+                ax.set_ylabel(p_axes[1].capitalize(), rotation=0)
             ax.invert_yaxis()
-            ax.set_xlabel(p_axes[0])
-            ax.set_ylabel(p_axes[1])
-        else:
-            ax = figure.add_subplot(2, 3, idx)
-            ax.plot(density['edges'][0][:-1],density['data'])
-            ax.set_xlabel(p_axes)
-            sns.despine()
 
-        idx += 1
+        else:
+            ax = axes[p_axes]
+            if p_axes == 'x':
+                ax.plot(density['edges'][0][:-1], density['data'])
+                ax.set_xlabel(p_axes.capitalize())
+            else:
+                ax.plot(density['data'], density['edges'][0][:-1])
+                ax.set_ylabel(p_axes.capitalize(), rotation=0)
+
+            sns.despine()
 
     figure.tight_layout(rect=[0, 0.03, 1, 0.9])
     return figure
