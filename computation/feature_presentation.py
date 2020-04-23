@@ -177,24 +177,24 @@ def compute_density_maps(neurontree=None, config_params=None):
 
     # read all missing params from config and set default values if no config available:
     if config_params is None:
-        n_bins_x = 20
-        n_bins_y = 20
-        n_bins_z = 20
-        normed = True
+        density = True
         smooth = True
+        normalised = False
         sigma = 1
         min = np.min(pc, axis=0)
         max = np.max(pc, axis=0)
+
+        bin_size = 20
+        n_bins_x, n_bins_y, n_bins_z = np.ceil((max-min)/bin_size).astype(int)
+
     else:
 
         min_ = np.min(pc, axis=0)
         max_ = np.max(pc, axis=0)
         # if config available use params else default values
-        n_bins_x = config_params.get('n_bins_x', 20)
-        n_bins_y = config_params.get('n_bins_y', 20)
-        n_bins_z = config_params.get('n_bins_z', 20)
-        normed = config_params.get('normed', True)
+        density = config_params.get('density', True)
         smooth = config_params.get('smooth', True)
+        normalised = config_params.get('normalised', False)
         sigma = config_params.get('sigma', 1)
 
         # normalization ranges
@@ -209,6 +209,14 @@ def compute_density_maps(neurontree=None, config_params=None):
         min = np.array([r_min_x, r_min_y, r_min_z])
         max = np.array([r_max_x, r_max_y, r_max_z])
 
+        if 'bin_size' in config_params.keys():
+            bin_size = config_params.get('bin_size')
+            n_bins_x, n_bins_y, n_bins_z = np.ceil((max - min) / bin_size).astype(int)
+        else:
+            n_bins_x = config_params.get('n_bins_x', 20)
+            n_bins_y = config_params.get('n_bins_y', 20)
+            n_bins_z = config_params.get('n_bins_z', 20)
+
     # r holds the normalization bounds
     r = dict(min=min, max=max)
 
@@ -221,9 +229,17 @@ def compute_density_maps(neurontree=None, config_params=None):
 
     ######## COMPUTATION ############
     # normalize point cloud
-    ext = (r['max'] - r['min'])
-    ext[ext == 0] = 1
-    pc = (pc - r['min']) / ext
+    if normalised:
+        ext = (r['max'] - r['min'])
+        ext[ext == 0] = 1
+        pc = (pc - r['min']) / ext
+
+    min_ = np.min(pc, axis=0)
+    max_ = np.max(pc, axis=0)
+    ranges = {'x': [[min_[0], max_[0]]], 'y': [[min_[1], max_[1]]], 'z': [[min_[2], max_[2]]],
+              'xy': [[min_[0], max_[0]], [min_[1], max_[1]]],
+              'xz': [[min_[0], max_[0]], [min_[2], max_[2]]],
+              'yz': [[min_[1], max_[1]], [min_[2], max_[2]]]}
 
     # all computed density maps will be stored in a dictionary
     densities = collections.OrderedDict()
@@ -234,12 +250,12 @@ def compute_density_maps(neurontree=None, config_params=None):
         # holds the range for binning of the histogram. So far the cells are noramlized to be between max --> 1 and min --> 0
         # I can therefore know, that the point will lie between 0 and 1. However, the range could also be a parameter set
         # in the config file.
-        range_ = [[-.1, 1.1]] * dim
         data = _project_data(p_ax, pc)
         n_bins = bins[ax]
+        ranges_ = ranges[ax]
 
         # compute histogram hence density map
-        h, edges = np.histogramdd(data, bins=n_bins, range=range_, density=normed)
+        h, edges = np.histogramdd(data, bins=n_bins, range=ranges_, density=density)
         # perform smoothing
         if smooth:
             h = smooth_gaussian(h, dim=dim, sigma=sigma)
@@ -252,7 +268,7 @@ def plot_density_maps(densities=None, figure=None):
     """
         functions to plot density maps from densities dictionary with data from x,y,z,xy,xz,yz projections
 
-        :return:            figure will be returned with all ploted maps from densities
+        :return:            figure will be returned with all plotted maps from densities
         :param densities:   dictionary which holds all projections for the plots
         :param figure:      you can pass a figure if you want to use a custom plot format
     """
@@ -281,13 +297,21 @@ def plot_density_maps(densities=None, figure=None):
 
         if dim > 1:
             ax = figure.add_subplot(2, 3, idx)
-            ax.imshow(density['data'].T)
+            x_edges = density['edges'][0]
+            y_edges = density['edges'][1]
+
+            x_min = np.floor(np.min(x_edges))
+            x_max = np.ceil(np.max(x_edges))
+            y_min = np.floor(np.min(y_edges))
+            y_max = np.ceil(np.max(y_edges))
+
+            ax.imshow(density['data'].T, extent=(x_min, x_max, y_max, y_min))
             ax.invert_yaxis()
             ax.set_xlabel(p_axes[0])
             ax.set_ylabel(p_axes[1])
         else:
             ax = figure.add_subplot(2, 3, idx)
-            ax.plot(density['data'])
+            ax.plot(density['edges'][0][:-1],density['data'])
             ax.set_xlabel(p_axes)
             sns.despine()
 
