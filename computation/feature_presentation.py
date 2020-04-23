@@ -179,7 +179,6 @@ def compute_density_maps(neurontree=None, config_params=None):
     if config_params is None:
         density = True
         smooth = True
-        normalised = False
         sigma = 1
         min = np.min(pc, axis=0)
         max = np.max(pc, axis=0)
@@ -194,7 +193,6 @@ def compute_density_maps(neurontree=None, config_params=None):
         # if config available use params else default values
         density = config_params.get('density', True)
         smooth = config_params.get('smooth', True)
-        normalised = config_params.get('normalised', False)
         sigma = config_params.get('sigma', 1)
 
         # normalization ranges
@@ -209,16 +207,15 @@ def compute_density_maps(neurontree=None, config_params=None):
         min = np.array([r_min_x, r_min_y, r_min_z])
         max = np.array([r_max_x, r_max_y, r_max_z])
 
-        if 'bin_size' in config_params.keys():
-            bin_size = config_params.get('bin_size')
-            n_bins_x, n_bins_y, n_bins_z = np.ceil((max - min) / bin_size).astype(int)
-        else:
-            n_bins_x = config_params.get('n_bins_x', 20)
-            n_bins_y = config_params.get('n_bins_y', 20)
-            n_bins_z = config_params.get('n_bins_z', 20)
 
-    # r holds the normalization bounds
-    r = dict(min=min, max=max)
+        bin_size = config_params.get('bin_size', 20)
+        n_bins_x, n_bins_y, n_bins_z = np.ceil((max - min) / bin_size).astype(int)
+        if 'n_bins_x' in config_params.keys():
+            n_bins_x = config_params.get('n_bins_x')
+        if 'n_bins_y' in config_params.keys():
+            n_bins_y = config_params.get('n_bins_y')
+        if 'n_bins_z' in config_params.keys():
+            n_bins_z = config_params.get('n_bins_z')
 
     # dictionary for axes and all labels of projection in right order
     axes = collections.OrderedDict([('0', 'x'), ('1', 'y'), ('2', 'z'), ('01', 'xy'), ('02', 'xz'), ('12', 'yz')])
@@ -228,18 +225,11 @@ def compute_density_maps(neurontree=None, config_params=None):
             'xy': (n_bins_x, n_bins_y), 'xz': (n_bins_x, n_bins_z), 'yz': (n_bins_y, n_bins_z)}
 
     ######## COMPUTATION ############
-    # normalize point cloud
-    if normalised:
-        ext = (r['max'] - r['min'])
-        ext[ext == 0] = 1
-        pc = (pc - r['min']) / ext
-
-    min_ = np.min(pc, axis=0)
-    max_ = np.max(pc, axis=0)
-    ranges = {'x': [[min_[0], max_[0]]], 'y': [[min_[1], max_[1]]], 'z': [[min_[2], max_[2]]],
-              'xy': [[min_[0], max_[0]], [min_[1], max_[1]]],
-              'xz': [[min_[0], max_[0]], [min_[2], max_[2]]],
-              'yz': [[min_[1], max_[1]], [min_[2], max_[2]]]}
+    # create ranges
+    ranges = {'x': [[min[0], max[0]]], 'y': [[min[1], max[1]]], 'z': [[min[2], max[2]]],
+              'xy': [[min[0], max[0]], [min[1], max[1]]],
+              'xz': [[min[0], max[0]], [min[2], max[2]]],
+              'yz': [[min[1], max[1]], [min[2], max[2]]]}
 
     # all computed density maps will be stored in a dictionary
     densities = collections.OrderedDict()
