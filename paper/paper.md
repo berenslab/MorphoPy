@@ -53,7 +53,7 @@ and persistence images in one simple open source framework implemented in Python
 ![Neural reconstructions are represented as direct acylic graphs with node and edge attributes.\label{fig:attributes}](./figures/Fig1_attributes_small.png)
 
 `MorphoPy` builds on the functionality of the networkx package [@hagberg:2008] and represents each neuron as a directed
-acylic tree graph with node and edge attributes \autoref{fig:attributes}. ADD SPECIFICATION? The package supports to read in files in the common
+acylic tree graph with node and edge attributes \autoref{fig:attributes}. The package supports to read in files in the common
 [swc-format](http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/Spec.html), offers functions to
 compute various feature representations and provides 2D plotting routines for data exploration (\autoref{fig:plot}).
 ```python
@@ -71,7 +71,7 @@ show_threeview(N, fig)
 ![Plotting reconstructions in 2D. \label{fig:plot}](./figures/threeview_dendrites.png)
 
 As shown in the code snippet above, it is also possible to split the reconstruction into its different parts (axon or dendrites only)
-and operate on each neurite type separately.
+and operate on each neurite type separately or even query every individual neurite that is extending from the soma. 
 
 Currently, MorphoPy supports the following feature representations:
 
