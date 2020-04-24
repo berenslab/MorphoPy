@@ -179,9 +179,9 @@ reconstruction file they will be automatically collapsed to the centroid of thei
 MorphoPy currently only supports neurites that connect back to the soma. This means, axons that emerge from dendritic
 structures can not be handled.
 
-All data is stored in the tidy data format (http://vita.had.co.nz/papers/tidy-data.pdf).
+All data is stored in the [tidy data format](http://vita.had.co.nz/papers/tidy-data.pdf).
 
-Please also refer to our [tutorial](./notebooks/MORPHOPY Tutorial.ipynb).
+Please also refer to our [tutorial](https://github.com/berenslab/MorphoPy/blob/master/notebooks/MORPHOPY%20Tutorial.ipynb).
 
 ### Density maps
 Changing config
