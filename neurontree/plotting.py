@@ -29,3 +29,5 @@ def show_threeview(nt, fig=None, **kwargs):
     ax4.axis('off')
     ax1.set_xticklabels([])
     ax1.set_yticklabels([])
+    ax1.set_xlabel('')
+    ax1.set_ylabel('')
