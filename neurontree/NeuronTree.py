@@ -779,7 +779,7 @@ class NeuronTree:
         """
         Returns the distance. Helper function for the distributions.
         :param dist: String, defines the distance measure to be used (default is 'path_length'), Options are
-        'path_length', 'radial' and 'branch_order'.
+        'path_length', 'radial_dist' and 'branch_order'.
         :param as_dict: boolean, default = True. Determines whether the distance are returned as a dictionary of the
         form {'node_id': ,distance} or as an numpy.array.
         :return: Dictionary or numpy.array of the defined distance measure from each node to the soma.
@@ -795,7 +795,7 @@ class NeuronTree:
             if not as_dict:
                 dist_ = np.array(list(dist_.values()))
 
-        elif dist == 'radial':
+        elif dist == 'radial_dist':
             dist_ = self.get_radial_distance()
             if not as_dict:
                 dist_ = np.array(list(dist_.values()))
@@ -840,13 +840,17 @@ class NeuronTree:
         segment_length = T.get_edge_attributes(dist)
         return segment_length
 
-    def _get_distribution_data(self, key='branch_order', dist_measure=None, **kwargs):
+    def _get_distribution_data(self, key='branch_order', dist_measure=None, angle_type='axis'):
         """
         Helper function. Returns the data for the functions get_histogram() and get_kde_distribution()
-        :param key:
-        :param dist_measure:
-        :param kwargs:
-        :return:
+        :param key: statistics key, default='branch_order', options are 'branch_order', 'strahler_order', 'branch_angle',
+        'path_angle', 'thickness', 'path_length', 'radial_dist', 'segment_length' and 'root_angle'.
+        :param dist_measure: String, (default: None). Optional distance measure against the distribution of values is
+        computed. Possible values are 'path_length', 'radial' and 'branch_order'. If set, the distribution returned is
+        two-dimensional ( statistic vs distance) .
+        :param angle_type: String, (default: 'axis') only used when querying root angles. Determines if angles are
+        returned as 'axis' angles or as 'euler' angles.
+        :return: distribution data
         """
 
         if key == 'branch_order':
@@ -862,12 +866,7 @@ class NeuronTree:
             values = self.get_path_angles()
 
         elif key == 'root_angle':
-            if 'angle_type' in kwargs.keys():
-                angle_type = kwargs.pop('angle_type')
                 values = self.get_root_angles(angle_type)
-
-            else:
-                values = self.get_root_angles()
 
         elif key == 'thickness':
             values = self.get_radii()
@@ -902,7 +901,7 @@ class NeuronTree:
 
         return data
 
-    def get_histogram(self, key='branch_order', dist_measure=None, **kwargs):
+    def get_histogram(self, key='branch_order', dist_measure=None, angle_type='axis', **kwargs):
         """
         Returns the frequency distribution over the queried statistic. If a distance measure is set the distribution
         is two-dimensional.
@@ -910,22 +909,21 @@ class NeuronTree:
         are 'branch_order', 'strahler_order', 'branch_angle', 'path_angle', 'thickness', 'path_length', 'radial_dist',
         'segment_length' and 'root_angle'.
         :param dist_measure: String, (default: None). Optional distance measure against the distribution of values is
-        computed. Possible values are 'path_length', 'radial' and 'branch_order'. If set, the distribution returned is
+        computed. Possible values are 'path_length', 'radial_dist' and 'branch_order'. If set, the distribution returned is
         two-dimensional ( statistic vs distance) .
-        :param kwargs: options for the np.histogramdd method and to determine the angle type when 'root_angles' are
-        queried.
+        :param angle_type: String, (default: 'axis') only used when querying root angles. Determines if angles are
+        returned as 'axis' angles or as 'euler' angles.
+        :param kwargs: options for the np.histogramdd method.
         :return: (hist, edges ) as np.arrays. The histogram and its bin edges.
         """
 
         r = None
         dim = 1
-        data = self._get_distribution_data(key,dist_measure,**kwargs)
+        data = self._get_distribution_data(key, dist_measure, angle_type)
         if key == 'root_angle':
-            if 'angle_type' in kwargs.keys():
-                angle_type = kwargs.pop('angle_type')
-                if angle_type == 'euler':
-                    dim = 3
-                    r = [[0, 180]] * dim
+            if angle_type == 'euler':
+                dim = 3
+                r = [[0, 180]] * dim
         if dist_measure:
             hist_data = np.histogramdd(data, range=r, **kwargs)
         else:
@@ -936,7 +934,7 @@ class NeuronTree:
 
         return hist_data
 
-    def get_kde_distribution(self, key, dist_measure=None, **kwargs):
+    def get_kde_distribution(self, key, dist_measure=None, angle_type='axis', **kwargs):
         """
         Returns a Gaussian kernel density estimate of the distribution of the measure defined by key.
         changed for use with networkx v2 (works also in old version: edge -> adj)
@@ -944,16 +942,32 @@ class NeuronTree:
         'strahler_order', 'branch_angle', 'path_angle', 'thickness', 'path_length', 'radial_dist',
         'segment_length' and 'root_angle'.
         :param dist_measure: Optional. Allows to express the measure as a function of distance. If set to None, the kde is
-        one-dimensional, otherwise it is has two dimensions. Possible values are 'path_length', 'radial' and 'branch_order'.
-        :return: A one- or two-dimensional Gaussian kernel density estimate of measure specified with key.
+        one-dimensional, otherwise it is has two dimensions. Possible values are 'path_length', 'radial_dist' and 'branch_order'.
+        :param angle_type:
+        :param kwargs: options for the stats.gaussian_kde method.
+        :return: (kde, sampling_points) kde is a one- or two-dimensional Gaussian kernel density estimate of measure
+        specified with key. sampling_points is a 1x100 or 2x10000 array of equidistant sampling points for plotting the
+        kde.
         """
 
-        data = self._get_distribution_data(key, dist_measure, **kwargs)
-        if len(data.shape) > 1:
-            kde = stats.gaussian_kde(data.T)
+        data = self._get_distribution_data(key, dist_measure, angle_type)
+
+        max_ = np.ceil(np.max(data, axis=0))
+        dim = len(data.shape)
+        if key.find('angle') > -1: # if we are operating on angles then set max to be 180 degree
+            if dim > 1:
+                max_[1] = 180
+            else:
+                max_ = 180
+
+        if dim > 1:
+            kde = stats.gaussian_kde(data.T, **kwargs)
+            x, y = np.mgrid[0:max_[0]:100j, 0:max_[1]:100j]
+            sampling_points = np.vstack([x.ravel(), y.ravel()])
         else:
-            kde = stats.gaussian_kde(data)
-        return kde
+            kde = stats.gaussian_kde(data, **kwargs)
+            sampling_points = np.linspace(0, max_, 100)
+        return kde, sampling_points
 
     def get_radii(self):
         """
