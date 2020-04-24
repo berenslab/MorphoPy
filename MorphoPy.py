@@ -168,8 +168,8 @@ def main(argv):
             try:
                 # import swc file, compute statistics and create an output
                 mytree = file_manager.load_swc_file(directory + file)
-                morpho_stats_frame = fp.compute_morphometric_statistics(mytree)
-                morpho_stats_frame['filename'] = [file]
+                morpho_stats_frame = fp.compute_morphometric_statistics(mytree, format='long')
+                morpho_stats_frame['filename'] = file
                 print(morpho_stats_frame)
                 print("")
                 # Append stats to global dataframe
