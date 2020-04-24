@@ -141,7 +141,9 @@ A sample config file for density maps looks like this (stored in a text file):
 	# specific distance for resampling nodes:
     distance: 1
     # number of bins for all dimensions
-    n_bins: 100
+    n_bins_x: 20
+    n_bins_y: 20
+    n_bins_z: 20
     # if true: probabilty density is returned, count histogram otherwise
     density: True
     # smoothing the density data
@@ -184,10 +186,10 @@ All data is stored in the [tidy data format](http://vita.had.co.nz/papers/tidy-d
 Please also refer to our [tutorial](https://github.com/berenslab/MorphoPy/blob/master/notebooks/MORPHOPY%20Tutorial.ipynb).
 
 ### Density maps
-Changing config
+Density maps are marginal histograms over the neural mass. MorphoPy allows you to create density maps of different projections through the function compute_denisty_maps(). Per default it computes x, y, z, xy, xz and yz density maps from the point cloud of the original reconstruction. The point cloud is constructed through resampling along all neurites with a default distance of 1 micron. The resulting point clous is then binned into bins of 20 microns and smoothed using Gaussian smoothing with std of 1.
 
-### Persistence
-changing distance function. Adding a distance function
+However, you can customize all these parameters by passing a config file to the function (see LINK).
+
 
 ### Morphometric statistics
 Available morphometric statistics are:
@@ -210,6 +212,9 @@ Frequency histograms or Gaussian kernel density estimates can be queried for all
 methods `get_histogram(key)` or `get_kde_distribution(key)`. If you provide a distance measure (e.g. branch order,
 path distance from soma or radial distance) the returned distribution will be two-dimensional and allows to investigate
 a features' development across space.
+
+### Persistence
+changing distance function. Adding a distance function
 
 
 ### Not enough? ###
