@@ -71,7 +71,7 @@ show_threeview(N, fig)
 ![Plotting reconstructions in 2D. \label{fig:plot}](./figures/threeview_dendrites.png)
 
 As shown in the code snippet above, it is also possible to split the reconstruction into its different parts (axon or dendrites only)
-and operate on each neurite type separately or even query every individual neurite that is extending from the soma. 
+and operate on each neurite type separately. 
 
 Currently, MorphoPy supports the following feature representations:
 
