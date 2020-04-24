@@ -1594,8 +1594,8 @@ class NeuronTree:
             _ = ax.plot(V[plt_idx, :, x].T + x_offset, V[plt_idx, :, y].T + y_offset, c=apical_dendrite_color,
                                **kwargs)
 
-        ax.set_xlabel(projection[0].capitalize() + " (um)")
-        ax.set_ylabel(projection[1].capitalize() + " (um)")
+        ax.set_xlabel(projection[0].capitalize() + r' ($\mu$m)')
+        ax.set_ylabel(projection[1].capitalize() + r' ($\mu$m)')
         ax.spines['right'].set_visible(False)
         ax.spines['top'].set_visible(False)
 

@@ -277,7 +277,7 @@ def plot_density_maps(densities=None, figure=None):
     x_bins = densities['x_proj']['bins'][0]
     y_bins = densities['y_proj']['bins'][0]
     z_bins = densities['z_proj']['bins'][0]
-    title = 'No. bins are  x: %i  y: %i  z: %i'%(x_bins, y_bins, z_bins)
+    title = 'No. bins are  x: %i  y: %i  z: %i '%(x_bins, y_bins, z_bins) + '\n all units in microns'
 
     # write header in plot
     figure.suptitle(title, weight='bold')
