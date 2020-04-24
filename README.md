@@ -142,8 +142,8 @@ A sample config file for density maps looks like this (stored in a text file):
     distance: 1
     # number of bins for all dimensions
     n_bins: 100
-    # if true: probabilty density function at the bin
-    normed: True
+    # if true: probabilty density is returned, count histogram otherwise
+    density: True
     # smoothing the density data
     smooth: True
     # sigma used at smoothing
