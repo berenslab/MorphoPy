@@ -169,7 +169,7 @@ def main(argv):
                 # import swc file, compute statistics and create an output
                 mytree = file_manager.load_swc_file(directory + file)
                 morpho_stats_frame = fp.compute_morphometric_statistics(mytree)
-                morpho_stats_frame.index = [file]
+                morpho_stats_frame['filename'] = [file]
                 print(morpho_stats_frame)
                 print("")
                 # Append stats to global dataframe
@@ -204,8 +204,8 @@ def main(argv):
                     plt.title('Persistence Diagram')
                 else:
                     plt.title('Persistence Diagram (%s)' % function.__name__)
-                plt.xlabel('birth')
-                plt.ylabel('death')
+                plt.xlabel('Birth')
+                plt.ylabel('Death')
                 outputfile = '%s%s_persistence.png' % (output, file)
                 plt.savefig(outputfile)
                 print('Persistence saved to: ', outputfile)
@@ -230,12 +230,15 @@ def main(argv):
                 # plot densities
                 plot = fp.plot_density_maps(densities)
                 # get bins from density keys
-                bins = (list(densities))[0].split('_')[0]
+                x_bins = densities['x_proj']['bins'][0]
+                y_bins = densities['y_proj']['bins'][0]
+                z_bins = densities['z_proj']['bins'][0]
+                bins = 'x%iy%iz%i'%(x_bins, y_bins, z_bins)
                 # build output path and save plots there
                 outputfile = '%s%s_density_' % (output, file)
                 plot.savefig('%s_%s.png' % (outputfile, bins))
                 plt.close()
-                print('Density maps plotted to %s_%sbins.png' % (outputfile, bins))
+                print('Density maps plotted to %s_%s.png' % (outputfile, bins))
                 # build output path and save density data
                 outputfile = '%s%s_reconstruction_density.mat' % (outputfile, file)
                 sio.savemat(outputfile, densities)
@@ -254,7 +257,7 @@ def main(argv):
             output_filename = '%s%s_%s.csv' % (output, dirname, compute)
         else:
             output_filename = '%s%s_%s.csv' % (output, files[0], compute)
-        output_data.to_csv(output_filename, index_label="filename")
+        output_data.to_csv(output_filename, index=False)
         print('Data saved to: %s' % output_filename)
 
     # program end

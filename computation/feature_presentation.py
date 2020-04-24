@@ -71,7 +71,7 @@ def get_persistence(neurontree=None, f=None):
     return pd.DataFrame(D)
 
 
-def compute_morphometric_statistics(neurontree=None):
+def compute_morphometric_statistics(neurontree=None, format='wide'):
     """
     Compute various morphometric statistics of a NeuronTree which is passed as an object
     :param neurontree: NeuronTree instance, holds complete data of an swc file
@@ -150,7 +150,11 @@ def compute_morphometric_statistics(neurontree=None):
     else:
         z['tree_asymmetry'] = 0
 
-    return pd.DataFrame.from_dict(z, orient='index').T
+
+    morph = pd.DataFrame.from_dict(z, orient='index').T
+    if format == 'long':
+        morph = morph.T.reset_index().rename(columns={0: 'value', 'index': 'statistic'})
+    return morph
 
 
 def compute_density_maps(neurontree=None, config_params=None):
