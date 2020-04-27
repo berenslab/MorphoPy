@@ -188,7 +188,7 @@ def main(argv):
                 # import swc file, compute persistence table and give an output
                 mytree = file_manager.load_swc_file(directory + file)
                 persistence_frame = fp.get_persistence(mytree.get_topological_minor(), f=function)
-                persistence_frame.index = (file for x in range(len(persistence_frame)))
+                persistence_frame['filename'] = file
                 print(persistence_frame)
                 print()
 
