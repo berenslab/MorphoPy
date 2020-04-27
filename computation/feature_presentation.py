@@ -317,12 +317,14 @@ def plot_density_maps(densities=None, figure=None):
             if p_axes == 'x':
                 ax.plot(density['edges'][0][:-1], density['data'])
                 ax.set_xlabel(p_axes.capitalize() + r' ($\mu$m)')
+                ax.ticklabel_format(axis='y', style='scientific', scilimits=(0, 0))
             else:
                 ax.plot(density['data'], density['edges'][0][:-1])
                 ax.set_ylabel(p_axes.capitalize() + r' ($\mu$m)')
+                ax.ticklabel_format(axis='x', style='scientific', scilimits=(0, 0))
 
             sns.despine()
-
+        ax.set_aspect('auto')
     figure.tight_layout(rect=[0, 0.03, 1, 0.9])
     return figure
 
