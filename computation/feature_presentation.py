@@ -75,6 +75,8 @@ def compute_morphometric_statistics(neurontree=None, format='wide'):
     """
     Compute various morphometric statistics of a NeuronTree which is passed as an object
     :param neurontree: NeuronTree instance, holds complete data of an swc file
+    :param format: String (default='wide'), determines the data format of the returned statistics. Options are 'wide' and
+    'long'. For more information read http://www.cookbook-r.com/Manipulating_data/Converting_data_between_wide_and_long_format/.
     :return: pandas dataframe object with dictionary of all statistics
     """
     if neurontree is None:
@@ -273,22 +275,14 @@ def plot_density_maps(densities=None, figure=None):
     if densities is None:
         return figure
 
-    # get bins from density keys
-    x_bins = densities['x_proj']['bins'][0]
-    y_bins = densities['y_proj']['bins'][0]
-    z_bins = densities['z_proj']['bins'][0]
-    title = 'No. bins are  x: %i  y: %i  z: %i '%(x_bins, y_bins, z_bins) + '\n all units in microns'
-
-    # write header in plot
-    figure.suptitle(title, weight='bold')
     # set the axes layout right
     ax_x = plt.subplot2grid((4, 4), (0, 1), rowspan=1, colspan=2)
     ax_y = plt.subplot2grid((4, 4), (1, 3), rowspan=2, colspan=1)
     ax_z = plt.subplot2grid((4, 4), (3, 3), rowspan=1, colspan=1)
 
     ax_xy = plt.subplot2grid((4, 4), (1, 1), rowspan=2, colspan=2, sharex=ax_x, sharey=ax_y)
-    ax_xz = plt.subplot2grid((4, 4), (3, 1), rowspan=1, colspan=2, sharex=ax_x, sharey=ax_z)
-    ax_yz = plt.subplot2grid((4, 4), (1, 0), rowspan=2, colspan=1, sharey=ax_y)
+    ax_xz = plt.subplot2grid((4, 4), (3, 1), rowspan=1, colspan=2, sharex=ax_xy, sharey=ax_z)
+    ax_yz = plt.subplot2grid((4, 4), (1, 0), rowspan=2, colspan=1, sharey=ax_xy)
     axes = {'x': ax_x, 'y': ax_y, 'z': ax_z, 'xy': ax_xy, 'xz': ax_xz, 'yz': ax_yz}
 
 
@@ -310,22 +304,22 @@ def plot_density_maps(densities=None, figure=None):
 
             if p_axes == 'yz':
                 ax.imshow(density['data'], extent=(y_min, y_max, x_max, x_min))
-                ax.set_xlabel(p_axes[1].capitalize())
-                ax.set_ylabel(p_axes[0].capitalize(), rotation=0)
+                ax.set_xlabel(p_axes[1].capitalize() + r' ($\mu$m)')
+                ax.set_ylabel(p_axes[0].capitalize() + r' ($\mu$m)')
             else:
                 ax.imshow(density['data'].T, extent=(x_min, x_max, y_max, y_min))
-                ax.set_xlabel(p_axes[0].capitalize())
-                ax.set_ylabel(p_axes[1].capitalize(), rotation=0)
+                ax.set_xlabel(p_axes[0].capitalize() + r' ($\mu$m)')
+                ax.set_ylabel(p_axes[1].capitalize() + r' ($\mu$m)')
             ax.invert_yaxis()
 
         else:
             ax = axes[p_axes]
             if p_axes == 'x':
                 ax.plot(density['edges'][0][:-1], density['data'])
-                ax.set_xlabel(p_axes.capitalize())
+                ax.set_xlabel(p_axes.capitalize() + r' ($\mu$m)')
             else:
                 ax.plot(density['data'], density['edges'][0][:-1])
-                ax.set_ylabel(p_axes.capitalize(), rotation=0)
+                ax.set_ylabel(p_axes.capitalize() + r' ($\mu$m)')
 
             sns.despine()
 
