@@ -146,7 +146,7 @@ A sample config file for density maps looks like this (stored in a text file):
 	[global]
 	# specific distance for resampling nodes:
     distance: 1
-    # number of bins across all dimensions
+    # width of each bin in microns across all dimensions
     #bin_size: 20
     # number of bins for each dimension (only if you don't use bin_size)
     n_bins_x: 20
