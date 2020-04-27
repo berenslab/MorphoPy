@@ -25,25 +25,30 @@ def help(exitcode=0):
     """
     version()
     print('')
-    print('Usage: MorphoPy.py -c <compute_feature> [--func <persistence_function> | --conf <config_file>]')
+    print('Usage: MorphoPy.py -c <compute_feature> [--wide | --func <persistence_function> | --conf <config_file>]')
     print('                   [-f <swc_file> | -d <directory>] [-o <output directory>]')
     print('')
     print('Options:')
     print('   -c, --compute                parameter for selecting the computing feature:')
-    print('                                persistence: Compute persistence data         ')
-    print('                                stats      : Compute Morphometric statistics  ')
-    print('                                density    : Create density maps              ')
-    print('       Persistence Options:                                                   ')
+    print('                                persistence: compute persistence data         ')
+    print('                                stats      : compute morphometric statistics  ')
+    print('                                density    : create density maps              ')
+    print('       statistics options:                                                    ')
+    print('       --wide                   you can change your output format, in wide    ')
+    print('                                format you get one row for one cell with all  ')
+    print('                                belonging values.                             ')
+    print('                                (default: every value in an own row)          ')
+    print('       persistence options:                                                   ')
     print('       --func                   if persistence is selected as feature, you can')
     print('                                specify with this option a method function you')
     print('                                want to use at computing the persistence.     ')
-    print('       Density Map Options:                                                   ')
+    print('                                (default: radial distance function)           ')
+    print('       density map options:                                                   ')
     print('       --conf                   if density map is selected, you can pass a    ')
     print('                                config file with more parameters for creating ')
     print('                                the density maps. (optional)                  ')
     print('   -f, --file                   specifies a swc-file as input for Morphopy,   ')
-    print('                                if no file or directory is selected, working  ')
-    print('                                directory is used as default.                 ')
+    print('                                if no file is selected, directory is used     ')
     print('   -d, --directory              specifies a directory as input for swc-files. ')
     print('                                (default: working directory)                  ')
     print('   -o, --output                 specifies the output directory for saving the ')
@@ -82,7 +87,7 @@ def main(argv):
     """
     try:
         opts, args = getopt.gnu_getopt(argv, "c:f:d:o:hv",
-                                   ["compute=", "func=", "conf=", "file=", "dir=", "output=", "help", "version"])
+                                   ["compute=", "wide", "func=", "conf=", "file=", "dir=", "output=", "help", "version"])
     except getopt.GetoptError:
         print("Error: Wrong options are specified!")
         help(1)
@@ -96,6 +101,7 @@ def main(argv):
     compute = ''  # no compute mode selected
     directory = './'  # default working directory if no file and dir specified
     file = ""  # default no file -> directory is used
+    format = "long"  # default is long output format for stats
     function = None  # default function none
     output = None  # default output directory is none
     configfile = None  # default value, no config file is used
@@ -118,6 +124,8 @@ def main(argv):
             directory = arg
         elif opt in ('-o', '--output'):
             output = arg
+        elif opt in '--wide':
+            format = "wide"
         elif opt in '--conf':
             configfile = arg
         elif opt in '--func':
@@ -168,7 +176,7 @@ def main(argv):
             try:
                 # import swc file, compute statistics and create an output
                 mytree = file_manager.load_swc_file(directory + file)
-                morpho_stats_frame = fp.compute_morphometric_statistics(mytree, format='long')
+                morpho_stats_frame = fp.compute_morphometric_statistics(mytree, format=format)
                 morpho_stats_frame['filename'] = file
                 print(morpho_stats_frame)
                 print("")

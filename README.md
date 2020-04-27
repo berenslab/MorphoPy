@@ -22,12 +22,14 @@ The current working build:
  
 All builds are tested on Linux (Debian and CentOS) and Windows 10.
 
-You can find the all working builds at [pypi.org](https://pypi.org/project/morphopy/).
+You can find all working builds at [pypi.org](https://pypi.org/project/morphopy/).
 
 [back to start](#content)
 
-In the following, all commands written in boxes need to be entered into your terminal.
 ## <a name="requirements">Software Requirements</a>
+
+In the following, all commands written in boxes need to be entered into your terminal.
+
 ### Mac:
 
  - homebrew (to install latest version of python3)
@@ -104,29 +106,34 @@ Just call everywhere on the command line:
 	MorphoPy.py <options>
 Help:
 
-	Usage: MorphoPy.py -c <compute_feature> [--func <persistence_function> | --conf <config_file>]
+	Usage: MorphoPy.py -c <compute_feature> [--wide | --func <persistence_function> | --conf <config_file>]
 	                   [-f <swc_file> | -d <directory>] [-o <output directory>]
-
+	
 	Options:
-	   -c, --compute                parameter for selecting the computing feature:
-	                                persistence: Compute persistence data
-	                                stats      : Compute Morphometric statistics
-	                                density    : Create density maps
-	       Persistence Options:
-	       --func                   if persistence is selected as feature, you can
-	                                specify with this option a method function you
-	                                want to use at computing the persistence.
-	       Density Map Options:
-	       --conf                   if density map is selected, you can pass a
-	                                config file with more parameters for creating
-	                                the density maps. (optional)
-	   -f, --file                   specifies a swc-file as input for Morphopy,
-	                                if no file or directory is selected, working
-	                                directory is used as default.
-	   -d, --directory              specifies a directory as input for swc-files.
-	                                (default: working directory)
-	   -o, --output                 specifies the output directory for saving the
-	                                results in. (default: same as source)
+	-c, --compute               parameter for selecting the computing feature:
+	                            persistence: compute persistence data
+                                stats      : compute morphometric statistics
+                                density    : create density maps
+       statistics options:
+       --wide                   you can change your output format, in wide
+                                format you get one row for one cell with all
+                                belonging values.
+                                (default: every value in an own row)
+       persistence options:
+       --func                   if persistence is selected as feature, you can
+                                specify with this option a method function you
+                                want to use at computing the persistence.
+                                (default: radial distance function)
+       density map options:
+       --conf                   if density map is selected, you can pass a
+                                config file with more parameters for creating
+                                the density maps. (optional)
+    -f, --file                   specifies a swc-file as input for Morphopy,
+                                if no file is selected, directory is used
+    -d, --directory              specifies a directory as input for swc-files.
+                                (default: working directory)
+    -o, --output                 specifies the output directory for saving the
+                                results in. (default: same as source)
 
 
 Available functions for persistence at the moment are:
