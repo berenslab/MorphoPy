@@ -54,8 +54,14 @@ def read_config(configfile=None):
             config_params = {}
             if cfg.has_option("global", "distance"):
                 config_params['distance'] = cfg.getint("global", "distance")
-            if cfg.has_option("global", "n_bins"):
-                config_params['n_bins'] = cfg.getint("global", "n_bins")
+            if cfg.has_option("global", "bin_size"):
+                config_params['bin_size'] = cfg.getint("global", "bin_size")
+            if cfg.has_option("global", "n_bins_x"):
+                config_params['n_bins_x'] = cfg.getint("global", "n_bins_x")
+            if cfg.has_option("global", "n_bins_y"):
+                config_params['n_bins_y'] = cfg.getint("global", "n_bins_y")
+            if cfg.has_option("global", "n_bins_z"):
+                config_params['n_bins_z'] = cfg.getint("global", "n_bins_z")
             if cfg.has_option("global", "normed"):
                 config_params['normed'] = cfg.getboolean("global", "normed")
             if cfg.has_option("global", "smooth"):

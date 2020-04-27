@@ -115,10 +115,9 @@ Help:
                                 stats      : compute morphometric statistics
                                 density    : create density maps
        statistics options:
-       --wide                   you can change your output format, in wide
-                                format you get one row for one cell with all
-                                belonging values.
-                                (default: every value in an own row)
+       --long                   you can change your output format, in long
+                                format you get all values in a separate row.
+                                (default: all values in one row)   
        persistence options:
        --func                   if persistence is selected as feature, you can
                                 specify with this option a method function you
@@ -147,7 +146,9 @@ A sample config file for density maps looks like this (stored in a text file):
 	[global]
 	# specific distance for resampling nodes:
     distance: 1
-    # number of bins for all dimensions
+    # number of bins across all dimensions
+    #bin_size: 20
+    # number of bins for each dimension (only if you don't use bin_size)
     n_bins_x: 20
     n_bins_y: 20
     n_bins_z: 20

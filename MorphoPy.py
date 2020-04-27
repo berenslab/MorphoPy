@@ -34,10 +34,9 @@ def help(exitcode=0):
     print('                                stats      : compute morphometric statistics  ')
     print('                                density    : create density maps              ')
     print('       statistics options:                                                    ')
-    print('       --wide                   you can change your output format, in wide    ')
-    print('                                format you get one row for one cell with all  ')
-    print('                                belonging values.                             ')
-    print('                                (default: every value in an own row)          ')
+    print('       --long                   you can change your output format, in long    ')
+    print('                                format you get all values in a separate row.  ')
+    print('                                (default: all values in one row)              ')
     print('       persistence options:                                                   ')
     print('       --func                   if persistence is selected as feature, you can')
     print('                                specify with this option a method function you')
@@ -87,7 +86,7 @@ def main(argv):
     """
     try:
         opts, args = getopt.gnu_getopt(argv, "c:f:d:o:hv",
-                                   ["compute=", "wide", "func=", "conf=", "file=", "dir=", "output=", "help", "version"])
+                                   ["compute=", "long", "func=", "conf=", "file=", "dir=", "output=", "help", "version"])
     except getopt.GetoptError:
         print("Error: Wrong options are specified!")
         help(1)
@@ -101,7 +100,7 @@ def main(argv):
     compute = ''  # no compute mode selected
     directory = './'  # default working directory if no file and dir specified
     file = ""  # default no file -> directory is used
-    format = "long"  # default is long output format for stats
+    format = "wide"  # default is wide output format for stats
     function = None  # default function none
     output = None  # default output directory is none
     configfile = None  # default value, no config file is used
@@ -124,8 +123,8 @@ def main(argv):
             directory = arg
         elif opt in ('-o', '--output'):
             output = arg
-        elif opt in '--wide':
-            format = "wide"
+        elif opt in '--long':
+            format = "long"
         elif opt in '--conf':
             configfile = arg
         elif opt in '--func':
