@@ -194,13 +194,26 @@ All data is stored in the [tidy data format](http://vita.had.co.nz/papers/tidy-d
 Please also refer to our [tutorial](https://github.com/berenslab/MorphoPy/blob/master/notebooks/MORPHOPY%20Tutorial.ipynb).
 
 ### Density maps
-Density maps are marginal histograms over the neural mass. MorphoPy allows you to create density maps of different projections through the function compute_denisty_maps(). Per default it computes x, y, z, xy, xz and yz density maps from the point cloud of the original reconstruction. The point cloud is constructed through resampling along all neurites with a default distance of 1 micron. The resulting point clous is then binned into bins of 20 microns and smoothed using Gaussian smoothing with std of 1.
+Density maps are marginal histograms over the neural mass. MorphoPy allows you to create density maps of different projections through the function compute_denisty_maps(). Per default it computes x, y, z, xy, xz and yz density maps from the point cloud of the original reconstruction. The point cloud is constructed through resampling along all neurites with a default distance of 1 micron. The resulting point cloud is then binned into bins of 20 microns and smoothed using Gaussian smoothing with std of 1.
 
-However, you can customize all these parameters by passing a config file to the function (see LINK).
+However, you can customize all these parameters by passing a config file to the function (see above).
 
 
 ### Morphometric statistics
-Available morphometric statistics are:
+TODO
+
+Changing the Code
+
+### Morphometric distributions
+
+Morphometric distributions are not (yet) available via the command line tool.
+Frequency histograms or Gaussian kernel density estimates can be queried for all listed key statistics using the
+methods `get_histogram(key)` or `get_kde_distribution(key)`. If you provide a distance measure (e.g. branch order,
+path distance from soma or radial distance) the returned distribution will be two-dimensional and allows to investigate
+a features' development across space.
+Additionally, it is possible to compute [Sholl intersection profiles](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1244622/) using the function `get_sholl_intersection_profile()'. 
+
+Key statistics are
 - branch orders
 - Strahler order
 - branch angles
@@ -210,16 +223,6 @@ Available morphometric statistics are:
 - segment lengths
 - path length to soma
 - radial distance
-
-
-Changing the Code
-
-### Morphometric distributions
-These features are not (yet) available via the command line tool.
-Frequency histograms or Gaussian kernel density estimates can be queried for all single value statistics using the
-methods `get_histogram(key)` or `get_kde_distribution(key)`. If you provide a distance measure (e.g. branch order,
-path distance from soma or radial distance) the returned distribution will be two-dimensional and allows to investigate
-a features' development across space.
 
 ### Persistence
 changing distance function. Adding a distance function
