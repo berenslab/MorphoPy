@@ -252,7 +252,7 @@ Key statistics are
 
 ### Persistence
 
-Persistence diagrams are a concept from topology. They have been introduced as morphological descriptors of neural morphologies by [Kanari et al.](https://link.springer.com/article/10.1007/s12021-017-9341-1) and [Li et al.](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0182184) 
+Persistence diagrams are a concept from topology. They have been introduced as descriptors of neural morphologies by [Kanari et al.](https://link.springer.com/article/10.1007/s12021-017-9341-1) and [Li et al.](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0182184) 
 
 <img src="https://user-images.githubusercontent.com/520137/80973456-b0d37580-8e1f-11ea-92f4-2dfa5d9729d9.png" alt="Schematic of persistence diagrams" width="450"/>
 
