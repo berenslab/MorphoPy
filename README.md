@@ -189,20 +189,24 @@ reconstruction file they will be automatically collapsed to the centroid of thei
 MorphoPy currently only supports neurites that connect back to the soma. This means, axons that emerge from dendritic
 structures can not be handled.
 
+A neuron is represented as a directed acyclic graph with node attributes _id, x-, y-, z- position, radius_ and _type_id_ (soma: 1, axon: 2, dendrite: 3, apical dendrite: 4), and with edge attributes _path_length_ and _euclidean_dist_. Positions, radius and length mesaures are assumed to be given in microns. 
+
+![Node and edge attributes](https://user-images.githubusercontent.com/520137/80974465-0d836000-8e21-11ea-87b3-0bc9fdb41a3f.png)
+
 All data is stored in the [tidy data format](http://vita.had.co.nz/papers/tidy-data.pdf).
 
 Please also refer to our [tutorial](https://github.com/berenslab/MorphoPy/blob/master/notebooks/MORPHOPY%20Tutorial.ipynb).
+
 
 ### Density maps
 Density maps are marginal histograms over the neural mass. MorphoPy allows you to create density maps of different projections through the function compute_denisty_maps(). Per default it computes x, y, z, xy, xz and yz density maps from the point cloud of the original reconstruction. The point cloud is constructed through resampling along all neurites with a default distance of 1 micron. The resulting point cloud is then binned into bins of 20 microns and smoothed using Gaussian smoothing with std of 1.
 
 However, you can customize all these parameters by passing a config file to the function (see [above](#usage)).
 
-
 ### Morphometric statistics
-TODO
 
-Changing the Code
+![Morphometric statistics that can be queried.](https://user-images.githubusercontent.com/520137/80974473-0f4d2380-8e21-11ea-8ce2-acb8153cece4.png)
+
 
 ### Morphometric distributions
 
