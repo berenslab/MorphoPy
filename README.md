@@ -226,9 +226,9 @@ Key statistics are
 
 ### Persistence
 
-Persistence diagrams are a concept from topology. They have been introduced as morphological descriptors of neural morphologies by [Kanari et al.](https://link.springer.com/article/10.1007/s12021-017-9341-1) and [Li et al.](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0182184). 
+Persistence diagrams are a concept from topology. They have been introduced as morphological descriptors of neural morphologies by [Kanari et al.](https://link.springer.com/article/10.1007/s12021-017-9341-1) and [Li et al.](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0182184) 
 
-TODO add picture from Kanari
+![alt text](https://github.com/berenslab/MorphoPy/tree/master/figures/persistence_kanari.png "Schematic of how a persitence diagram is created. Figure taken from Kanari et al. 2018")
 
 The recorded birth and death times in the figure above are based on a certain distance function. `MorphoPy` implements four different distance functions to choose from: radial distance (default), height, path length and branch order. They all compute the distance of a point with respect to the soma. You can switch between them using the `--func` keyword (see [above](#usage)). 
 To provide your own distance function, add its code and its keyword to the `persistence_functions.py` file, but make sure that the distance functions interface fits the specification `custom_distance(networkx.DiGraph,node_id_end, node_id_start)` (see the [tutorial](https://github.com/berenslab/MorphoPy/blob/master/notebooks/MORPHOPY%20Tutorial.ipynb) for an example). 
