@@ -8,7 +8,7 @@
 <td valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>feature_presentation</strong></big></big></font></td
 ><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:MorphoPy/computation/feature_presentation.py">MorphoPy/computation/feature_presentation.py</a></font></td></tr></table>
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:computation/feature_presentation.py">computation/feature_presentation.py</a></font></td></tr></table>
     <p></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -17,13 +17,14 @@
 <font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
     
 <tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="copy.html">copy</a><br>
-<a href="numpy.html">numpy</a><br>
-</td><td width="25%" valign=top><a href="networkx.html">networkx</a><br>
-<a href="pandas.html">pandas</a><br>
-</td><td width="25%" valign=top><a href="matplotlib.pyplot.html">matplotlib.pyplot</a><br>
-<a href="random.html">random</a><br>
-</td><td width="25%" valign=top><a href="seaborn.html">seaborn</a><br>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="collections.html">collections</a><br>
+<a href="copy.html">copy</a><br>
+</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+<a href="networkx.html">networkx</a><br>
+</td><td width="25%" valign=top><a href="pandas.html">pandas</a><br>
+<a href="matplotlib.pyplot.html">matplotlib.pyplot</a><br>
+</td><td width="25%" valign=top><a href="random.html">random</a><br>
+<a href="seaborn.html">seaborn</a><br>
 </td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#eeaa77">
@@ -37,8 +38,10 @@ several&nbsp;projections&nbsp;are&nbsp;computed:&nbsp;x,y,z,xy,xz,yz<br>
 :param&nbsp;config_params:&nbsp;&nbsp;&nbsp;configuration&nbsp;params&nbsp;passed&nbsp;as&nbsp;dictionary&nbsp;which&nbsp;was&nbsp;load&nbsp;from&nbsp;file<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;containing&nbsp;all&nbsp;customizable&nbsp;params&nbsp;for&nbsp;density&nbsp;maps<br>
 :return:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;returns&nbsp;a&nbsp;dictionary&nbsp;with&nbsp;all&nbsp;density&nbsp;maps&nbsp;computed&nbsp;with&nbsp;all&nbsp;projections&nbsp;(x,y,z,xy,xz,yz)</tt></dd></dl>
- <dl><dt><a name="-compute_morphometric_statistics"><strong>compute_morphometric_statistics</strong></a>(neurontree=None)</dt><dd><tt>Compute&nbsp;various&nbsp;morphometric&nbsp;statistics&nbsp;of&nbsp;a&nbsp;NeuronTree&nbsp;which&nbsp;is&nbsp;passed&nbsp;as&nbsp;an&nbsp;object<br>
+ <dl><dt><a name="-compute_morphometric_statistics"><strong>compute_morphometric_statistics</strong></a>(neurontree=None, format='wide')</dt><dd><tt>Compute&nbsp;various&nbsp;morphometric&nbsp;statistics&nbsp;of&nbsp;a&nbsp;NeuronTree&nbsp;which&nbsp;is&nbsp;passed&nbsp;as&nbsp;an&nbsp;object<br>
 :param&nbsp;neurontree:&nbsp;NeuronTree&nbsp;instance,&nbsp;holds&nbsp;complete&nbsp;data&nbsp;of&nbsp;an&nbsp;swc&nbsp;file<br>
+:param&nbsp;format:&nbsp;String&nbsp;(default='wide'),&nbsp;determines&nbsp;the&nbsp;data&nbsp;format&nbsp;of&nbsp;the&nbsp;returned&nbsp;statistics.&nbsp;Options&nbsp;are&nbsp;'wide'&nbsp;and<br>
+'long'.&nbsp;For&nbsp;more&nbsp;information&nbsp;read&nbsp;<a href="http://www.cookbook-r.com/Manipulating_data/Converting_data_between_wide_and_long_format/">http://www.cookbook-r.com/Manipulating_data/Converting_data_between_wide_and_long_format/</a>.<br>
 :return:&nbsp;pandas&nbsp;dataframe&nbsp;object&nbsp;with&nbsp;dictionary&nbsp;of&nbsp;all&nbsp;statistics</tt></dd></dl>
  <dl><dt><a name="-get_persistence"><strong>get_persistence</strong></a>(neurontree=None, f=None)</dt><dd><tt>Creates&nbsp;the&nbsp;persistence&nbsp;barcode&nbsp;for&nbsp;the&nbsp;graph&nbsp;G.&nbsp;The&nbsp;algorithm&nbsp;is&nbsp;taken&nbsp;from<br>
 _Quantifying&nbsp;topological&nbsp;invariants&nbsp;of&nbsp;neuronal&nbsp;morphologies_&nbsp;from&nbsp;Lida&nbsp;Kanari&nbsp;et&nbsp;al<br>
@@ -50,8 +53,15 @@ changed&nbsp;for&nbsp;use&nbsp;with&nbsp;networkx&nbsp;v2&nbsp;(works&nbsp;also&
 &nbsp;&nbsp;&nbsp;&nbsp;distance&nbsp;from&nbsp;soma.</tt></dd></dl>
  <dl><dt><a name="-plot_density_maps"><strong>plot_density_maps</strong></a>(densities=None, figure=None)</dt><dd><tt>functions&nbsp;to&nbsp;plot&nbsp;density&nbsp;maps&nbsp;from&nbsp;densities&nbsp;dictionary&nbsp;with&nbsp;data&nbsp;from&nbsp;x,y,z,xy,xz,yz&nbsp;projections<br>
 &nbsp;<br>
-:return:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;figure&nbsp;will&nbsp;be&nbsp;returned&nbsp;with&nbsp;all&nbsp;ploted&nbsp;maps&nbsp;from&nbsp;densities<br>
+:return:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;figure&nbsp;will&nbsp;be&nbsp;returned&nbsp;with&nbsp;all&nbsp;plotted&nbsp;maps&nbsp;from&nbsp;densities<br>
 :param&nbsp;densities:&nbsp;&nbsp;&nbsp;dictionary&nbsp;which&nbsp;holds&nbsp;all&nbsp;projections&nbsp;for&nbsp;the&nbsp;plots<br>
 :param&nbsp;figure:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;you&nbsp;can&nbsp;pass&nbsp;a&nbsp;figure&nbsp;if&nbsp;you&nbsp;want&nbsp;to&nbsp;use&nbsp;a&nbsp;custom&nbsp;plot&nbsp;format</tt></dd></dl>
-</td></tr></table>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>__warningregistry__</strong> = {'version': 16, ('Setting the datapath via matplotlibrc is deprecated 3.2 and will be removed in in 3.3. ', &lt;class 'matplotlib.cbook.deprecation.MatplotlibDeprecationWarning'&gt;, 7): True, ('<font color="#c040c0">\n</font>The datapath rcparam was deprecated in Matplotl...2.1 and will be removed two minor releases later.', &lt;class 'matplotlib.cbook.deprecation.MatplotlibDeprecationWarning'&gt;, 7): True}</td></tr></table>
 </body></html>

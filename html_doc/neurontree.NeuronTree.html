@@ -8,7 +8,7 @@
 <td valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>NeuronTree</strong></big></big></font></td
 ><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:MorphoPy/neurontree/NeuronTree.py">MorphoPy/neurontree/NeuronTree.py</a></font></td></tr></table>
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:neurontree/NeuronTree.py">neurontree/NeuronTree.py</a></font></td></tr></table>
     <p></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -48,7 +48,7 @@
     
 <tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
-<dl><dt><a name="NeuronTree-__init__"><strong>__init__</strong></a>(self, swc=None, scaling=1.0, node_data=[], edge_data=[], graph=None, nxversion=1)</dt><dd><tt>Creates&nbsp;a&nbsp;<a href="#NeuronTree">NeuronTree</a>&nbsp;<a href="builtins.html#object">object</a>&nbsp;that&nbsp;contains&nbsp;a&nbsp;networkx.DiGraph&nbsp;with&nbsp;node&nbsp;attributes&nbsp;'pos'&nbsp;[x,y,z],<br>
+<dl><dt><a name="NeuronTree-__init__"><strong>__init__</strong></a>(self, swc=None, scaling=1.0, node_data=[], edge_data=[], graph=None)</dt><dd><tt>Creates&nbsp;a&nbsp;<a href="#NeuronTree">NeuronTree</a>&nbsp;<a href="builtins.html#object">object</a>&nbsp;that&nbsp;contains&nbsp;a&nbsp;networkx.DiGraph&nbsp;with&nbsp;node&nbsp;attributes&nbsp;'pos'&nbsp;[x,y,z],<br>
 'type'&nbsp;[1:soma,2:axon,3:&nbsp;dendrite],&nbsp;'radius'&nbsp;and&nbsp;edge&nbsp;attributes&nbsp;'euclidean_dist'&nbsp;and&nbsp;'path_length'.<br>
 It&nbsp;can&nbsp;be&nbsp;created&nbsp;from&nbsp;an&nbsp;swc&nbsp;file&nbsp;(as&nbsp;pandas.DataFrame&nbsp;or&nbsp;as&nbsp;numpy,ndarray)&nbsp;from&nbsp;a&nbsp;list&nbsp;of&nbsp;nodes&nbsp;and<br>
 edges&nbsp;or&nbsp;from&nbsp;a&nbsp;given&nbsp;networkx.DiGraph.<br>
@@ -152,26 +152,31 @@ of&nbsp;the&nbsp;mass.<br>
 
 <dl><dt><a name="NeuronTree-get_graph"><strong>get_graph</strong></a>(self)</dt></dl>
 
-<dl><dt><a name="NeuronTree-get_histogram"><strong>get_histogram</strong></a>(self, key='branch_order', dist_measure=None, **kwargs)</dt><dd><tt>Returns&nbsp;the&nbsp;frequency&nbsp;distribution&nbsp;over&nbsp;the&nbsp;queried&nbsp;statistic.&nbsp;If&nbsp;a&nbsp;distance&nbsp;measure&nbsp;is&nbsp;set&nbsp;the&nbsp;distribution<br>
+<dl><dt><a name="NeuronTree-get_histogram"><strong>get_histogram</strong></a>(self, key='branch_order', dist_measure=None, angle_type='axis', **kwargs)</dt><dd><tt>Returns&nbsp;the&nbsp;frequency&nbsp;distribution&nbsp;over&nbsp;the&nbsp;queried&nbsp;statistic.&nbsp;If&nbsp;a&nbsp;distance&nbsp;measure&nbsp;is&nbsp;set&nbsp;the&nbsp;distribution<br>
 is&nbsp;two-dimensional.<br>
 :param&nbsp;key:&nbsp;string&nbsp;(default='branch_order'),&nbsp;allows&nbsp;to&nbsp;query&nbsp;different&nbsp;statistic&nbsp;distributions.&nbsp;Options<br>
 are&nbsp;'branch_order',&nbsp;'strahler_order',&nbsp;'branch_angle',&nbsp;'path_angle',&nbsp;'thickness',&nbsp;'path_length',&nbsp;'radial_dist',<br>
 'segment_length'&nbsp;and&nbsp;'root_angle'.<br>
 :param&nbsp;dist_measure:&nbsp;String,&nbsp;(default:&nbsp;None).&nbsp;Optional&nbsp;distance&nbsp;measure&nbsp;against&nbsp;the&nbsp;distribution&nbsp;of&nbsp;values&nbsp;is<br>
-computed.&nbsp;Possible&nbsp;values&nbsp;are&nbsp;'path_length',&nbsp;'radial'&nbsp;and&nbsp;'branch_order'.&nbsp;If&nbsp;set,&nbsp;the&nbsp;distribution&nbsp;returned&nbsp;is<br>
+computed.&nbsp;Possible&nbsp;values&nbsp;are&nbsp;'path_length',&nbsp;'radial_dist'&nbsp;and&nbsp;'branch_order'.&nbsp;If&nbsp;set,&nbsp;the&nbsp;distribution&nbsp;returned&nbsp;is<br>
 two-dimensional&nbsp;(&nbsp;statistic&nbsp;vs&nbsp;distance)&nbsp;.<br>
-:param&nbsp;kwargs:&nbsp;options&nbsp;for&nbsp;the&nbsp;np.histogramdd&nbsp;method&nbsp;and&nbsp;to&nbsp;determine&nbsp;the&nbsp;angle&nbsp;type&nbsp;when&nbsp;'root_angles'&nbsp;are<br>
-queried.<br>
+:param&nbsp;angle_type:&nbsp;String,&nbsp;(default:&nbsp;'axis')&nbsp;only&nbsp;used&nbsp;when&nbsp;querying&nbsp;root&nbsp;angles.&nbsp;Determines&nbsp;if&nbsp;angles&nbsp;are<br>
+returned&nbsp;as&nbsp;'axis'&nbsp;angles&nbsp;or&nbsp;as&nbsp;'euler'&nbsp;angles.<br>
+:param&nbsp;kwargs:&nbsp;options&nbsp;for&nbsp;the&nbsp;np.histogramdd&nbsp;method.<br>
 :return:&nbsp;(hist,&nbsp;edges&nbsp;)&nbsp;as&nbsp;np.arrays.&nbsp;The&nbsp;histogram&nbsp;and&nbsp;its&nbsp;bin&nbsp;edges.</tt></dd></dl>
 
-<dl><dt><a name="NeuronTree-get_kde_distribution"><strong>get_kde_distribution</strong></a>(self, key, dist_measure=None, **kwargs)</dt><dd><tt>Returns&nbsp;a&nbsp;Gaussian&nbsp;kernel&nbsp;density&nbsp;estimate&nbsp;of&nbsp;the&nbsp;distribution&nbsp;of&nbsp;the&nbsp;measure&nbsp;defined&nbsp;by&nbsp;key.<br>
+<dl><dt><a name="NeuronTree-get_kde_distribution"><strong>get_kde_distribution</strong></a>(self, key, dist_measure=None, angle_type='axis', **kwargs)</dt><dd><tt>Returns&nbsp;a&nbsp;Gaussian&nbsp;kernel&nbsp;density&nbsp;estimate&nbsp;of&nbsp;the&nbsp;distribution&nbsp;of&nbsp;the&nbsp;measure&nbsp;defined&nbsp;by&nbsp;key.<br>
 changed&nbsp;for&nbsp;use&nbsp;with&nbsp;networkx&nbsp;v2&nbsp;(works&nbsp;also&nbsp;in&nbsp;old&nbsp;version:&nbsp;edge&nbsp;-&gt;&nbsp;adj)<br>
 :param&nbsp;key:&nbsp;String,&nbsp;measure&nbsp;to&nbsp;calculate&nbsp;the&nbsp;kernel&nbsp;density&nbsp;estimate&nbsp;from.&nbsp;Options&nbsp;are&nbsp;'branch_order',<br>
 'strahler_order',&nbsp;'branch_angle',&nbsp;'path_angle',&nbsp;'thickness',&nbsp;'path_length',&nbsp;'radial_dist',<br>
 'segment_length'&nbsp;and&nbsp;'root_angle'.<br>
 :param&nbsp;dist_measure:&nbsp;Optional.&nbsp;Allows&nbsp;to&nbsp;express&nbsp;the&nbsp;measure&nbsp;as&nbsp;a&nbsp;function&nbsp;of&nbsp;distance.&nbsp;If&nbsp;set&nbsp;to&nbsp;None,&nbsp;the&nbsp;kde&nbsp;is<br>
-one-dimensional,&nbsp;otherwise&nbsp;it&nbsp;is&nbsp;has&nbsp;two&nbsp;dimensions.&nbsp;Possible&nbsp;values&nbsp;are&nbsp;'path_length',&nbsp;'radial'&nbsp;and&nbsp;'branch_order'.<br>
-:return:&nbsp;A&nbsp;one-&nbsp;or&nbsp;two-dimensional&nbsp;Gaussian&nbsp;kernel&nbsp;density&nbsp;estimate&nbsp;of&nbsp;measure&nbsp;specified&nbsp;with&nbsp;key.</tt></dd></dl>
+one-dimensional,&nbsp;otherwise&nbsp;it&nbsp;is&nbsp;has&nbsp;two&nbsp;dimensions.&nbsp;Possible&nbsp;values&nbsp;are&nbsp;'path_length',&nbsp;'radial_dist'&nbsp;and&nbsp;'branch_order'.<br>
+:param&nbsp;angle_type:<br>
+:param&nbsp;kwargs:&nbsp;options&nbsp;for&nbsp;the&nbsp;stats.gaussian_kde&nbsp;method.<br>
+:return:&nbsp;(kde,&nbsp;sampling_points)&nbsp;kde&nbsp;is&nbsp;a&nbsp;one-&nbsp;or&nbsp;two-dimensional&nbsp;Gaussian&nbsp;kernel&nbsp;density&nbsp;estimate&nbsp;of&nbsp;measure<br>
+specified&nbsp;with&nbsp;key.&nbsp;sampling_points&nbsp;is&nbsp;a&nbsp;1x100&nbsp;or&nbsp;2x10000&nbsp;array&nbsp;of&nbsp;equidistant&nbsp;sampling&nbsp;points&nbsp;for&nbsp;plotting&nbsp;the<br>
+kde.</tt></dd></dl>
 
 <dl><dt><a name="NeuronTree-get_neurites"><strong>get_neurites</strong></a>(self, soma_included=True)</dt><dd><tt>Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;neurites&nbsp;extending&nbsp;from&nbsp;the&nbsp;soma&nbsp;(axon&nbsp;and&nbsp;dendrites).&nbsp;If&nbsp;the&nbsp;neurites&nbsp;are&nbsp;disconnected<br>
 only&nbsp;the&nbsp;part&nbsp;connected&nbsp;to&nbsp;the&nbsp;soma&nbsp;will&nbsp;be&nbsp;returned.<br>
