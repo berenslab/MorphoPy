@@ -146,7 +146,7 @@ A sample config file for density maps looks like this (stored in a text file):
 	[global]
 	# specific distance for resampling nodes:
     distance: 1
-    # number of bins across all dimensions
+    # width of each bin in microns across all dimensions
     #bin_size: 20
     # number of bins for each dimension (only if you don't use bin_size)
     n_bins_x: 20
@@ -194,13 +194,26 @@ All data is stored in the [tidy data format](http://vita.had.co.nz/papers/tidy-d
 Please also refer to our [tutorial](https://github.com/berenslab/MorphoPy/blob/master/notebooks/MORPHOPY%20Tutorial.ipynb).
 
 ### Density maps
-Density maps are marginal histograms over the neural mass. MorphoPy allows you to create density maps of different projections through the function compute_denisty_maps(). Per default it computes x, y, z, xy, xz and yz density maps from the point cloud of the original reconstruction. The point cloud is constructed through resampling along all neurites with a default distance of 1 micron. The resulting point clous is then binned into bins of 20 microns and smoothed using Gaussian smoothing with std of 1.
+Density maps are marginal histograms over the neural mass. MorphoPy allows you to create density maps of different projections through the function compute_denisty_maps(). Per default it computes x, y, z, xy, xz and yz density maps from the point cloud of the original reconstruction. The point cloud is constructed through resampling along all neurites with a default distance of 1 micron. The resulting point cloud is then binned into bins of 20 microns and smoothed using Gaussian smoothing with std of 1.
 
-However, you can customize all these parameters by passing a config file to the function (see LINK).
+However, you can customize all these parameters by passing a config file to the function (see [above](#usage)).
 
 
 ### Morphometric statistics
-Available morphometric statistics are:
+TODO
+
+Changing the Code
+
+### Morphometric distributions
+
+Morphometric distributions are not (yet) available via the command line tool.
+Frequency histograms or Gaussian kernel density estimates can be queried for all listed key statistics using the
+methods `get_histogram(key)` or `get_kde_distribution(key)`. If you provide a distance measure (e.g. branch order,
+path distance from soma or radial distance) the returned distribution will be two-dimensional and allows to investigate
+a features' development across space.
+Additionally, it is possible to compute [Sholl intersection profiles](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1244622/) using the function `get_sholl_intersection_profile()`. 
+
+Key statistics are
 - branch orders
 - Strahler order
 - branch angles
@@ -211,18 +224,15 @@ Available morphometric statistics are:
 - path length to soma
 - radial distance
 
-
-Changing the Code
-
-### Morphometric distributions
-These features are not (yet) available via the command line tool.
-Frequency histograms or Gaussian kernel density estimates can be queried for all single value statistics using the
-methods `get_histogram(key)` or `get_kde_distribution(key)`. If you provide a distance measure (e.g. branch order,
-path distance from soma or radial distance) the returned distribution will be two-dimensional and allows to investigate
-a features' development across space.
-
 ### Persistence
-changing distance function. Adding a distance function
+
+Persistence diagrams are a concept from topology. They have been introduced as morphological descriptors of neural morphologies by [Kanari et al.](https://link.springer.com/article/10.1007/s12021-017-9341-1) and [Li et al.](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0182184) 
+
+![alt text](https://github.com/berenslab/MorphoPy/tree/master/figures/persistence_kanari.png "Schematic of how a persitence diagram is created. Figure taken from Kanari et al. 2018")
+
+The recorded birth and death times in the figure above are based on a certain distance function. `MorphoPy` implements four different distance functions to choose from: radial distance (default), height, path length and branch order. They all compute the distance of a point with respect to the soma. You can switch between them using the `--func` keyword (see [above](#usage)). 
+To provide your own distance function, add its code and its keyword to the `persistence_functions.py` file, but make sure that the distance functions interface fits the specification `custom_distance(networkx.DiGraph,node_id_end, node_id_start)` (see the [tutorial](https://github.com/berenslab/MorphoPy/blob/master/notebooks/MORPHOPY%20Tutorial.ipynb) for an example). 
+
 
 
 ### Not enough? ###
