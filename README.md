@@ -193,6 +193,8 @@ A neuron is represented as a directed acyclic graph with node attributes _id, x-
 
 ![Node and edge attributes](https://user-images.githubusercontent.com/520137/80974465-0d836000-8e21-11ea-87b3-0bc9fdb41a3f.png)
 
+*Fig. 1: Node and edge attributes associated with each neuron graph.*
+
 All data is stored in the [tidy data format](http://vita.had.co.nz/papers/tidy-data.pdf).
 
 Please also refer to our [tutorial](https://github.com/berenslab/MorphoPy/blob/master/notebooks/MORPHOPY%20Tutorial.ipynb).
@@ -207,6 +209,7 @@ However, you can customize all these parameters by passing a config file to the 
 
 ![Morphometric statistics that can be queried.](https://user-images.githubusercontent.com/520137/80974473-0f4d2380-8e21-11ea-8ce2-acb8153cece4.png)
 
+*Fig. 2: Morphometric statistics that can be computed on each reconstruction. Left: distance measures, Right: angles.*
 
 ### Morphometric distributions
 
@@ -232,7 +235,10 @@ Key statistics are
 
 Persistence diagrams are a concept from topology. They have been introduced as morphological descriptors of neural morphologies by [Kanari et al.](https://link.springer.com/article/10.1007/s12021-017-9341-1) and [Li et al.](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0182184) 
 
-<img width="581" alt="Schematic of how a persistence diagram is computed. Taken from Kanari et al. 2018" src="https://user-images.githubusercontent.com/520137/80973456-b0d37580-8e1f-11ea-92f4-2dfa5d9729d9.png">
+<img src="https://user-images.githubusercontent.com/520137/80973456-b0d37580-8e1f-11ea-92f4-2dfa5d9729d9.png" alt="Schematic of persistence diagrams" width="450"/>
+
+*Fig. 3: Schematic of how a persistence diagram is generated. The longest branch with the longest 'lifetime' is marked in red. Taken from Kanari et al. 2018.*
+
 
 The recorded birth and death times in the figure above are based on a certain distance (or lifetime) function. `MorphoPy` implements four different distance functions to choose from: radial distance (default), height, path length and branch order. They all compute the distance of a point with respect to the soma. You can switch between them using the `--func` keyword (see [above](#usage)). 
 To provide your own distance function, add its code and its keyword to the `persistence_functions.py` file, but make sure that the distance functions interface fits the specification `custom_distance(networkx.DiGraph,node_id_end, node_id_start)` (see the [tutorial](https://github.com/berenslab/MorphoPy/blob/master/notebooks/MORPHOPY%20Tutorial.ipynb) for an example). 
