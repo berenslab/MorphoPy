@@ -260,7 +260,11 @@ Persistence diagrams are a concept from topology. They have been introduced as d
 
 
 The recorded birth and death times in the figure above are based on a certain distance (or lifetime) function. `MorphoPy` implements four different distance functions to choose from: radial distance (default), height, path length and branch order. They all compute the distance of a point with respect to the soma. You can switch between them using the `--func` keyword (see [above](#usage)). 
-To provide your own distance function, add its code and its keyword to the `persistence_functions.py` file, but make sure that the distance functions interface fits the specification `custom_distance(networkx.DiGraph,node_id_end, node_id_start)` (see the [tutorial](https://github.com/berenslab/MorphoPy/blob/master/notebooks/MORPHOPY%20Tutorial.ipynb) for an example). 
+To provide your own distance function, add its code and its keyword to the `persistence_functions.py` file, but make sure that the distance functions interface fits the specification `custom_distance(networkx.DiGraph,node_id_end, node_id_start)` (see Fig. 4 and the [tutorial](https://github.com/berenslab/MorphoPy/blob/master/notebooks/MORPHOPY%20Tutorial.ipynb) for an example). 
+
+<img src="https://user-images.githubusercontent.com/520137/80983512-eaf74400-8e2c-11ea-94cc-040275f6aeca.png" alt="How to add a custom distance function" width="751"/>
+
+*Fig. 4: How to add a custom persistence distance function. To be able to call it from the command line you need to add it to the functions list.*
 
 
 
