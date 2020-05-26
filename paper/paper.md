@@ -35,7 +35,7 @@ For a long time, the anatomy of a neuron has been considered a defining feature 
 However, computational analysis of neuronal morphologies persists to be a challenging problem. It usually begins with choosing a
 feature representation in order to make individual morphologies amenable to statistical data analysis or to processing by
 machine learning methods. Over the years, many different feature representations have been suggested in the literature,
-such as density maps [jefferis:2007], single valued summary statistics (morphometrics) [scorcioni:2008; @neurom] or,
+such as density maps [@jefferis:2007], single valued summary statistics (morphometrics) [@scorcioni:2008; @neurom] or,
 more recently, persistence images [@li:2017; @kanari:2018].
 Unfortunately, current software packages for extracting them from morphological data are often focused on solely one such
 representation and implemented across various programming languages.
