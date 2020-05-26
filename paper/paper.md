@@ -96,7 +96,8 @@ from computation.feature_presentation import get_persistence
 import numpy as np
 def custom_distance(G, u, v):
     """
-    Returns a distance between nodes u and v, which both are part of the graph given in G.
+    Returns a distance between nodes u and v, 
+    which both are part of the graph given in G.
     """
     n = G.node[u]['pos']
     r = G.node[v]['pos']
