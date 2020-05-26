@@ -82,7 +82,7 @@ A variety of _morphometric statistics_ can be computed on the nodes and edges of
 The `get_morphometric_statistics()`-method offers a precompiled single valued selection of these statistics including e.g.
 min/max branch angles, maximal branch order, and maximal path length to the soma (see \autoref{fig:morphometrics}), but in principle, they can be adjusted to the user's personal preference.
 
-Additionally, it is possible to query the entire _morphomoetric distribution_ of each statistic either in form of a histogram or as a
+Additionally, it is possible to query the entire _morphometric distribution_ of each statistic either in form of a histogram or as a
 Gaussian kernel density estimate (kde). Fig. \autoref{fig:morphdist}, for example, shows the kde of radial distances, branch angles and their
 combination for the dendrites shown in \autoref{fig:plot}.
 
