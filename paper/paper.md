@@ -9,17 +9,13 @@ authors:
     - name: Sophie Laturnus
       orcid: 0000-0001-9532-788X
       affiliation: "1,3,4"
-
     - name: Adam von Daranyi
       affiliation: 4
-
     - name: Ziwei Huang
       affiliation: "1,3,4"
-
     - name: Philipp Berens
      orcid: 0000-0002-0199-4727
      affiliation: "1,2,3,4"
-
 affiliations:
     - name: Institute for Ophthalmic Research, University of T\"ubingen, Germany
     index: 1
@@ -29,7 +25,7 @@ affiliations:
     index: 3
     - name: Center for Integrative Neuroscience, University of T\"ubingen, Germany
     index: 4
-date: \today
+date: 26 May 2020
 bibliography: morphopy.bib
 ---
 
