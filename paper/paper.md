@@ -70,19 +70,20 @@ and operate on each neurite type separately.
 
 Currently, MorphoPy supports the following feature representations:
 
+![XY-density map of the dendrite plotted above with different degrees of Gaussian smoothing. \label{fig:dms}](./figures/density_map_smoothing.png)
 _Density maps_ are computed on the basis of a configuration file (or a dictionary) that controls parameters such as bin size
 and binning ranges. Additionally, users can specify whether and to which degree
 they want to smooth each density map \autoref{fig:dms}.
-![XY-density map of the dendrite plotted above with different degrees of Gaussian smoothing. \label{fig:dms}](./figures/density_map_smoothing.png)
 
+![Node and edge related morphometric statistics. \label{fig:morphometrics}](./figures/fig_morphometrics.png)
 A variety of _morphometric statistics_ can be computed on the nodes and edges of each reconstruction.
 The `get_morphometric_statistics()`-method offers a precompiled single valued selection of these statistics including e.g.
 min/max branch angles, maximal branch order, and maximal path length to the soma (\autoref{fig:morphometrics}), but in principle, they can be adjusted to the user's personal preference.
-![Node and edge related morphometric statistics. \label{fig:morphometrics}](./figures/fig_morphometrics.png)
+
+![\label{fig:morphdist}](./figures/2D_morph_dist.png)
 Additionally, it is possible to query the entire _morphomoetric distribution_ of each statistic either in form of a histogram or as a
 Gaussian kernel density estimate (kde). Fig. \autoref{fig:morphdist}, for example, shows the kde of radial distances, branch angles and their
 combination for the dendrites shown in \autoref{fig:plot}.
-![\label{fig:morphdist}](./figures/2D_morph_dist.png)
 
 Furthermore, `MorphoPy` supports the generation of _2D persistence diagrams_. Persistence diagrams describe the branching
 of neural morphologies [@li:2017; @kanari:2018] with respect to a specified distance function. By default, `MorphoPy`
