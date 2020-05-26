@@ -9,30 +9,25 @@ authors:
     - name: Sophie Laturnus
       orcid: 0000-0001-9532-788X
       affiliation: "1,3,4"
-
     - name: Adam von Daranyi
       affiliation: 4
-
     - name: Ziwei Huang
       affiliation: "1,3,4"
-
     - name: Philipp Berens
-     orcid: 0000-0002-0199-4727
-     affiliation: "1,2,3,4"
-
+      orcid: 0000-0002-0199-4727
+      affiliation: "1,2,3,4"
 affiliations:
     - name: Institute for Ophthalmic Research, University of T\"ubingen, Germany
-    index: 1
+      index: 1
     - name: Institute for Bioinformatics and Medical Informatics, University of T\"ubingen, Germany
-    index: 2
+      index: 2
     - name: Bernstein Center for Computational Neuroscience, University of T\"ubingen, Germany
-    index: 3
+      index: 3
     - name: Center for Integrative Neuroscience, University of T\"ubingen, Germany
-    index: 4
-date: \today
+      index: 4
+date: 26 May 2020
 bibliography: morphopy.bib
 ---
-
 
 # Summary
 
@@ -121,11 +116,10 @@ For a full documentation of `MorphoPy`'s functionality please refer to our docum
 based on their morphology [@laturnus:2019]. It has already been used in a series of scientific publications that relate
 transcriptome, electrophysiology and morphology of cortical interneurons in V1 and M1 [@scala:2019; @scala:2020].
 
-
 # Acknowledgements
 
 This work was funded by the German Ministry of Education and Research(FKZ 01GQ1601), the German Research Foundation (DFG)
 under Germany’s Excellence Strategy (EXC2064/1 – 390727645; BE5601/4-1, SFB 1233 “Robust Vision”, Project number 276693517),
 and the National Institute of Mental Health (U19MH114830).
 
-# Reference
+# References
