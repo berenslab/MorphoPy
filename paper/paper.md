@@ -68,9 +68,10 @@ show_threeview(N, fig)
 As shown in the code snippet above, it is also possible to split the reconstruction into its different parts (axon or dendrites only)
 and operate on each neurite type separately. 
 
+![XY-density map of the dendrite plotted above with different degrees of Gaussian smoothing. \label{fig:dms}](./figures/density_map_smoothing.png)
+
 Currently, MorphoPy supports the following feature representations:
 
-![XY-density map of the dendrite plotted above with different degrees of Gaussian smoothing. \label{fig:dms}](./figures/density_map_smoothing.png)
 _Density maps_ are computed on the basis of a configuration file (or a dictionary) that controls parameters such as bin size
 and binning ranges. Additionally, users can specify whether and to which degree
 they want to smooth each density map \autoref{fig:dms}.
@@ -80,10 +81,10 @@ A variety of _morphometric statistics_ can be computed on the nodes and edges of
 The `get_morphometric_statistics()`-method offers a precompiled single valued selection of these statistics including e.g.
 min/max branch angles, maximal branch order, and maximal path length to the soma (\autoref{fig:morphometrics}), but in principle, they can be adjusted to the user's personal preference.
 
-![\label{fig:morphdist}](./figures/2D_morph_dist.png)
 Additionally, it is possible to query the entire _morphomoetric distribution_ of each statistic either in form of a histogram or as a
 Gaussian kernel density estimate (kde). Fig. \autoref{fig:morphdist}, for example, shows the kde of radial distances, branch angles and their
 combination for the dendrites shown in \autoref{fig:plot}.
+![Kernel density estimate of branch angles as a function of the readial distance from the soma. \label{fig:morphdist}](./figures/2D_morph_dist.png)
 
 Furthermore, `MorphoPy` supports the generation of _2D persistence diagrams_. Persistence diagrams describe the branching
 of neural morphologies [@li:2017; @kanari:2018] with respect to a specified distance function. By default, `MorphoPy`
@@ -110,7 +111,8 @@ df_custom = get_persistence(Dendrites.get_topological_minor(), f=custom_distance
 In addition to working as a package in interactive computing environments, `MorphoPy` can be called from the command line
 to operate on single files or entire batches.
 ```bash
-MorphoPy.py -c [density|persistence|stats] -f ['path_to_file'] | -d ['path_to_folder']
+MorphoPy.py -c [density|persistence|stats] 
+            -f ['path_to_file'] | -d ['path_to_folder']
 ```
 For a full documentation of `MorphoPy`'s functionality please refer to our documentation and tutorial on our [gitHub page](https://github.com/berenslab/MorphoPy).
 
