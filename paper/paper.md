@@ -77,6 +77,7 @@ and binning ranges. Additionally, users can specify whether and to which degree
 they want to smooth each density map (see \autoref{fig:dms}).
 
 ![Node and edge related morphometric statistics. \label{fig:morphometrics}](./figures/fig_morphometrics.png)
+
 A variety of _morphometric statistics_ can be computed on the nodes and edges of each reconstruction.
 The `get_morphometric_statistics()`-method offers a precompiled single valued selection of these statistics including e.g.
 min/max branch angles, maximal branch order, and maximal path length to the soma (see \autoref{fig:morphometrics}), but in principle, they can be adjusted to the user's personal preference.
@@ -84,7 +85,8 @@ min/max branch angles, maximal branch order, and maximal path length to the soma
 Additionally, it is possible to query the entire _morphomoetric distribution_ of each statistic either in form of a histogram or as a
 Gaussian kernel density estimate (kde). Fig. \autoref{fig:morphdist}, for example, shows the kde of radial distances, branch angles and their
 combination for the dendrites shown in \autoref{fig:plot}.
-![Kernel density estimate of branch angles as a function of the readial distance from the soma. \label{fig:morphdist}](./figures/2D_morph_dist.png)
+
+![Kernel density estimate of branch angles as a function of the radial distance from the soma. \label{fig:morphdist}](./figures/2D_morph_dist.png)
 
 Furthermore, `MorphoPy` supports the generation of _2D persistence diagrams_. Persistence diagrams describe the branching
 of neural morphologies [@li:2017; @kanari:2018] with respect to a specified distance function. By default, `MorphoPy`
