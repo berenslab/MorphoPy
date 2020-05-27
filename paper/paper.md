@@ -86,7 +86,7 @@ Additionally, it is possible to query the entire _morphometric distribution_ of 
 Gaussian kernel density estimate (kde). Fig. \autoref{fig:morphdist}, for example, shows the kde of radial distances, branch angles and their
 combination for the dendrites shown in \autoref{fig:plot}.
 
-![Kernel density estimate of branch angles as a function of the radial distance from the soma. \label{fig:morphdist}](./figures/2D_morph_dist.png)
+![Kernel density estimate of branch angles as a function of the radial distance from the soma. \label{fig:morphdist}](./figures/2D_morph_dist_small.png)
 
 Furthermore, `MorphoPy` supports the generation of _2D persistence diagrams_. Persistence diagrams describe the branching
 of neural morphologies [@li:2017; @kanari:2018] with respect to a specified distance function. By default, `MorphoPy`
