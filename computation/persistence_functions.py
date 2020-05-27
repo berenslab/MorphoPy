@@ -5,6 +5,10 @@ import numpy as np
 functions = ["None",  "radial_distance", "height", "path_length", "branch_order"]
 nx_version = int(float(nx.__version__))
 
+
+def custom_distance(G,u,v):
+    # write your code here
+    return scalar
 # A selection of filter functions
 def radial_distance(G, u, v):
     if nx_version > 1:
