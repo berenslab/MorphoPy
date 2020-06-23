@@ -45,10 +45,10 @@ downstream statistical analysis. It bundles common representations such as densi
 and persistence images in one simple open source framework implemented in Python to make them accessible to a larger community.
 `MorphoPy` can be used either as a standalone command line tool or as a package within an interactive computing workflow.
 
-![Neural reconstructions are represented as direct acylic graphs with node and edge attributes.\label{fig:attributes}](./figures/Fig1_attributes_small.png)
+![Neural reconstructions are represented as direct acyclic graphs with node and edge attributes.\label{fig:attributes}](./figures/Fig1_attributes_small.png)
 
 `MorphoPy` builds on the functionality of the networkx package [@hagberg:2008] and represents each neuron as a directed
-acylic tree graph with node and edge attributes \autoref{fig:attributes}. The package supports to read in files in the common
+acyclic tree graph with node and edge attributes \autoref{fig:attributes}. The package supports to read in files in the common
 [swc-format](http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/Spec.html), offers functions to
 compute various feature representations and provides 2D plotting routines for data exploration (\autoref{fig:plot}).
 ```python
