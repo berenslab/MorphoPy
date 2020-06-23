@@ -17,13 +17,13 @@ authors:
       orcid: 0000-0002-0199-4727
       affiliation: "1,2,3,4"
 affiliations:
-    - name: Institute for Ophthalmic Research, University of T\"ubingen, Germany
+    - name: Institute for Ophthalmic Research, University of T&uuml;bingen, Germany
       index: 1
-    - name: Institute for Bioinformatics and Medical Informatics, University of T\"ubingen, Germany
+    - name: Institute for Bioinformatics and Medical Informatics, University of T&uuml;bingen, Germany
       index: 2
-    - name: Bernstein Center for Computational Neuroscience, University of T\"ubingen, Germany
+    - name: Bernstein Center for Computational Neuroscience, University of T&uuml;bingen, Germany
       index: 3
-    - name: Center for Integrative Neuroscience, University of T\"ubingen, Germany
+    - name: Center for Integrative Neuroscience, University of T&uuml;bingen, Germany
       index: 4
 date: 26 May 2020
 bibliography: morphopy.bib
