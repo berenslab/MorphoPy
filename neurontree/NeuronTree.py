@@ -1610,7 +1610,7 @@ class NeuronTree:
 
         # create dataframe with graph data
         G = self._G
-        ids = [int(k) for k in G.nodes(data=True)]
+        ids = [int(k) for k in G.nodes(data=False)]
         ids.sort()
         pos_dict = self.get_node_attributes('pos')
         r_dict = self.get_node_attributes('radius')
