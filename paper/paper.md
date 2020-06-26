@@ -52,13 +52,14 @@ acyclic tree graph with node and edge attributes \autoref{fig:attributes}. The p
 [swc-format](http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/Spec.html), offers functions to
 compute various feature representations and provides 2D plotting routines for data exploration (\autoref{fig:plot}).
 ```python
-import MorphoPy.NeuronTree as nt
-from MorphoPy.computation import file_manager as fm
+
+from morphopy import MorphoPy as nt
+from morphopy.MorphoPy import file_manager as fm
 
 N = fm.load_swc_file("../data/EC3-80604.CNG.swc")
 Dendrites = N.get_dendritic_tree()
 
-from neurontree.plotting import show_threeview
+from morphopy.neurontree.plotting import show_threeview
 fig = plt.figure(figsize=(10,10))
 show_threeview(N, fig)
 ```
@@ -94,7 +95,7 @@ computes a persistence diagram based on the radial distance from the soma, but u
 pre-implemented distance functions (radial distance, path length, height or branch order) or provide their own.
 
 ```python
-from computation.feature_presentation import get_persistence
+from morphopy.computation.feature_presentation import get_persistence
 
 import numpy as np
 def custom_distance(G, u, v):
