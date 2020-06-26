@@ -101,7 +101,7 @@ You can simply uninstall the package with pip3:
 [back to start](#content)
 
 ## <a name="usage">Usage</a> 
-Just call everywhere on the command line:
+After the installation you can simply call:
 
 	MorphoPy.py <options>
 Help:
@@ -180,12 +180,22 @@ the code and add tests and examples of how to use your code.
 
 ## <a name="citation"> Citing MorphoPy </a>
 
-If you are using MorphoPy for your research or your work project please make sure to cite us and this repository.
-
+If you are using MorphoPy for your research or your work project please make sure to cite us and this repository:
+```
+@misc{morphopy,
+  author = {Laturnus, Sophie and von Daranyi, Adam and Huang, Ziwei and Berens, Philipp},
+  title = {MorphoPy},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  url = {https://github.com/berenslab/MorphoPy}
+}
+```
 ## <a name="module">Module description</a> 
 
-**Important:** MorphoPy requires the soma to be one single point. If several soma points are present in the
-reconstruction file they will be automatically collapsed to the centroid of their convex hull on file loading (also see utils.get_standardized_swc).
+**Important:** MorphoPy requires the soma to be one single point. If more than 3 somatic points are present in the
+reconstruction file they will be automatically collapsed to the centroid of their convex hull on file loading. If the 
+soma is described by 2 to 3 points they will be automatically collapsed to their mean (also see utils.get_standardized_swc).
+
 MorphoPy currently only supports neurites that connect back to the soma. This means, axons that emerge from dendritic
 structures can not be handled.
 
@@ -259,13 +269,17 @@ Persistence diagrams are a concept from topology. They have been introduced as d
 *Fig. 3: Schematic of how a persistence diagram is generated. The longest branch with the longest 'lifetime' is marked in red. Taken from Kanari et al. 2018.*
 
 
-The recorded birth and death times in the figure above are based on a certain distance (or lifetime) function. `MorphoPy` implements four different distance functions to choose from: radial distance (default), height, path length and branch order. They all compute the distance of a point with respect to the soma. You can switch between them using the `--func` keyword (see [above](#usage)). 
-To provide your own distance function, add its code and its keyword to the `persistence_functions.py` file, but make sure that the distance functions interface fits the specification `custom_distance(networkx.DiGraph,node_id_end, node_id_start)` (see Fig. 4 and the [tutorial](https://github.com/berenslab/MorphoPy/blob/master/notebooks/MORPHOPY%20Tutorial.ipynb) for an example). 
+The recorded birth and death times in the figure above are based on a certain distance (or lifetime) function. `MorphoPy` implements four different distance functions to choose from: radial distance (default), height, path length and branch order. 
+They all compute the distance of a point with respect to the soma. In the command line tool you can switch between them using the `--func` keyword (see [above](#usage)). 
+To provide your own distance function, add its code and its keyword to the `persistence_functions.py` file, but make sure 
+that the distance functions interface fits the specification `custom_distance(networkx.DiGraph,node_id_end, node_id_start)` 
+(see Fig. 4 and the [tutorial](https://github.com/berenslab/MorphoPy/blob/master/notebooks/MORPHOPY%20Tutorial.ipynb) for an example). 
 
 <img src="https://user-images.githubusercontent.com/520137/80983512-eaf74400-8e2c-11ea-94cc-040275f6aeca.png" alt="How to add a custom distance function" width="751"/>
 
 *Fig. 4: How to add a custom persistence distance function. To be able to call it from the command line you need to add it to the functions list.*
 
+If you are using the API you can simply pass a function to the `get_persistence()`-method (see the [tutorial](https://github.com/berenslab/MorphoPy/blob/master/notebooks/MORPHOPY%20Tutorial.ipynb) for an example).
 
 
 ### Not enough? ###
