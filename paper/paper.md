@@ -53,8 +53,8 @@ acyclic tree graph with node and edge attributes \autoref{fig:attributes}. The p
 compute various feature representations and provides 2D plotting routines for data exploration (\autoref{fig:plot}).
 ```python
 
-from morphopy import MorphoPy as nt
-from morphopy.MorphoPy import file_manager as fm
+from morphopy.neurontree import NeuronTree as nt
+from morphopy.computation import file_manager as fm
 
 N = fm.load_swc_file("../data/EC3-80604.CNG.swc")
 Dendrites = N.get_dendritic_tree()
