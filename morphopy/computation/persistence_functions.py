@@ -8,7 +8,9 @@ nx_version = int(float(nx.__version__))
 
 def custom_distance(G,u,v):
     # write your code here
+    scalar = None
     return scalar
+
 # A selection of filter functions
 def radial_distance(G, u, v):
     if nx_version > 1:

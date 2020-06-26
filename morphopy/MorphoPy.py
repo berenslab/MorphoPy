@@ -5,16 +5,14 @@ import os
 import fnmatch
 import traceback
 import pandas as pd
-import networkx as nx
 import scipy.io as sio
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
-import computation.file_manager as file_manager
-import computation.feature_presentation as fp
-import computation.persistence_functions as pf
+from morphopy import computation as file_manager, about
+import morphopy.computation.feature_presentation as fp
+import morphopy.computation.persistence_functions as pf
 # load global about variables
-import about
 # set global version
 __version__ = about.__version__
 

@@ -2,7 +2,7 @@
 
 import setuptools
 ### load global MorphoPy variables
-import about
+from morphopy import about
 
 # get long description from readme
 with open("README.md", "r", encoding='utf8') as fh:
