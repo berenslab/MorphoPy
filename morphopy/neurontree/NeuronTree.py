@@ -2,7 +2,6 @@ import copy
 import sys
 import matplotlib
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -15,7 +14,7 @@ from scipy import stats
 from shapely.geometry import MultiLineString, LineString, Point
 from itertools import combinations
 from collections import OrderedDict
-from neurontree.utils import angle_between, get_rotation_matrix, rotationMatrixToEulerAngles
+from morphopy.neurontree.utils import angle_between, get_rotation_matrix, rotationMatrixToEulerAngles
 
 sys.setrecursionlimit(100000)
 matplotlib.rcParams.update({'font.size': 14})

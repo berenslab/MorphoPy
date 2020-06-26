@@ -1,7 +1,7 @@
 import pandas as pd
 import configparser as cp
-import neurontree.NeuronTree as nt
-import neurontree.utils as utils
+import morphopy.neurontree.NeuronTree as nt
+import morphopy.neurontree.utils as utils
 
 
 def load_swc_file(filename=None, **kwargs):

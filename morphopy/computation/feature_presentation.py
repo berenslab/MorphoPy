@@ -1,13 +1,12 @@
 import copy
 import random
 import collections
-import networkx as nx
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from neurontree.utils import smooth_gaussian
-from computation.persistence_functions import radial_distance
+from morphopy.neurontree.utils import smooth_gaussian
+from morphopy.computation.persistence_functions import radial_distance
 
 
 def get_persistence(neurontree=None, f=None):
