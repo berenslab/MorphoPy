@@ -7,7 +7,3 @@ networkx
 seaborn
 sklearn
 shapely
-pygraphviz
-
-
-

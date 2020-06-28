@@ -9,7 +9,8 @@ import scipy.io as sio
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
-from morphopy import computation as file_manager, about
+import morphopy.about as about
+import morphopy.computation.file_manager as file_manager
 import morphopy.computation.feature_presentation as fp
 import morphopy.computation.persistence_functions as pf
 # load global about variables
@@ -140,7 +141,11 @@ def main(argv):
     allfiles = []
     if len(file) > 1:
         allfiles.append(os.path.basename(file))
-        directory = os.path.dirname(file) + "/"
+        directory = os.path.dirname(file)
+        if len(directory) > 0:
+            directory = directory + "/"
+        else:
+            directory = "./"
     else:
         allfiles = os.listdir(directory)
 
@@ -223,7 +228,7 @@ def main(argv):
         print('##### Density Map #####')
         # process all files
         for file in files:
-            print('... Process File: %s'%file)
+            print('... Process File: %s' % file)
             # compute density map
             try:
                 # import swc file and initialize NeuronTree
