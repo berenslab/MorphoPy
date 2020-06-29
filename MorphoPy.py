@@ -9,8 +9,8 @@ import scipy.io as sio
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
-import morphopy.about as about
-import morphopy.computation.file_manager as file_manager
+from morphopy import about
+from morphopy.computation import file_manager
 import morphopy.computation.feature_presentation as fp
 import morphopy.computation.persistence_functions as pf
 # load global about variables
@@ -22,35 +22,39 @@ def help(exitcode=0):
     Print help page and exit application depending on error passed
     :param exitcode: Errorcode which will be returned at Exit or 0 if no error occured
     """
-    version()
+    if exitcode == 0:
+        version()
     print('')
-    print('Usage: MorphoPy.py -c <compute_feature> [--wide | --func <persistence_function> | --conf <config_file>]')
-    print('                   [-f <swc_file> | -d <directory>] [-o <output directory>]')
-    print('')
-    print('Options:')
-    print('   -c, --compute                parameter for selecting the computing feature:')
-    print('                                persistence: compute persistence data         ')
-    print('                                stats      : compute morphometric statistics  ')
-    print('                                density    : create density maps              ')
-    print('       statistics options:                                                    ')
-    print('       --long                   you can change your output format, in long    ')
-    print('                                format you get all values in a separate row.  ')
-    print('                                (default: all values in one row)              ')
-    print('       persistence options:                                                   ')
-    print('       --func                   if persistence is selected as feature, you can')
-    print('                                specify with this option a method function you')
-    print('                                want to use at computing the persistence.     ')
-    print('                                (default: radial distance function)           ')
-    print('       density map options:                                                   ')
-    print('       --conf                   if density map is selected, you can pass a    ')
-    print('                                config file with more parameters for creating ')
-    print('                                the density maps. (optional)                  ')
-    print('   -f, --file                   specifies a swc-file as input for Morphopy,   ')
-    print('                                if no file is selected, directory is used     ')
-    print('   -d, --directory              specifies a directory as input for swc-files. ')
-    print('                                (default: working directory)                  ')
-    print('   -o, --output                 specifies the output directory for saving the ')
-    print('                                results in. (default: same as source)         ')
+    print('Usage: MorphoPy.py -c <compute_feature> -i <swc_file>|<directory> [-o <output directory>]')
+    print('                   [--long | --func <persistence_function> | --conf <config_file>] [--help]')
+    print('                                                                                           ')
+    if exitcode == 0:
+        print('Options:                                                                      ')
+        print('   -h, --help                   show this help.                               ')
+        print('                                                                              ')
+        print('   -c, --compute                parameter for selecting the computing feature:')
+        print('                                persistence: compute persistence data         ')
+        print('                                stats      : compute morphometric statistics  ')
+        print('                                density    : create density maps              ')
+        print('       statistics options:                                                    ')
+        print('       --long                   you can change your output format, in long    ')
+        print('                                format you get all values in a separate row.  ')
+        print('                                (default: all values in one row)              ')
+        print('       persistence options:                                                   ')
+        print('       --func                   if persistence is selected as feature, you can')
+        print('                                specify with this option a method function you')
+        print('                                want to use at computing the persistence.     ')
+        print('                                (default: radial distance function)           ')
+        print('       density map options:                                                   ')
+        print('       --conf                   if density map is selected, you can pass a    ')
+        print('                                config file with more parameters for creating ')
+        print('                                the density maps. (optional)                  ')
+        print('                                                                              ')
+        print('   -i, --input                  specifies a swc-file or a directory as input  ')
+        print('                                for morphopy (mandatory)                      ')
+        print('                                                                              ')
+        print('   -o, --output                 specifies the output directory for saving the ')
+        print('                                results in. (default: same as source)         ')
     sys.exit(exitcode)
 
 
@@ -84,21 +88,20 @@ def main(argv):
     :type argv: arguments passed for processing swc-files
     """
     try:
-        opts, args = getopt.gnu_getopt(argv, "c:f:d:o:hv",
-                                   ["compute=", "long", "func=", "conf=", "file=", "dir=", "output=", "help", "version"])
+        opts, args = getopt.gnu_getopt(argv, "c:i:o:hv",
+                                   ["compute=", "long", "func=", "conf=", "input=", "output=", "help", "version"])
     except getopt.GetoptError:
         print("Error: Wrong options are specified!")
         help(1)
 
     # check if arguments are empty
     if len(argv) < 1:
-        print("Error: No arguments are used! At least the compute mode has to be passed.")
+        print("Error: No arguments are used! At least the compute mode and input is needed.")
         help(1)
 
     # default values:
     compute = ''  # no compute mode selected
-    directory = './'  # default working directory if no file and dir specified
-    file = ""  # default no file -> directory is used
+    input = ""  # input data as file or directory
     format = "wide"  # default is wide output format for stats
     function = None  # default function none
     output = None  # default output directory is none
@@ -113,13 +116,11 @@ def main(argv):
         # argument is missing because next option is in argument
         if arg.startswith("-"):
             print('Error: Wrong argument in option: %s'%opt)
-            help()
+            help(1)
         if opt in ('-c', '--compute'):
             compute = arg
-        elif opt in ('-f', '--file'):
-            file = arg
-        elif opt in ('-d', '--dir'):
-            directory = arg
+        elif opt in ('-i', '--input'):
+            input = arg
         elif opt in ('-o', '--output'):
             output = arg
         elif opt in '--long':
@@ -135,23 +136,29 @@ def main(argv):
             version()
             exit(0)
         elif opt in ('-h', '--help'):
-            help()
+            help(0)
 
-    # if single file or directory, fill array with all files
+    # if single file or directory, fill array with all files and set directory of data
     allfiles = []
-    if len(file) > 1:
-        allfiles.append(os.path.basename(file))
-        directory = os.path.dirname(file)
-        if len(directory) > 0:
-            directory = directory + "/"
-        else:
+    directory = ""
+    if os.path.isfile(input):
+        allfiles.append(os.path.basename(input))
+        directory = os.path.dirname(input)
+        if len(directory) == 0:
             directory = "./"
-    else:
-        allfiles = os.listdir(directory)
+    elif os.path.isdir(input):
+        directory = input
+        allfiles = os.listdir(input)
 
-    # if no output directory is specified use source directory
+    # check directory for trailing slash
+    if not directory.endswith("/"):
+        directory = "%s/" % directory
+
+    # if no output directory is specified use source directory and check for trailing slash
     if output is None:
         output = directory
+    elif not output.endswith("/"):
+        output = "%s/" % output
 
     # test if files have valid extension
     files = []
@@ -162,7 +169,7 @@ def main(argv):
 
     # no valid files found
     if len(files) < 1:
-        print('Error: No valid file is specified or no file found in current directory!')
+        print('Error: No input is specified! Please use a valid file or directory.')
         help(1)
 
     # save output data in a dataframe with all proceeded files for export

@@ -15,7 +15,7 @@ with open('requirements.txt') as f:
 setuptools.setup(
       name=about.__title__,
       version=about.__version__,
-      scripts=['MorphoPy.py'] ,
+      scripts=['MorphoPy.py'],
       author=about.__author__,
       author_email=about.__email__,
       description=about.__summary__,

@@ -106,10 +106,12 @@ After the installation you can simply call:
 	MorphoPy.py <options>
 Help:
 
-	Usage: MorphoPy.py -c <compute_feature> [--wide | --func <persistence_function> | --conf <config_file>]
-	                   [-f <swc_file> | -d <directory>] [-o <output directory>]
+	Usage: MorphoPy.py -c <compute_feature> -i <swc_file>|<directory> [-o <output directory>]
+	                   [--long | --func <persistence_function> | --conf <config_file>] [--help]
 	
 	Options:
+    -h, --help                  show this help.
+    
 	-c, --compute               parameter for selecting the computing feature:
 	                            persistence: compute persistence data
                                 stats      : compute morphometric statistics
@@ -127,11 +129,9 @@ Help:
        --conf                   if density map is selected, you can pass a
                                 config file with more parameters for creating
                                 the density maps. (optional)
-    -f, --file                   specifies a swc-file as input for Morphopy,
-                                if no file is selected, directory is used
-    -d, --directory              specifies a directory as input for swc-files.
-                                (default: working directory)
-    -o, --output                 specifies the output directory for saving the
+    -i, --input                 specifies a swc-file or a directory as input
+                                for morphopy (mandatory)
+    -o, --output                specifies the output directory for saving the
                                 results in. (default: same as source)
 
 
