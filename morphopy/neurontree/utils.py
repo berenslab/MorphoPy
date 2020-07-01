@@ -16,16 +16,8 @@ from scipy.spatial import ConvexHull
 def unit_vector(vector):
     """ Returns the unit vector of the vector.
 
-    Parameter
-    --------
-    vector : numpy.array
-        d-dimensional vector
-
-    Returns
-    -------
-    u : numpy.array
-        d-dimensional unit vector of 'vector'
-
+    :param vector: numpy.array d-dimensional vector
+    :return: u numpy.array d-dimensional unit vector of 'vector'
     """
     if np.linalg.norm(vector) > 0:
         return vector / np.linalg.norm(vector)
@@ -42,17 +34,10 @@ def angle_between(v1, v2):
             0.0
             >>> angle_between((1, 0, 0), (-1, 0, 0))
             3.141592653589793
-    Parameters
-    ----------
-    v1 : numpy.array
-        d-dimensional vector
-    v2 : numpy.array
-        d-dimensional vector
 
-    Returns
-    -------
-    theta : float
-        angle btw v1 and v2 in radians
+    :param v1: numpy.array d-dimensional vector
+    :param v2: numpy.array d-dimensional vector
+    :return: theta - float angle btw v1 and v2 in radians
 
     """
     v1_u = unit_vector(v1)
@@ -63,17 +48,9 @@ def angle_between(v1, v2):
 def get_axis(v1, v2):
     """ Returns the axis between two vectors v1 and v2
 
-    Parameters
-    ---------
-    v1: numpy.array
-        d-dimensional
-    v2: numpy.array
-        d-dimensional
-
-    Returns
-    -------
-    axis: numpy.array
-        d-dimensional axis btw v1 and v2
+    :param v1: numpy.array d-dimensional
+    :param v2: numpy.array d-dimensional
+    :return: axis - numpy.array d-dimensional axis btw v1 and v2
     """
     return (np.cross(v1, v2)) / (np.linalg.norm(np.cross(v1, v2)))
 
@@ -81,11 +58,9 @@ def get_axis(v1, v2):
 def get_A(x):
     """
     Returns matrix A. Used for rotation matrix calculation
-    :param x: 3D numpy.array
-            rotation axis
 
-    :return:
-        A: 3x3 numpy.array
+    :param x: 3D numpy.array rotation axis
+    :return: A - 3x3 numpy.array
     """
 
     if np.isnan(x).any():
@@ -105,7 +80,6 @@ def get_rotation_matrix(a, b):
     :param a: numpy.array (2 or 3 dimensional)
     :param b: numpy.array (2 or 3 dimensional)
     :return: R (2x2 or 3x3) rotation matrix to rotate a onto b
-
     """
 
     n = np.max(a.shape)
@@ -124,8 +98,8 @@ def get_rotation_matrix(a, b):
 
 
 def isRotationMatrix(R):
-    """
-    Checks if R is a valid rotation matrix.
+    """ Checks if R is a valid rotation matrix.
+
     :param R: [3x3] rotation matrix
     :return: boolean. Returns True when R is a valid rotation matrix, otherwise False.
     """
@@ -137,8 +111,8 @@ def isRotationMatrix(R):
 
 
 def rotationMatrixToEulerAngles(R):
-    """
-    Calculates rotation matrix to euler angles
+    """ Calculates rotation matrix to euler angles
+
     :param R: rotation matrix [3x3]
     :return: vector of euler angles (rotations around x,y and z axis)
     """
@@ -161,8 +135,8 @@ def rotationMatrixToEulerAngles(R):
 
 
 def eulerAnglesToRotationMatrix(theta):
-    """
-    Calculates the rotation matrix from given euelr angles
+    """ Calculates the rotation matrix from given euelr angles
+
     :param theta: 3D vector with eulerangles for x,y and z axis
     :return: rotation matrix R [3x3]
     """
@@ -188,8 +162,9 @@ def eulerAnglesToRotationMatrix(theta):
 
 def sphereFit(spX, spY, spZ):
     """
-    fit a sphere to X,Y, and Z data points returns the radius and center points of the best fit sphere. Implementation
-    by http://jekel.me/2015/Least-Squares-Sphere-Fit/
+    fit a sphere to X,Y, and Z data points returns the radius and center points of the best fit sphere.\n
+    Implementation by http://jekel.me/2015/Least-Squares-Sphere-Fit/
+
     :param spX:
     :param spY:
     :param spZ:
@@ -277,6 +252,7 @@ def shortpathFW(A, gpu=True):
 def commuteDist(A):
     """
     Returns the commute distance within a graph given by adjacency matrix A
+
     :param A: adjacency matrix (NxN)
     :return: B (NxN) containing the commute distances from each node to each other
     """
@@ -294,8 +270,8 @@ def commuteDist(A):
 
 
 def computeStat(statType, W, d, maxDist):
-    """
-    computes a graph key on (sub)graph given by W
+    """ computes a graph key on (sub)graph given by W
+
     :param statType: string
         'maxDist' : maximal distance
         'maxDist_norm' : normalized maximal distance
@@ -348,6 +324,7 @@ def smooth_gaussian(data, dim, sigma=2):
     """
         Smooths the given data using a gaussian. This method only works for stacked one or two dimensional data so
         far! Smoothing in 3D is not implemented.
+
         :param data: (X,Y,N) numpy.array 1,2 or 3 dimensional.
         :param dim: int
             Dimension of the passed data. Used to determine if data is a single image or stacked.
@@ -401,14 +378,15 @@ def get_standardized_swc(swc, scaling=1., soma_radius=None, soma_center=True, pc
     This function collapses all soma points to a single node located at the centroid of the convex hull of the original
     soma nodes. It can also scale the coordinates, merge nodes into the soma that have a bigger radius than soma_radius
     and return the xyz coordinates of the swc file in their PCA rotation.
+
     :param swc: swc file, as pandas.DataFrame.
     :param scaling: float, (default=1), allows for a uniform scaling of x, y and z
     :param soma_radius: float (default=None), if set, then all nodes with a radius greater or equal to soma radius are
-    set to be somatic (type=1). In a subsequent step these nodes will be merged to one. Careful! If this radius is set
-    too small this leads to faulty skeletons.
+     set to be somatic (type=1). In a subsequent step these nodes will be merged to one. Careful! If this radius is set
+     too small this leads to faulty skeletons.
     :param soma_center: bool (default=True), if True, x,y,z are soma centered.
     :param pca_rot: bool (default=False), if True, the x,y,z coordinates in the given swc file are rotated into their
-    PCA frame. Then x corresponds to the direction of highest and z to the direction of lowest variance.
+     PCA frame. Then x corresponds to the direction of highest and z to the direction of lowest variance.
     :return: pandas.DataFrame
     """
 

@@ -21,9 +21,12 @@ matplotlib.rcParams.update({'font.size': 14})
 
 
 class NeuronTree:
-
-    # resample nodes along the edges of _G in distance d, return array of 3D positions
     def resample_nodes(self, d=1):
+        """resample nodes along the edges of _G in distance d, return array of 3D positions
+
+        :param d: distance
+        :return: array of positions
+        """
         P = []
         for (u, v, edata) in self._G.edges(data=True):
             if self._nxversion == 2:
@@ -46,18 +49,16 @@ class NeuronTree:
         P += list(self.get_node_attributes('pos').values())
         return np.array(P)
 
-    # creates a networkX Tree out of a swc file.
-    # scaling denotes the conversion factor needed to convert the units given in swc file to microns
-    # soma_rad denotes the radius of the soma given in microns
     def __init__(self, swc=None, scaling=1., node_data=[], edge_data=[], graph=None):
         """
         Creates a NeuronTree object that contains a networkx.DiGraph with node attributes 'pos' [x,y,z],
         'type' [1:soma,2:axon,3: dendrite], 'radius' and edge attributes 'euclidean_dist' and 'path_length'.
         It can be created from an swc file (as pandas.DataFrame or as numpy,ndarray) from a list of nodes and
         edges or from a given networkx.DiGraph.
+
         :param swc: pandas.DataFrame or numpy.ndarray containing the data of an swc file.
-        :param scaling: Scaling of the coordinates in swc file to microns. Sometimes the coordinates are given in voxels
-        or other units.
+        :param scaling: Scaling of the coordinates in swc file to microns.
+         Sometimes the coordinates are given in voxels or other units.
         :param soma_rad: radius of the soma in microns.
         :param node_data: list of nodes with node id and dictionary of node attributes
         :param edge_data: list of edges with dicionary of edge attributes
@@ -128,9 +129,9 @@ class NeuronTree:
             self._make_tree()   # needed to access the functions predecessor and successor
 
     def _remove_redundant_nodes(self):
-        """
-        Remove redundant nodes from the NeuronTree. A node is considered redundant if the edge between two nodes has a
-        euclidean distance = 0, so the node has the same 3D position as its predecessor.
+        """ Remove redundant nodes from the NeuronTree.
+         A node is considered redundant if the edge between two nodes has a euclidean distance = 0, so the node has
+          the same 3D position as its predecessor.
         """
         # get the nodes whose edge between them has distance = 0.
         nodeindices = np.array(list(self.get_edge_attributes('euclidean_dist').values())) == 0
@@ -163,8 +164,8 @@ class NeuronTree:
             edgelist = list(np.array(list(self.get_edge_attributes('euclidean_dist').keys()))[nodeindices])
 
     def _get_branch_type(self, B):
-        """
-        get the type of a branch based on majority vote.
+        """ get the type of a branch based on majority vote.
+
         :param B: subgraph, a branch within the NeuronTree
         :return: int, type id (1: soma, 2: axon, 3: basal dendrite, 4: apical dendrite). Type of the branch 'B'.
         """
@@ -230,7 +231,6 @@ class NeuronTree:
         looses the original node and edge attributes. Manipulation done inplace.
         changed for use with networkx v2 (works also in old version: parameters with names)
         """
-
         G = self._G
         roots = self.get_root(return_all=True) # in case there are disconnected neurites
 
@@ -264,8 +264,7 @@ class NeuronTree:
         Returns the topological minor of the Neuron. In this representation all continuation points are pruned away and
         the neuron solely consists of tips and branch points.
         Changed for use with networkx v2 (works also in old version: edge -> adj)
-        :return:
-            NeuronTree: mst. The topological minor representation of the original neuron.
+        :return: NeuronTree: mst. The topological minor representation of the original neuron.
         """
         # get the included nodes, which are soma, branch points and tips
         root = self.get_root()
@@ -304,7 +303,12 @@ class NeuronTree:
         return NeuronTree(node_data=node_data_new, edge_data=edge_data_new)
 
     def smooth_neurites(self, dim=1, window_size=21):
+        """
 
+        :param dim:
+        :param window_size:
+        :return:
+        """
         from scipy.signal import savgol_filter
 
         G = copy.copy(self.get_graph())
@@ -380,8 +384,7 @@ class NeuronTree:
         """ returns the list of attributes assigned to each node.
             If no attributes are assigned it returns an empty list.
             changed for use with networkx v2 (works in all versions)
-            :return:
-                list : attribute names assigned to nodes
+            :return: list : attribute names assigned to nodes
         """
         attr = []
         if self._G.nodes():
@@ -396,8 +399,8 @@ class NeuronTree:
         return attr
 
     def get_node_attributes(self, attribute):
-        """
-        Returns a dictionary that holds the attribute's value for each node.
+        """ Returns a dictionary that holds the attribute's value for each node.
+
         :param attribute: string. Possible values are "type", "pos" and "radius".
         :return: dict of the form {n : attribute_value}eturns a dictionary that holds the attributes value for each edge.
         :param attribute: string. Possible values are "euclidean_dist" and "path_length"
@@ -406,12 +409,11 @@ class NeuronTree:
         return nx.get_node_attributes(self.get_graph(), attribute)
 
     def get_edge_attribute_names(self):
-        """
-            Returns the list of attributes assigned to each edge.
-            If no attributes are assigned it returns an empty list.
-            changed for use with networkx v2 (works in all versions)
-        :return:
-            list : attribute names assigned to edges
+        """ Returns the list of attributes assigned to each edge.
+        If no attributes are assigned it returns an empty list.
+        changed for use with networkx v2 (works in all versions)
+
+        :return: list : attribute names assigned to edges
         """
         attr = []
         if self._G.edges():
@@ -425,20 +427,20 @@ class NeuronTree:
         return attr
 
     def get_edge_attributes(self, attribute):
-        """
-        Returns a dictionary that holds the attribute's value for each edge.
+        """ Returns a dictionary that holds the attribute's value for each edge.
+
         :param attribute: string. Possible values are "euclidean_dist" and "path_length"
         :return: dict of the form {(u,v) : attribute_value}
         """
         return nx.get_edge_attributes(self.get_graph(), attribute)
 
     def get_path_length(self, weight='euclidean_dist'):
-        """
-        Returns a dictionary containing the path length to the root for each node.
-        :param: weight String (default='euclidean_dist'). Determines which edge attribute ist used. Options are
-        'path_length' and 'eulidean_dist'. Note that in an unreduced tree, both options return the same values.
-        :return:
-         dict: Dictionary of the form {node_id=path length to soma}
+        """ Returns a dictionary containing the path length to the root for each node.
+
+        :param: weight String (default='euclidean_dist'). Determines which edge attribute ist used.
+         Options are 'path_length' and 'eulidean_dist'. Note that in an unreduced tree, both options
+         return the same values.
+        :return: dict: Dictionary of the form {node_id=path length to soma}
         """
         pl = nx.single_source_dijkstra_path_length(self.get_graph(), source=self.get_root(), weight=weight)
         return pl
@@ -447,10 +449,10 @@ class NeuronTree:
         """
         Returns a dictionary that hold the cumulative path length of the subtree attached to node n. The root holds
         the total path length within the tree whereas the cumulative path length of all tips is equal to zero.
-        :param: weight, String (default='path_length'). Determines which edge attribute ist used. Options are
-        'path_length', 'eulidean_dist' or None.
-        :return:
-        dict: Dictionary holding the cumulative path length of the subtree connected to each node.
+
+        :param: weight, String (default='path_length'). Determines which edge attribute ist used.
+         Options are 'path_length', 'eulidean_dist' or None.
+        :return: dict: Dictionary holding the cumulative path length of the subtree connected to each node.
         """
 
         tips = self.get_tips()
@@ -484,10 +486,10 @@ class NeuronTree:
         return c_pl
 
     def get_root(self, return_all=False):
-        """
-        Returns the root of the Neuron's rooted tree graph. A root is defined as a node that has an in degree of 0.
-        :param return_all: bool (defaut=False). Determines if all roots are returned or just one. If there is only one
-        root it is returned as an int.
+        """ Returns the root of the Neuron's rooted tree graph. A root is defined as a node that has an in degree of 0.
+
+        :param return_all: bool (defaut=False). Determines if all roots are returned or just one.
+         If there is only one root it is returned as an int.
         :return: int or list , node id(s) of the tree roots.
         """
         if self._nxversion >= 2:
@@ -504,8 +506,8 @@ class NeuronTree:
         """
         This function returns True if the neuron is connected and False otherwise. In case of False it means that there
         are disconnected neurites in the reconstruction.
-
         For access to the disconnected components checkout networkx.connected_components(graph).
+
         :return: bool. True if all neurites are connected, False otherwise.
         """
         G = self.get_graph()
@@ -525,6 +527,7 @@ class NeuronTree:
         """
         Truncates the number of nodes by the given percentage. The nodes are pruned equally from the tips inward until
         the approximated percentage has been deleted or at least the given number of nodes is truncated.
+
         :param perc: float. Percent of nodes that are to be truncated between 0 and 1. Default=0.1
         :param no_trunc_nodes: int . Optional. Number of nodes to be truncated
         :return: The truncated tree.
@@ -553,10 +556,10 @@ class NeuronTree:
         return T
 
     def nodes(self, type_ix=None, data=False):
-        """
-        Wrapper function to the networkx.nodes() function. It returns a list of all nodes.
+        """ Wrapper function to the networkx.nodes() function. It returns a list of all nodes.
+
         :param type_ix: int, optional, default = None. Determines the type of nodes to be returned.
-        Options are None (= all nodes), 2 (= axonal nodes) and 3 (= dendritic nodes).
+         Options are None (= all nodes), 2 (= axonal nodes) and 3 (= dendritic nodes).
         :param data: boolean, default=False. If set to True the node attribute data is returned as well.
         :return: list of nodes
         """
@@ -580,12 +583,12 @@ class NeuronTree:
         return nodes
 
     def edges(self, start=None, type_ix=None, data=False):
-        """
-        Wrapper function to the networkx.edges() function. It returns a list of edges.
+        """ Wrapper function to the networkx.edges() function. It returns a list of edges.
+
         :param start: int, node id, determines the starting edge within the neuron
-        :param type_ix: int, optional, default = None. Determines the type of edges to be returned.
-        Options are None (= all edges), 2 (= axonal edges), 3 (= basal dendritic edges), 4 (= apical dendritic edges) or
-        [3,4] (= all dendritic edges).
+        :param type_ix: int, optional, default = None. Determines the type of edges to be returned.\n
+         Options are None (= all edges), 2 (= axonal edges), 3 (= basal dendritic edges),\n
+         4 (= apical dendritic edges) or [3,4] (= all dendritic edges).
         :param data: boolean, default=False. If set to True the edge attribute data is returned as well.
         :return: list of edges
         """
@@ -597,43 +600,55 @@ class NeuronTree:
         return edges
 
     def get_dendrite_nodes(self, data=False, type_ix=[3, 4]):
-        """
-        Returns all dendritic nodes.
+        """ Returns all dendritic nodes.
+
         :param data: boolean, default=False. If set to True the node attribute data is returned as well.
         :param type_ix: list, default = [3,4]. This determines if all, only basal (ix =3) or only apical (ix = 4)
-        dendritic nodes are returned.
+         dendritic nodes are returned.
         :return: list of dendritic nodes
         """
         return np.array(self.nodes(type_ix=type_ix , data=data))
 
     def get_axon_nodes(self, data=False):
-        """
-        Returns all axonal nodes.
+        """ Returns all axonal nodes.
+
         :param data: boolean, default=False. If set to True the node attribute data is returned as well.
         :return: list of axonal nodes
         """
         return np.array(self.nodes(type_ix=2, data=data))
 
     def get_axon_edges(self, start=None, data=False):
+        """
+
+        :param start:
+        :param data:
+        :return:
+        """
         axon_nodes = self.get_axon_nodes()
         return [x for x in self._G.edges(start,data=data) if (x[0] in axon_nodes or x[1] in axon_nodes)]
 
     def get_dendrite_edges(self, start=None, data=False):
+        """
+
+        :param start:
+        :param data:
+        :return:
+        """
         dendrite_nodes = self.get_dendrite_nodes()
         return [x for x in self._G.edges(start, data=data) if (x[0] in dendrite_nodes or x[1] in dendrite_nodes)]
 
     def get_tips(self):
-        """
-        Returns a list of tips, so the ending nodes within the neuron.
+        """ Returns a list of tips, so the ending nodes within the neuron.
         changed for use with networkx v2 (works also in old version: edge -> adj)
+
         :return: list of node ids of tips.
         """
         E = self._G.adj
         return np.array([e for e in E if E[e] == {}])
 
     def get_branchpoints(self):
-        """
-        Returns a list of branch point ids of the neuron.
+        """ Returns a list of branch point ids of the neuron.
+
         :return: list of node ids of all branch points (nodes that have more than one successor).
         """
         # is this correct???:
@@ -642,8 +657,8 @@ class NeuronTree:
         return np.array(self.nodes())[bp_indx]
 
     def get_dendritic_tree(self, type_ix=[3,4]):
-        """
-        Returns the dendrites as a new NeuronTree.
+        """ Returns the dendrites as a new NeuronTree.
+
         :return: NeuronTree
         """
         nodes = list(self.get_dendrite_nodes(type_ix=type_ix))
@@ -652,8 +667,8 @@ class NeuronTree:
         return NeuronTree(graph=subgraph)
 
     def get_axonal_tree(self):
-        """
-        Returns the axon as a new NeuronTree
+        """ Returns the axon as a new NeuronTree
+
         :return: NeuronTree
         """
         nodes = list(self.get_axon_nodes())
@@ -662,21 +677,22 @@ class NeuronTree:
         return NeuronTree(graph=subgraph)
 
     def get_adjacency_matrix(self, weight=None):
-        """
-        Returns the adjacency matrix of the Tree saved in self._G. weight can be None, 'euclidean_dist' or 'path_length'
+        """ get the adjacency matrix of the Tree saved in self._G.\n
+        weight can be None, 'euclidean_dist' or 'path_length'
+
         :param weight: edge attribute that is considered for the adjacency matrix A. Default = None, then A only
-        contains the structural connectivity between nodes. If set to 'euclidean_dist' or 'path_length' the adjacency
-        matrix is weighted accordingly.
+         contains the structural connectivity between nodes. If set to 'euclidean_dist' or 'path_length' the adjacency
+         matrix is weighted accordingly.
         :return: sparse array
         """
         return nx.adjancency_matrix(self._G, weight=weight)
 
     def get_extend(self, robust=False):
-        """
-        Returns the maximal extend in x, y and z direction.
-        :param robust: bool. This parameter determines if the extend is calculated as maximum (default robust=False) or
-        as 95-percentile (robust=True). The latter is considered a more robust value, as it reflects the extend of 95%
-        of the mass.
+        """ Returns the maximal extend in x, y and z direction.
+
+        :param robust: bool. This parameter determines if the extend is calculated as maximum (default robust=False)
+         or as 95-percentile (robust=True). The latter is considered a more robust value, as it reflects the extend
+         of 95% of the mass.
         :return: 1x3 numpy.array
         """
         P = np.array(list(self.get_node_attributes('pos').values()))
@@ -690,9 +706,10 @@ class NeuronTree:
         """
         Returns a dictionary of the root angle of each edge. Root angle denotes the orientation of each edge with
         respect to the root (soma).
+
         :param angle_type: either 'axis' or 'euler' (default='axis')
          Defines the type of angle that is calculated. Euler angles are defined as angles around the canonical
-        euler axes (x, y and z). Axis angles are defined with respect to the rotation axis between two vectors.
+         euler axes (x, y and z). Axis angles are defined with respect to the rotation axis between two vectors.
         :return: dict of the form {(u,v): root_angle of edge between u and v}
         """
         angles = {}
@@ -719,9 +736,8 @@ class NeuronTree:
         """
         Returns the dictionary of the branch order of each node. The branch order denotes the number of branch points
         that are crossed when tracing the path back to the soma.
-        :return:
-            d: dict
-            Dictionary of the form {u: branch_order} for each node.
+
+        :return: d: dict Dictionary of the form {u: branch_order} for each node.
         """
         root = self.get_root()
         return self._get_branch_order(root, 0)
@@ -729,11 +745,10 @@ class NeuronTree:
     def _get_branch_order(self, start, bo):
         """
         Returns the dictionary assigning the right branch order to each node.
+
         :param start: starting node
         :param bo: starting branch order
-        :return:
-            d: dict
-            Dictionary of the form {u: branch_order} for each node reachable from starting node.
+        :return: d: dict Dictionary of the form {u: branch_order} for each node reachable from starting node.
         """
         d = {}
         edges = list(self.edges(start))
@@ -753,8 +768,8 @@ class NeuronTree:
         then the Strahler number of the node is i again.
         If the node has two or more children with Strahler number i, and no children with greater number,
         then the Strahler number of the node is i + 1. ( taken from https://en.wikipedia.org/wiki/Strahler_number)
-        :return:
-            dict. Dictionary of the form {u: Strahler order} for each node.
+
+        :return: dict. Dictionary of the form {u: Strahler order} for each node.
         """
 
         tips = self.get_tips()
@@ -775,12 +790,12 @@ class NeuronTree:
         return strahler_order
 
     def _get_distance(self, dist='path_length', as_dict=True):
-        """
-        Returns the distance. Helper function for the distributions.
-        :param dist: String, defines the distance measure to be used (default is 'path_length'), Options are
-        'path_length', 'radial_dist' and 'branch_order'.
-        :param as_dict: boolean, default = True. Determines whether the distance are returned as a dictionary of the
-        form {'node_id': ,distance} or as an numpy.array.
+        """ Returns the distance. Helper function for the distributions.
+
+        :param dist: String, defines the distance measure to be used (default is 'path_length'),
+         Options are 'path_length', 'radial_dist' and 'branch_order'.
+        :param as_dict: boolean, default = True. Determines whether the distance are returned as a dictionary of
+         the form {'node_id': ,distance} or as an numpy.array.
         :return: Dictionary or numpy.array of the defined distance measure from each node to the soma.
         """
         if dist == 'path_length':
@@ -804,8 +819,8 @@ class NeuronTree:
         return dist_
 
     def get_radial_distance(self):
-        """
-        Returns a dictionary with radial distance from soma.
+        """ Returns a dictionary with radial distance from soma.
+
         :return: dict (node: radial distance to soma}
         """
         radial_dist = {}
@@ -824,14 +839,14 @@ class NeuronTree:
 
     def get_segment_length(self, dist='path_length'):
         """
-        Returns the dictionary of the length in microns of each segment where dist_measure denotes the distance measure. A segment
-        is defined as the path between two branch points or a branch point and a tip.
-         Possible options are 'path_length' an 'euclidean_dist'. The keys of the dictionary denote the
-        tuples of the starting and end node of each segment.
+        Returns the dictionary of the length in microns of each segment where dist_measure denotes the distance\n
+        measure. A segment is defined as the path between two branch points or a branch point and a tip.\n
+        Possible options are 'path_length' an 'euclidean_dist'. The keys of the dictionary denote the tuples\n
+        of the starting and end node of each segment.
+
         :param dist: String, options ['path_length', 'euclidean_dist']
-        :return:
-            d: dict
-            Dictionary of the form {(n_s, n_e): segment length[u] in either 'path length' or 'euclidean distance' }
+        :return: d: dict Dictionary of the form {(n_s, n_e):
+          segment length[u] in either 'path length' or 'euclidean distance' }
         """
 
         T = self.get_topological_minor()
@@ -842,13 +857,14 @@ class NeuronTree:
     def _get_distribution_data(self, key='branch_order', dist_measure=None, angle_type='axis'):
         """
         Helper function. Returns the data for the functions get_histogram() and get_kde_distribution()
+
         :param key: statistics key, default='branch_order', options are 'branch_order', 'strahler_order', 'branch_angle',
-        'path_angle', 'thickness', 'path_length', 'radial_dist', 'segment_length' and 'root_angle'.
+         'path_angle', 'thickness', 'path_length', 'radial_dist', 'segment_length' and 'root_angle'.
         :param dist_measure: String, (default: None). Optional distance measure against the distribution of values is
-        computed. Possible values are 'path_length', 'radial' and 'branch_order'. If set, the distribution returned is
-        two-dimensional ( statistic vs distance) .
+         computed. Possible values are 'path_length', 'radial' and 'branch_order'. If set, the distribution returned
+         is two-dimensional ( statistic vs distance) .
         :param angle_type: String, (default: 'axis') only used when querying root angles. Determines if angles are
-        returned as 'axis' angles or as 'euler' angles.
+         returned as 'axis' angles or as 'euler' angles.
         :return: distribution data
         """
 
@@ -904,14 +920,15 @@ class NeuronTree:
         """
         Returns the frequency distribution over the queried statistic. If a distance measure is set the distribution
         is two-dimensional.
+
         :param key: string (default='branch_order'), allows to query different statistic distributions. Options
-        are 'branch_order', 'strahler_order', 'branch_angle', 'path_angle', 'thickness', 'path_length', 'radial_dist',
-        'segment_length' and 'root_angle'.
+         are 'branch_order', 'strahler_order', 'branch_angle', 'path_angle', 'thickness', 'path_length',
+         'radial_dist', 'segment_length' and 'root_angle'.
         :param dist_measure: String, (default: None). Optional distance measure against the distribution of values is
-        computed. Possible values are 'path_length', 'radial_dist' and 'branch_order'. If set, the distribution returned is
-        two-dimensional ( statistic vs distance) .
+         computed. Possible values are 'path_length', 'radial_dist' and 'branch_order'. If set, the distribution
+         returned is two-dimensional ( statistic vs distance) .
         :param angle_type: String, (default: 'axis') only used when querying root angles. Determines if angles are
-        returned as 'axis' angles or as 'euler' angles.
+         returned as 'axis' angles or as 'euler' angles.
         :param kwargs: options for the np.histogramdd method.
         :return: (hist, edges ) as np.arrays. The histogram and its bin edges.
         """
@@ -937,16 +954,17 @@ class NeuronTree:
         """
         Returns a Gaussian kernel density estimate of the distribution of the measure defined by key.
         changed for use with networkx v2 (works also in old version: edge -> adj)
+
         :param key: String, measure to calculate the kernel density estimate from. Options are 'branch_order',
-        'strahler_order', 'branch_angle', 'path_angle', 'thickness', 'path_length', 'radial_dist',
-        'segment_length' and 'root_angle'.
+         'strahler_order', 'branch_angle', 'path_angle', 'thickness', 'path_length', 'radial_dist',
+         'segment_length' and 'root_angle'.
         :param dist_measure: Optional. Allows to express the measure as a function of distance. If set to None, the kde is
-        one-dimensional, otherwise it is has two dimensions. Possible values are 'path_length', 'radial_dist' and 'branch_order'.
+         one-dimensional, otherwise it is has two dimensions. Possible values are 'path_length', 'radial_dist' and 'branch_order'.
         :param angle_type:
         :param kwargs: options for the stats.gaussian_kde method.
-        :return: (kde, sampling_points) kde is a one- or two-dimensional Gaussian kernel density estimate of measure
-        specified with key. sampling_points is a 1x100 or 2x10000 array of equidistant sampling points for plotting the
-        kde.
+        :return: (kde, sampling_points) kde is a one- or two-dimensional Gaussian kernel density estimate of
+         measure specified with key. sampling_points is a 1x100 or 2x10000 array of equidistant sampling points
+         for plotting the kde.
         """
 
         data = self._get_distribution_data(key, dist_measure, angle_type)
@@ -969,8 +987,8 @@ class NeuronTree:
         return kde, sampling_points
 
     def get_radii(self):
-        """
-        Returns the radii of each node.
+        """ Returns the radii of each node.
+
         :return: dict {u: thickness of u}
         """
         # get the thickness of each node
@@ -978,11 +996,10 @@ class NeuronTree:
         return thickness_dict
 
     def get_path_angles(self):
-        """
-        Returns a dictionary of angles between two edges if their connecting point is no branch point.
+        """ Returns a dictionary of angles between two edges if their connecting point is no branch point.
         Angles are reported in degree.
-        :return: dict of path angles btw two edges.
-                d[v] holds the angle between edge (u,v) and (v,w)
+
+        :return: dict of path angles btw two edges. d[v] holds the angle between edge (u,v) and (v,w)
         """
         # get the depth first search successors from the soma (id=1).
         root = self.get_root()
@@ -1017,8 +1034,8 @@ class NeuronTree:
         return path_angle
 
     def get_soma_angles(self):
-        """
-        Returns the list of angles between the neurites exiting the soma.
+        """ Returns the list of angles between the neurites exiting the soma.
+
         :return: soma_angles    list of angles (in degree).
         """
 
@@ -1043,12 +1060,11 @@ class NeuronTree:
         return soma_angles[:len(branches) - 1]
 
     def get_branch_angles(self):
-        """
-        Returns a dictionary of branch angles.
+        """ Returns a dictionary of branch angles.
         changed for use with networkx v2 (works also in old version: edge -> adj)
-        :return:
-            branch_angles   dictionary of branch angles. Its form is {(bp, succ1, succ2): angle between (bp, succ1) and
-            (bp, succ2).
+
+        :return: branch_angles - dictionary of branch angles.
+         Its form is {(bp, succ1, succ2) angle between (bp, succ1) and (bp, succ2).
         """
 
         #from itertools import combinations
@@ -1084,8 +1100,8 @@ class NeuronTree:
         return branch_angles
 
     def get_volume(self):
-        """
-        Returns the volume for each segment in the tree.
+        """ Returns the volume for each segment in the tree.
+
         :return: dictionary of the form d[(u,v)] = volume(u,v)
         """
 
@@ -1107,6 +1123,7 @@ class NeuronTree:
     def get_surface(self):
         """
         Returns the surface for each segment in the tree treating each edge as a pipe (without closing lids!).
+
         :return: dictionary of the form d[(u,v)] = surface(u,v)
         """
         d = {}
@@ -1129,13 +1146,13 @@ class NeuronTree:
         Sholl intersection profile counts the intersection of the neurites with concentric circles with increasing
         radii. The origin of the concentric circles can be chosen to either be the centroid of the
         projected neuron's convex hull or to be the soma.
+
         :param proj: 2D projection of all neurites. Options are 'xy', 'xz' and 'yz'
         :param steps: number of concentric circles centered around _centroid_. Their radii are determined as the
-        respective fraction of the distance from the centroid to the farthest point of the convex hull.
+         respective fraction of the distance from the centroid to the farthest point of the convex hull.
         :param centroid: Determines the origin of the concentric circles. Options are 'centroid' or 'soma'.
-        :return:
-            intersections  list, len(steps), count of intersections with each circle.
-            intervals list, len(steps +1), radii of the concentric circles.
+        :return: intersections  list, len(steps), count of intersections with each circle.
+         intervals list, len(steps +1), radii of the concentric circles.
         """
 
         G = self.get_graph()
@@ -1203,16 +1220,15 @@ class NeuronTree:
         """
         Returns the proportional sum of absolute deviations (PSAD) for each branching node in the neuron. The PSAD is
         a measure of topological tree asymmetry and is defined for a branching node p as
-        PSAD_p = m/(2*(m-1)*(n-m) * sum_m |r_i - n/m|
+        PSAD_p = m/(2*(m-1)*(n-m) * sum_m * abs(r_i - n/m)
         where m is the out_degree of node p, n is the number of leaves of the subtree starting at p and r_i is the
         number of leaves of the i_th subtree of p. For a more detailed definition see:
         Verwer, Ronald WH, and Jaap van Pelt.
         "Descriptive and comparative analysis of geometrical properties of neuronal tree structures."
         Journal of neuroscience methods 18.1-2 (1986): 179-206.
 
-        :return:
-            w:      dict boolean, dict of weights [0,1] indicating which subtrees have more than 3 leaves.
-            psad:   dict, dictionary of the form {bp: PSAD} for each  in neuron.
+        :return: w:      dict boolean, dict of weights [0,1] indicating which subtrees have more than 3 leaves.
+                 psad:   dict, dictionary of the form {bp: PSAD} for each  in neuron.
 
         """
 
@@ -1220,6 +1236,7 @@ class NeuronTree:
             """
             Helper-function: Returns the number of leaves that are attached to start point in graph G.
             downstream.
+
             :param G: nx.Digraph
             :param start: int   point to get the number of terminals from.
             :param out_degree:  dict . Dictionary of out degrees for each node in G.
@@ -1268,6 +1285,7 @@ class NeuronTree:
         node and edge attributes to generate a new NeuronTree. If dist is longer than a segment (path from branch point
         to branch point) there is no additional point sampled.
         All original branching points are kept!
+
         :param dist: distance (in microns) at which each neurite is resampled.
         :return: swc pandas.DataFrame containing the new tree data
         """
@@ -1399,6 +1417,7 @@ class NeuronTree:
         """
          Re-sample new nodes along the tree in equidistant distance dist_measure (given in microns) and return a new
          NeuronTree with the resampled data. Original branch points are kept.
+
         :param dist: distance (in microns) at which to resample
         :return: NeuronTree
         """
@@ -1412,6 +1431,7 @@ class NeuronTree:
         """
         Returns a list of all neurites extending from the soma (axon and dendrites). If the neurites are disconnected
         only the part connected to the soma will be returned.
+
         :param soma_included: bool. Determines if the soma is part of the neurites or not.
         :return: list of NeuronTrees
         """
@@ -1458,13 +1478,13 @@ class NeuronTree:
 #######################################################################################################################
 
     def draw_3D(self, fig=None, ix=111, reverse=False, r_axis='z', axon_color='darkgreen', dendrite_color='darkgrey'):
-        """
-        Draws a stick figure neuron in 3D.
+        """ Draws a stick figure neuron in 3D.
+
         :param fig: figure in which to draw. If None a new figure is created.
         :param ix: index of the subplot within the figure 'fig'. Default: 111
         :param reverse: Default=False. Determines whether the axis specified in 'r_axis' is inverted.
         :param r_axis: Default = 'z'. Defines the axis that is inverted if 'reverse' is set to True. Possible values are
-        'x', 'y' and 'z'.
+         'x', 'y' and 'z'.
         :param axon_color: Color, default='grey'. Defines the color of the axon.
         :param dendrite_color: Color, default='darkgrey'. Defines the color of the dendrites.
         """
@@ -1516,8 +1536,8 @@ class NeuronTree:
 
     def draw_2D(self, fig=None, ax=None, projection='xz', axon_color='darkgreen', dendrite_color='darkgrey',
                 apical_dendrite_color='grey', x_offset=0, y_offset=0, **kwargs):
-        """
-        Plots a 2D projection of the stick figure neuron.
+        """ Plots a 2D projection of the stick figure neuron.
+
         :param fig: Figure in which to draw. If None a new figure is created.
         :param projection: Default='xz'. Identifier of the ewo dimensional projection plane ['xz', 'xy', 'yz']
         :param axon_color: Color, default='grey'. Defines the color of the axon.
@@ -1602,8 +1622,8 @@ class NeuronTree:
 
 
     def to_swc(self):
-        """
-        Write NeuronTree into swc file compatible pandas.DataFrame.
+        """ Write NeuronTree into swc file compatible pandas.DataFrame.
+
         :return: pandas.DataFrame with columns 'n', 'type', 'x', 'y', 'z', 'radius' and 'parent'
         """
 
@@ -1635,13 +1655,11 @@ class NeuronTree:
 
     def write_to_swc(self, file_name,
                      path='/gpfs01/berens/data/data/anatomy/BC_morphologies/swc_tree/'):
-        """
-        Write NeuronTree to swc file.
+        """ Write NeuronTree to swc file.
+
         :param file_name: String. File name without '.swc' tag.
         :param path: String. Path to file
-
         """
-
         if not exists(path):
             makedirs(path)
 
@@ -1650,12 +1668,11 @@ class NeuronTree:
 
     def write_to_mat(self, file_name,
                      path='/gpfs01/berens/data/data/anatomy/BC_morphologies/csv_luxburg/'):
-        """
-        Write NeuronTree to mat file.
+        """ Write NeuronTree to mat file.
+
         :param file_name: String. Filename without .mat tag.
         :param path:  String. Path to file
         """
-
         if not exists(path):
             makedirs(path)
 

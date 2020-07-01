@@ -22,3 +22,6 @@ build/*
 
 # build
 dist/*
+
+# Sphinx documentation
+docs/_build/

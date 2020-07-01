@@ -20,6 +20,7 @@ __version__ = about.__version__
 def help(exitcode=0):
     """
     Print help page and exit application depending on error passed
+
     :param exitcode: Errorcode which will be returned at Exit or 0 if no error occured
     """
     if exitcode == 0:
@@ -70,6 +71,7 @@ def version():
 def printException(message="Unknown Error"):
     """
     Helper function for processing Exceptions in main function
+
     :param message: pass message for user defined Exception
     """
     tb = traceback.format_exc()
@@ -85,6 +87,7 @@ def morphopy(argv):
     """
     Callable from command line or imported with several arguments
     see help page for more information
+
     :type argv: arguments passed for processing swc-files
     """
     try:
@@ -291,8 +294,8 @@ def main():
 
 
 if __name__ == '__main__':
-    '''
+    """
     callable from command line
-    '''
+    """
     main()
 

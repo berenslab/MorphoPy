@@ -8,8 +8,9 @@ def load_swc_file(filename=None, **kwargs):
     """
     This function imports a swc file to a pandas dataframe and then uses utils to standardize it.
     This dataframe is then used to initialize a new NeuronTree object and returns it to the caller.
+
     :param filename: path to swc file as string
-    :param **kargs: optional parameters passed to the utils.get_standardized_swc()s
+    :param kargs: optional parameters passed to the utils.get_standardized_swc()
     :return: NeuronTree object
     """
     f = lambda x: float(x.replace(",", "."))
@@ -29,6 +30,7 @@ def load_swc_file(filename=None, **kwargs):
 def check_neurontree(neurontree=None):
     """
     This function checks a neurontree
+
     :param filename: path to swc file as string
     :return: NeuronTree object
     """
@@ -41,8 +43,9 @@ def check_neurontree(neurontree=None):
 def read_config(configfile=None):
     """
     This function reads a config file and returns two dictionaries with all found values
+
     :param configfile: path to the configfile
-    :return: (config_params) dictionary with global params and normalization bounds with key, value pairs
+    :return: config_params - dictionary with global params and normalization bounds with key, value pairs
                             None will be returned if no file or wrong file was found
     """
     try:

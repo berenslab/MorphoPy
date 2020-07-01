@@ -12,9 +12,10 @@ from morphopy.computation.persistence_functions import radial_distance
 def get_persistence(neurontree=None, f=None):
     """
     Creates the persistence barcode for the graph G. The algorithm is taken from
-    _Quantifying topological invariants of neuronal morphologies_ from Lida Kanari et al
-    (https://arxiv.org/abs/1603.08432).
+    "Quantifying topological invariants of neuronal morphologies" from Lida Kanari et al
+    (https://arxiv.org/abs/1603.08432).\n
     changed for use with networkx v2 (works also in old version: list(G.neighbors()))
+
     :param neurontree: instance of a NeuronTree class which holds the data of the swc file
     :param f: user defined function for computing persitence (see persistence_functions.py)
     :return: pandas.DataFrame with entries node_id | birth | death . Where birth and death are defined in radial
@@ -73,9 +74,11 @@ def get_persistence(neurontree=None, f=None):
 def compute_morphometric_statistics(neurontree=None, format='wide'):
     """
     Compute various morphometric statistics of a NeuronTree which is passed as an object
+
     :param neurontree: NeuronTree instance, holds complete data of an swc file
-    :param format: String (default='wide'), determines the data format of the returned statistics. Options are 'wide' and
-    'long'. For more information read http://www.cookbook-r.com/Manipulating_data/Converting_data_between_wide_and_long_format/.
+    :param format: String determines the data format of the returned statistics.
+     Options are 'wide'(default) and 'long'. For more information read\n
+     http://www.cookbook-r.com/Manipulating_data/Converting_data_between_wide_and_long_format/
     :return: pandas dataframe object with dictionary of all statistics
     """
     if neurontree is None:
@@ -161,7 +164,8 @@ def compute_morphometric_statistics(neurontree=None, format='wide'):
 def compute_density_maps(neurontree=None, config_params=None):
     """
     function for computing density maps which can be specified by a config and passed with a neurontree
-    several projections are computed: x,y,z,xy,xz,yz
+    several projections are computed (x,y,z,xy,xz,yz)
+
     :param neurontree:      NeuronTree object wich holds a swc file data
     :param config_params:   configuration params passed as dictionary which was load from file
                             containing all customizable params for density maps

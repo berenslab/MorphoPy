@@ -3,8 +3,8 @@ from matplotlib_scalebar.scalebar import ScaleBar
 
 
 def show_threeview(nt, fig=None, **kwargs):
-    """
-    Plots all three two-dimensional projections of the neuron in nt.
+    """ Plots all three two-dimensional projections of the neuron in nt.
+
     :param nt: NeuronTree, neuron to be plotted
     :param fig: (optional) pass the figure handle from outside if you want more control.
     :param kwargs: arguments that can be passed to the NeuronTree.draw_2D() function.
