@@ -25,7 +25,7 @@ def help(exitcode=0):
     if exitcode == 0:
         version()
     print('')
-    print('Usage: MorphoPy.py -c <compute_feature> -i <swc_file>|<directory> [-o <output directory>]')
+    print('Usage: morphopy -c <compute_feature> -i <swc_file>|<directory> [-o <output directory>]')
     print('                   [--long | --func <persistence_function> | --conf <config_file>] [--help]')
     print('                                                                                           ')
     if exitcode == 0:
@@ -81,9 +81,9 @@ def printException(message="Unknown Error"):
     print(tb)
 
 
-def main(argv):
+def morphopy(argv):
     """
-    Callable from command line with several arguments
+    Callable from command line or imported with several arguments
     see help page for more information
     :type argv: arguments passed for processing swc-files
     """
@@ -281,12 +281,18 @@ def main(argv):
     sys.exit(0)
 
 
+def main():
+    """
+    callable from console script without arguments
+    """
+    argv=sys.argv[1:]
+    print(argv)
+    morphopy(argv)
+
+
 if __name__ == '__main__':
     '''
     callable from command line
-    Can open data of the following file format:
-    - .swc or batch processing whole directories
-    - see help page for more information
     '''
-    print(sys.argv)
-    main(sys.argv[1:])
+    main()
+

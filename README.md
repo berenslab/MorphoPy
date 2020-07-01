@@ -18,7 +18,7 @@ You can use MorphoPy imported in Python or from command line as batch-tool as we
 
 The current working build:
  
- **version 0.6**
+ **version 0.7**
  
 All builds are tested on Linux (Debian and CentOS) and Windows 10.
 
@@ -103,10 +103,10 @@ You can simply uninstall the package with pip3:
 ## <a name="usage">Usage</a> 
 After the installation you can simply call:
 
-	MorphoPy.py <options>
+	morphopy <options>
 Help:
 
-	Usage: MorphoPy.py -c <compute_feature> -i <swc_file>|<directory> [-o <output directory>]
+	Usage: morphopy -c <compute_feature> -i <swc_file>|<directory> [-o <output directory>]
 	                   [--long | --func <persistence_function> | --conf <config_file>] [--help]
 	
 	Options:
