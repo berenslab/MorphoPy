@@ -1,0 +1,152 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module utils</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>utils</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:MorphoPy/neurontree/utils.py">MorphoPy/neurontree/utils.py</a></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="math.html">math</a><br>
+</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top><a href="pandas.html">pandas</a><br>
+</td><td width="25%" valign=top><a href="scipy.html">scipy</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-angle_between"><strong>angle_between</strong></a>(v1, v2)</dt><dd><tt>Returns&nbsp;the&nbsp;angle&nbsp;in&nbsp;radians&nbsp;between&nbsp;vectors&nbsp;'v1'&nbsp;and&nbsp;'v2'::<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt;&gt;&gt;&nbsp;<a href="#-angle_between">angle_between</a>((1,&nbsp;0,&nbsp;0),&nbsp;(0,&nbsp;1,&nbsp;0))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.5707963267948966<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt;&gt;&gt;&nbsp;<a href="#-angle_between">angle_between</a>((1,&nbsp;0,&nbsp;0),&nbsp;(1,&nbsp;0,&nbsp;0))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0.0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt;&gt;&gt;&nbsp;<a href="#-angle_between">angle_between</a>((1,&nbsp;0,&nbsp;0),&nbsp;(-1,&nbsp;0,&nbsp;0))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.141592653589793<br>
+Parameters<br>
+----------<br>
+v1&nbsp;:&nbsp;numpy.array<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d-dimensional&nbsp;vector<br>
+v2&nbsp;:&nbsp;numpy.array<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d-dimensional&nbsp;vector<br>
+&nbsp;<br>
+Returns<br>
+-------<br>
+theta&nbsp;:&nbsp;float<br>
+&nbsp;&nbsp;&nbsp;&nbsp;angle&nbsp;btw&nbsp;v1&nbsp;and&nbsp;v2&nbsp;in&nbsp;radians</tt></dd></dl>
+ <dl><dt><a name="-commuteDist"><strong>commuteDist</strong></a>(A)</dt><dd><tt>Returns&nbsp;the&nbsp;commute&nbsp;distance&nbsp;within&nbsp;a&nbsp;graph&nbsp;given&nbsp;by&nbsp;adjacency&nbsp;matrix&nbsp;A<br>
+:param&nbsp;A:&nbsp;adjacency&nbsp;matrix&nbsp;(NxN)<br>
+:return:&nbsp;B&nbsp;(NxN)&nbsp;containing&nbsp;the&nbsp;commute&nbsp;distances&nbsp;from&nbsp;each&nbsp;node&nbsp;to&nbsp;each&nbsp;other</tt></dd></dl>
+ <dl><dt><a name="-computeStat"><strong>computeStat</strong></a>(statType, W, d, maxDist)</dt><dd><tt>computes&nbsp;a&nbsp;graph&nbsp;key&nbsp;on&nbsp;(sub)graph&nbsp;given&nbsp;by&nbsp;W<br>
+:param&nbsp;statType:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'maxDist'&nbsp;:&nbsp;maximal&nbsp;distance<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'maxDist_norm'&nbsp;:&nbsp;normalized&nbsp;maximal&nbsp;distance<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'meanEdgeLength'&nbsp;:&nbsp;mean&nbsp;edge&nbsp;length<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'meanEdgeLength_norm'&nbsp;:&nbsp;normalized&nbsp;mean&nbsp;edge&nbsp;length<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'4starMotif'&nbsp;:&nbsp;4&nbsp;star&nbsp;motif<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'branchPoints'&nbsp;:&nbsp;number&nbsp;of&nbsp;branch&nbsp;points<br>
+:param&nbsp;W:&nbsp;(KxK)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;adjacency&nbsp;matrix&nbsp;of&nbsp;graph<br>
+:param&nbsp;d:&nbsp;(Kx1)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;shortest&nbsp;path&nbsp;distances&nbsp;of&nbsp;nodes&nbsp;in&nbsp;W<br>
+:param&nbsp;maxDist:&nbsp;float<br>
+&nbsp;&nbsp;&nbsp;&nbsp;maximal&nbsp;shortest&nbsp;path&nbsp;distance&nbsp;in&nbsp;graph&nbsp;of&nbsp;which&nbsp;W&nbsp;is&nbsp;a&nbsp;sub-graph&nbsp;of.<br>
+:return:&nbsp;stat:&nbsp;float<br>
+&nbsp;&nbsp;&nbsp;&nbsp;key&nbsp;calculated&nbsp;according&nbsp;to&nbsp;statType</tt></dd></dl>
+ <dl><dt><a name="-eulerAnglesToRotationMatrix"><strong>eulerAnglesToRotationMatrix</strong></a>(theta)</dt><dd><tt>Calculates&nbsp;the&nbsp;rotation&nbsp;matrix&nbsp;from&nbsp;given&nbsp;euelr&nbsp;angles<br>
+:param&nbsp;theta:&nbsp;3D&nbsp;vector&nbsp;with&nbsp;eulerangles&nbsp;for&nbsp;x,y&nbsp;and&nbsp;z&nbsp;axis<br>
+:return:&nbsp;rotation&nbsp;matrix&nbsp;R&nbsp;[3x3]</tt></dd></dl>
+ <dl><dt><a name="-get_A"><strong>get_A</strong></a>(x)</dt><dd><tt>Returns&nbsp;matrix&nbsp;A.&nbsp;Used&nbsp;for&nbsp;rotation&nbsp;matrix&nbsp;calculation<br>
+:param&nbsp;x:&nbsp;3D&nbsp;numpy.array<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rotation&nbsp;axis<br>
+&nbsp;<br>
+:return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A:&nbsp;3x3&nbsp;numpy.array</tt></dd></dl>
+ <dl><dt><a name="-get_axis"><strong>get_axis</strong></a>(v1, v2)</dt><dd><tt>Returns&nbsp;the&nbsp;axis&nbsp;between&nbsp;two&nbsp;vectors&nbsp;v1&nbsp;and&nbsp;v2<br>
+&nbsp;<br>
+Parameters<br>
+---------<br>
+v1:&nbsp;numpy.array<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d-dimensional<br>
+v2:&nbsp;numpy.array<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d-dimensional<br>
+&nbsp;<br>
+Returns<br>
+-------<br>
+axis:&nbsp;numpy.array<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d-dimensional&nbsp;axis&nbsp;btw&nbsp;v1&nbsp;and&nbsp;v2</tt></dd></dl>
+ <dl><dt><a name="-get_rotation_matrix"><strong>get_rotation_matrix</strong></a>(a, b)</dt><dd><tt>Returns&nbsp;the&nbsp;rotation&nbsp;matrix&nbsp;to&nbsp;rotate&nbsp;vector&nbsp;a&nbsp;onto&nbsp;vector&nbsp;b.<br>
+&nbsp;<br>
+:param&nbsp;a:&nbsp;numpy.array&nbsp;(2&nbsp;or&nbsp;3&nbsp;dimensional)<br>
+:param&nbsp;b:&nbsp;numpy.array&nbsp;(2&nbsp;or&nbsp;3&nbsp;dimensional)<br>
+:return:&nbsp;R&nbsp;(2x2&nbsp;or&nbsp;3x3)&nbsp;rotation&nbsp;matrix&nbsp;to&nbsp;rotate&nbsp;a&nbsp;onto&nbsp;b</tt></dd></dl>
+ <dl><dt><a name="-get_standardized_swc"><strong>get_standardized_swc</strong></a>(swc, scaling=1.0, soma_radius=None, soma_center=True, pca_rot=False)</dt><dd><tt>This&nbsp;function&nbsp;collapses&nbsp;all&nbsp;soma&nbsp;points&nbsp;to&nbsp;a&nbsp;single&nbsp;node&nbsp;located&nbsp;at&nbsp;the&nbsp;centroid&nbsp;of&nbsp;the&nbsp;convex&nbsp;hull&nbsp;of&nbsp;the&nbsp;original<br>
+soma&nbsp;nodes.&nbsp;It&nbsp;can&nbsp;also&nbsp;scale&nbsp;the&nbsp;coordinates,&nbsp;merge&nbsp;nodes&nbsp;into&nbsp;the&nbsp;soma&nbsp;that&nbsp;have&nbsp;a&nbsp;bigger&nbsp;radius&nbsp;than&nbsp;soma_radius<br>
+and&nbsp;return&nbsp;the&nbsp;xyz&nbsp;coordinates&nbsp;of&nbsp;the&nbsp;swc&nbsp;file&nbsp;in&nbsp;their&nbsp;PCA&nbsp;rotation.<br>
+:param&nbsp;swc:&nbsp;swc&nbsp;file,&nbsp;as&nbsp;pandas.DataFrame.<br>
+:param&nbsp;scaling:&nbsp;float,&nbsp;(default=1),&nbsp;allows&nbsp;for&nbsp;a&nbsp;uniform&nbsp;scaling&nbsp;of&nbsp;x,&nbsp;y&nbsp;and&nbsp;z<br>
+:param&nbsp;soma_radius:&nbsp;float&nbsp;(default=None),&nbsp;if&nbsp;set,&nbsp;then&nbsp;all&nbsp;nodes&nbsp;with&nbsp;a&nbsp;radius&nbsp;greater&nbsp;or&nbsp;equal&nbsp;to&nbsp;soma&nbsp;radius&nbsp;are<br>
+set&nbsp;to&nbsp;be&nbsp;somatic&nbsp;(type=1).&nbsp;In&nbsp;a&nbsp;subsequent&nbsp;step&nbsp;these&nbsp;nodes&nbsp;will&nbsp;be&nbsp;merged&nbsp;to&nbsp;one.&nbsp;Careful!&nbsp;If&nbsp;this&nbsp;radius&nbsp;is&nbsp;set<br>
+too&nbsp;small&nbsp;this&nbsp;leads&nbsp;to&nbsp;faulty&nbsp;skeletons.<br>
+:param&nbsp;soma_center:&nbsp;bool&nbsp;(default=True),&nbsp;if&nbsp;True,&nbsp;x,y,z&nbsp;are&nbsp;soma&nbsp;centered.<br>
+:param&nbsp;pca_rot:&nbsp;bool&nbsp;(default=False),&nbsp;if&nbsp;True,&nbsp;the&nbsp;x,y,z&nbsp;coordinates&nbsp;in&nbsp;the&nbsp;given&nbsp;swc&nbsp;file&nbsp;are&nbsp;rotated&nbsp;into&nbsp;their<br>
+PCA&nbsp;frame.&nbsp;Then&nbsp;x&nbsp;corresponds&nbsp;to&nbsp;the&nbsp;direction&nbsp;of&nbsp;highest&nbsp;and&nbsp;z&nbsp;to&nbsp;the&nbsp;direction&nbsp;of&nbsp;lowest&nbsp;variance.<br>
+:return:&nbsp;pandas.DataFrame</tt></dd></dl>
+ <dl><dt><a name="-getsizeof"><strong>getsizeof</strong></a>(...)</dt><dd><tt><a href="#-getsizeof">getsizeof</a>(object,&nbsp;default)&nbsp;-&gt;&nbsp;int<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;size&nbsp;of&nbsp;object&nbsp;in&nbsp;bytes.</tt></dd></dl>
+ <dl><dt><a name="-isRotationMatrix"><strong>isRotationMatrix</strong></a>(R)</dt><dd><tt>Checks&nbsp;if&nbsp;R&nbsp;is&nbsp;a&nbsp;valid&nbsp;rotation&nbsp;matrix.<br>
+:param&nbsp;R:&nbsp;[3x3]&nbsp;rotation&nbsp;matrix<br>
+:return:&nbsp;boolean.&nbsp;Returns&nbsp;True&nbsp;when&nbsp;R&nbsp;is&nbsp;a&nbsp;valid&nbsp;rotation&nbsp;matrix,&nbsp;otherwise&nbsp;False.</tt></dd></dl>
+ <dl><dt><a name="-rotationMatrixToEulerAngles"><strong>rotationMatrixToEulerAngles</strong></a>(R)</dt><dd><tt>Calculates&nbsp;rotation&nbsp;matrix&nbsp;to&nbsp;euler&nbsp;angles<br>
+:param&nbsp;R:&nbsp;rotation&nbsp;matrix&nbsp;[3x3]<br>
+:return:&nbsp;vector&nbsp;of&nbsp;euler&nbsp;angles&nbsp;(rotations&nbsp;around&nbsp;x,y&nbsp;and&nbsp;z&nbsp;axis)</tt></dd></dl>
+ <dl><dt><a name="-shortpathFW"><strong>shortpathFW</strong></a>(A, gpu=True)</dt><dd><tt>Returns&nbsp;matrix&nbsp;B&nbsp;of&nbsp;shortest&nbsp;path&nbsp;distances&nbsp;from&nbsp;each&nbsp;node&nbsp;to&nbsp;each&nbsp;other&nbsp;node&nbsp;in&nbsp;the&nbsp;graph.<br>
+If&nbsp;the&nbsp;graph&nbsp;is&nbsp;undirected,&nbsp;B&nbsp;will&nbsp;be&nbsp;symmetric.<br>
+B[:,0]&nbsp;corresponds&nbsp;to&nbsp;all&nbsp;shortest&nbsp;paths&nbsp;from&nbsp;reached&nbsp;from&nbsp;node&nbsp;0.<br>
+Algorithm&nbsp;after&nbsp;Floyd&nbsp;and&nbsp;Warshall<br>
+&nbsp;<br>
+:param&nbsp;A:&nbsp;adjacency&nbsp;matrix&nbsp;of&nbsp;a&nbsp;graph&nbsp;(NxN)<br>
+:param&nbsp;gpu:&nbsp;default&nbsp;True.&nbsp;If&nbsp;True,&nbsp;calculation&nbsp;is&nbsp;performed&nbsp;on&nbsp;GPU.<br>
+:return:&nbsp;B&nbsp;(NxN)&nbsp;matrix&nbsp;of&nbsp;shortest&nbsp;paths</tt></dd></dl>
+ <dl><dt><a name="-smooth_gaussian"><strong>smooth_gaussian</strong></a>(data, dim, sigma=2)</dt><dd><tt>Smooths&nbsp;the&nbsp;given&nbsp;data&nbsp;using&nbsp;a&nbsp;gaussian.&nbsp;This&nbsp;method&nbsp;only&nbsp;works&nbsp;for&nbsp;stacked&nbsp;one&nbsp;or&nbsp;two&nbsp;dimensional&nbsp;data&nbsp;so<br>
+far!&nbsp;Smoothing&nbsp;in&nbsp;3D&nbsp;is&nbsp;not&nbsp;implemented.<br>
+:param&nbsp;data:&nbsp;(X,Y,N)&nbsp;numpy.array&nbsp;1,2&nbsp;or&nbsp;3&nbsp;dimensional.<br>
+:param&nbsp;dim:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Dimension&nbsp;of&nbsp;the&nbsp;passed&nbsp;data.&nbsp;Used&nbsp;to&nbsp;determine&nbsp;if&nbsp;data&nbsp;is&nbsp;a&nbsp;single&nbsp;image&nbsp;or&nbsp;stacked.<br>
+:param&nbsp;sigma:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;standard&nbsp;deviation&nbsp;of&nbsp;the&nbsp;smoothing&nbsp;gaussian&nbsp;used.<br>
+:return:&nbsp;Xb:&nbsp;same&nbsp;dimension&nbsp;as&nbsp;the&nbsp;input&nbsp;array.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Smoothed&nbsp;data.</tt></dd></dl>
+ <dl><dt><a name="-sphereFit"><strong>sphereFit</strong></a>(spX, spY, spZ)</dt><dd><tt>fit&nbsp;a&nbsp;sphere&nbsp;to&nbsp;X,Y,&nbsp;and&nbsp;Z&nbsp;data&nbsp;points&nbsp;returns&nbsp;the&nbsp;radius&nbsp;and&nbsp;center&nbsp;points&nbsp;of&nbsp;the&nbsp;best&nbsp;fit&nbsp;sphere.&nbsp;Implementation<br>
+by&nbsp;<a href="http://jekel.me/2015/Least-Squares-Sphere-Fit/">http://jekel.me/2015/Least-Squares-Sphere-Fit/</a><br>
+:param&nbsp;spX:<br>
+:param&nbsp;spY:<br>
+:param&nbsp;spZ:<br>
+:return:</tt></dd></dl>
+ <dl><dt><a name="-unit_vector"><strong>unit_vector</strong></a>(vector)</dt><dd><tt>Returns&nbsp;the&nbsp;unit&nbsp;vector&nbsp;of&nbsp;the&nbsp;vector.<br>
+&nbsp;<br>
+Parameter<br>
+--------<br>
+vector&nbsp;:&nbsp;numpy.array<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d-dimensional&nbsp;vector<br>
+&nbsp;<br>
+Returns<br>
+-------<br>
+u&nbsp;:&nbsp;numpy.array<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d-dimensional&nbsp;unit&nbsp;vector&nbsp;of&nbsp;'vector'</tt></dd></dl>
+</td></tr></table>
+</body></html>

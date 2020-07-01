@@ -1,5 +1,0 @@
-language: python
-python:
- - "3.6"
-before_install: pip install "networkx<=1.11"
-script: python -m pytest tests/

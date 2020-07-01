@@ -1,25 +1,35 @@
-from setuptools import setup, find_packages
+#!/usr/bin/python3
 
-setup(name='morphopy',
-      version='0.1.0',
-      description='Analyze morphological data from ImageJ/Simple Neurite Tracer',
-      author='Ziwei Huang',
-      author_email='huang-ziwei@outlook.com',
-      url='https://github.com/huangziwei/MorphoPy',
-      packages=find_packages(),
-      install_requires=[
-        "numpy",
-        "pandas",
-        "scipy",
-        "matplotlib",
-        "matplotlib-scalebar",
-        "tifffile",
-        "scikit-fmm",
-        "scikit-image",
-        "h5py",
-        "seaborn",
-        "opencv-python",
-        "astropy", 
-      ],
-     )
+import setuptools
+### load global MorphoPy variables
+from morphopy import about
 
+# get long description from readme
+with open("README.md", "r", encoding='utf8') as f:
+    long_description = f.read()
+
+# get all requirements from txt file
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
+
+setuptools.setup(
+    name=about.__title__,
+    version=about.__version__,
+    entry_points={
+        'console_scripts': ['morphopy=morphopy.MorphoPy:main'],
+    },
+    author=about.__author__,
+    author_email=about.__email__,
+    description=about.__summary__,
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url=about.__url__,
+    download_url="https://github.com/berenslab/MorphoPy/archive/v%s.tar.gz" % about.__version__,
+    packages=setuptools.find_packages(),
+    classifiers=[
+     "Programming Language :: Python :: 3",
+     "License :: OSI Approved :: MIT License",
+     "Operating System :: OS Independent",
+    ],
+    install_requires=requirements,
+)

@@ -1,5 +1,9 @@
-numpy
-pandas==0.20.3
-scipy
 matplotlib
-matplotlib-scalebar
+matplotlib_scalebar
+numpy
+scipy
+pandas
+networkx
+seaborn
+sklearn
+shapely

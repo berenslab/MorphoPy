@@ -11,4 +11,17 @@
 *.egg-info/
 
 # jupyter
-*.ipynb*
+*.ipynb_checkpoints*
+.idea/*
+
+# DS Store
+*.DS_Store*
+
+# build
+build/*
+
+# build
+dist/*
+
+# Sphinx documentation
+docs/_build/
