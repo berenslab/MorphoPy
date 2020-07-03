@@ -22,12 +22,12 @@ jobs:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
 
-    - name: Install dependecies
+    - name: Install dependencies
       run: |
         python3 -m pip install --upgrade pip
-        pip install pytest
-        pip install morphopy
-    # Runs a single command using the runners shell
+        python3 -m pip install pytest
+        python3 -m pip install setuptools
+        python3 -m pip install morphopy
     - name: Run pytest 
-      run: pytest ./tests/
+      run: /home/runner/.local/bin/pytest ./tests/
 
