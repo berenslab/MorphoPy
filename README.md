@@ -211,7 +211,7 @@ Please also refer to our [tutorial](https://github.com/berenslab/MorphoPy/blob/m
 
 
 ### Density maps
-Density maps are marginal histograms over the neural mass. MorphoPy allows you to create density maps of different projections through the function compute_denisty_maps(). Per default it computes x, y, z, xy, xz and yz density maps from the point cloud of the original reconstruction. The point cloud is constructed through resampling along all neurites with a default distance of 1 micron. The resulting point cloud is then binned into bins of 20 microns and smoothed using Gaussian smoothing with std of 1.
+Density maps are marginal histograms over the neural mass. MorphoPy allows you to create density maps of different projections through the function compute_density_maps(). Per default it computes x, y, z, xy, xz and yz density maps from the point cloud of the original reconstruction. The point cloud is constructed through resampling along all neurites with a default distance of 1 micron. The resulting point cloud is then binned into bins of 20 microns and smoothed using Gaussian smoothing with std of 1.
 
 However, you can customize all these parameters by passing a config file to the function (see [above](#usage)).
 

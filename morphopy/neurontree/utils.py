@@ -192,7 +192,7 @@ def sphereFit(spX, spY, spZ):
     return radius, C[0], C[1], C[2]
 
 
-def shortpathFW(A, gpu=True):
+def shortpathFW(A):
     """
     Returns matrix B of shortest path distances from each node to each other node in the graph.
     If the graph is undirected, B will be symmetric.
@@ -212,33 +212,6 @@ def shortpathFW(A, gpu=True):
     B = np.array(I, dtype=np.float32)
     print(getsizeof(A) * 1e-09)
 
-    if getsizeof(A) * 1e-09 * 2 > 11.5:
-        print('input is too large to be computed on GPU. Switching to CPU instead.')
-        gpu = False
-
-        #if gpu:
-        # g = tf.Graph()
-        # with g.as_default():
-        #
-        #     X = tf.placeholder(dtype=tf.float32, shape=(n, n), name='X')
-        #     B_ = tf.Variable(X, name='B_')
-        #     k = tf.Variable(0, dtype=tf.int32, name='k')
-        #
-        #     C1 = tf.transpose(tf.reshape(tf.tile(B_[:, k], [n]), (n, -1)), name='C1')
-        #     C2 = tf.reshape(tf.tile(B_[k, :], [n]), (-1, n), name='C2')
-        #     C = tf.add(C1, C2, name='C')
-        #     D = tf.minimum(B_, C)
-        #     step = tf.group(B_.assign(D), tf.assign_add(k, 1))
-        #
-        # # ensure that only as much gpu memory is needed as necessary
-        # with tf.Session(graph=g) as sess:
-        #     # Initialize state to initial conditions
-        #     tf.global_variables_initializer().run(feed_dict={X: B})
-        #
-        #     for i in range(n - 1):  # one step less to not exceed array range
-        #         sess.run(step, feed_dict={X: B})
-        #         B = B_.eval()
-        #else:
     for k in range(n):
         C1 = np.tile(B[:, k], (n, 1))
         C2 = np.tile(B[k, :], (n, 1))
