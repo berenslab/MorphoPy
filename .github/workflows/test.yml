@@ -22,15 +22,9 @@ jobs:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
 
-    - name: Install dependecies
+    - name: Install dependencies
       run: |
         python3 -m pip install --upgrade pip
         pip install pytest
         pip install morphopy
-
-    - name: Print current working dir
-      run: echo $PWD
-      
-    - name: Run a pytest
-      run: pytest ./tests/
 
