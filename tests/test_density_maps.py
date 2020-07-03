@@ -1,0 +1,1 @@
+from morphopy.computation.file_manager import load_swc_file
