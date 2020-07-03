@@ -207,7 +207,8 @@ A neuron is represented as a directed acyclic graph with node attributes _id, x-
 
 All data is stored in the [tidy data format](http://vita.had.co.nz/papers/tidy-data.pdf).
 
-Please also refer to our [tutorial](https://github.com/berenslab/MorphoPy/blob/master/notebooks/MORPHOPY%20Tutorial.ipynb).
+Please also refer to our [tutorial](https://github.com/berenslab/MorphoPy/blob/master/notebooks/MORPHOPY%20Tutorial.ipynb)
+and the [documentation](https://morphopy.readthedocs.io/en/latest/).
 
 
 ### Density maps
