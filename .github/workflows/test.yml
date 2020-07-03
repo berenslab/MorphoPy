@@ -24,10 +24,10 @@ jobs:
 
     - name: Install dependecies
       run: |
-        python -m pip install --upgrade pip
+        python3 -m pip install --upgrade pip
         pip install pytest
         pip install morphopy
     # Runs a single command using the runners shell
-    - name: Run a pytest
+    - name: Run pytest 
       run: pytest ./tests/
 
