@@ -30,5 +30,7 @@ jobs:
         python3 -m pip install morphopy
     - name: Show current working directory
       run: echo $PWD
+    - name: Show hime bin dir
+      run: ls /home/runner/.local/bin/
     - name: Run pytest 
-      run: pytest ./tests/
+      run: /home/runner/.local/bin/pytest ./tests/
