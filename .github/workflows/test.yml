@@ -25,6 +25,9 @@ jobs:
     - name: Install dependencies
       run: |
         python3 -m pip install --upgrade pip
-        pip install pytest
-        pip install morphopy
-
+        pip3 install pytest
+        pip3 install morphopy
+    - name: Shwo current working directory
+      run: echo $PWD
+    - name: Run pytest 
+      run: pytest ./tests/
