@@ -21,46 +21,36 @@ morphometric_statistic_names = ['avg_thickness', 'max_segment_path_length', 'max
        'mean_soma_exit_angle', 'total_surface', 'height', 'max_path_angle']
 
 
-def test_morphometrics_for_file_1():
-    k = 0
-    neuron = load_swc_file('../data/'+file_names[k])
+def compare_old_and_current_implementation(filename):
+    neuron = load_swc_file(dir_path+'/../data/' + filename)
     neuron_morphometrics = compute_morphometric_statistics(neuron)
 
     for m in morphometric_statistic_names:
-        old_value = round(precomputed_morphometric_statistics.loc[file_names[k]][m], 3)
+        old_value = round(precomputed_morphometric_statistics.loc[filename][m], 3)
         current_value = round(neuron_morphometrics[m].values[0], 3)
-        assert (old_value == current_value), "Computation of %s changed in file %s!" % (m, file_names[k])
+        assert (old_value == current_value), "Computation of %s changed in file %s!" % (m, filename)
+
+
+def test_morphometrics_for_file_1():
+    k = 0
+    filename = file_names[k]
+    compare_old_and_current_implementation(filename)
 
 
 def test_morphometrics_for_file_2():
     k = 1
-    neuron = load_swc_file('../data/'+file_names[k])
-    neuron_morphometrics = compute_morphometric_statistics(neuron)
-
-    for m in morphometric_statistic_names:
-        old_value = round(precomputed_morphometric_statistics.loc[file_names[k]][m], 3)
-        current_value = round(neuron_morphometrics[m].values[0], 3)
-        assert (old_value == current_value), "Computation of %s changed in file %s!" % (m, file_names[k])
+    filename = file_names[k]
+    compare_old_and_current_implementation(filename)
 
 
 def test_morphometrics_for_file_3():
     k = 2
-    neuron = load_swc_file('../data/'+file_names[k])
-    neuron_morphometrics = compute_morphometric_statistics(neuron)
-
-    for m in morphometric_statistic_names:
-        old_value = round(precomputed_morphometric_statistics.loc[file_names[k]][m], 3)
-        current_value = round(neuron_morphometrics[m].values[0], 3)
-        assert (old_value == current_value), "Computation of %s changed in file %s!" % (m, file_names[k])
+    filename = file_names[k]
+    compare_old_and_current_implementation(filename)
 
 
 def test_morphometrics_for_file_4():
     k = 3
-    neuron = load_swc_file('../data/'+file_names[k])
-    neuron_morphometrics = compute_morphometric_statistics(neuron)
-
-    for m in morphometric_statistic_names:
-        old_value = round(precomputed_morphometric_statistics.loc[file_names[k]][m], 3)
-        current_value = round(neuron_morphometrics[m].values[0], 3)
-        assert (old_value == current_value), "Computation of %s changed in file %s!" % (m, file_names[k])
+    filename = file_names[k]
+    compare_old_and_current_implementation(filename)
 
