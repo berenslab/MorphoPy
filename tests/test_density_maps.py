@@ -10,7 +10,6 @@ file_names = ['Image001-005_01_CNenhance_latest_LXS.swc', 'C4.swc',
               'V1_Layer23_Chat-IRES-Cre-neo_Ai14-299537.04.02.01_614430666_m.swc', 'EC3-80604.CNG.rotated.swc']
 
 
-
 def test_density_map_data_file_1():
 
     k=0
