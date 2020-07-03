@@ -27,14 +27,12 @@ def test_get_angle_with_same_vector():
     assert (r == 0), "returned angle should be 0"
 
 
-
 def test_get_angle_with_unnormalized_vector():
     v0 = np.array([0, 0, 1])
     v1 = np.array([0, 2, 0])
 
     r = angle_between(v0, v1)
     assert (r == 90 * np.pi / 180), "returned angle should be pi/2"
-
 
 
 def test_get_angle_btw_zero_and_v1():
@@ -54,18 +52,6 @@ def test_get_angle_returns_float():
 
 
 
-### TEST READING METHODS ####
 
-import networkx as nx
-from morphopy.computation.file_manager import load_swc_file
-
-
-def test_read_swc_returned_fileformat():
-
-    import pandas as pd
-    filepath = '../data/Image001-005-01.CNG.swc'
-    G = load_swc_file(filepath)
-
-    assert(isinstance(G.get_graph(), nx.DiGraph)), "read_swc() should return a graph as networkx.DiGraph"
   
 
