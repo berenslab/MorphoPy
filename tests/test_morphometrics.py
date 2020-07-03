@@ -1,5 +1,5 @@
 from morphopy.computation.file_manager import load_swc_file
-from morphopy.computation import feature_presentation as fp
+from morphopy.computation.feature_presentation import compute_morphometric_statistics
 
 import pandas as pd
 from numpy import round
@@ -24,7 +24,7 @@ morphometric_statistic_names = ['avg_thickness', 'max_segment_path_length', 'max
 def test_morphometrics_for_file_1():
     k = 0
     neuron = load_swc_file('../data/'+file_names[k])
-    neuron_morphometrics = fp.compute_morphometric_statistics(neuron)
+    neuron_morphometrics = compute_morphometric_statistics(neuron)
 
     for m in morphometric_statistic_names:
         old_value = round(precomputed_morphometric_statistics.loc[file_names[k]][m], 3)
@@ -35,7 +35,7 @@ def test_morphometrics_for_file_1():
 def test_morphometrics_for_file_2():
     k = 1
     neuron = load_swc_file('../data/'+file_names[k])
-    neuron_morphometrics = fp.compute_morphometric_statistics(neuron)
+    neuron_morphometrics = compute_morphometric_statistics(neuron)
 
     for m in morphometric_statistic_names:
         old_value = round(precomputed_morphometric_statistics.loc[file_names[k]][m], 3)
@@ -46,7 +46,7 @@ def test_morphometrics_for_file_2():
 def test_morphometrics_for_file_3():
     k = 2
     neuron = load_swc_file('../data/'+file_names[k])
-    neuron_morphometrics = fp.compute_morphometric_statistics(neuron)
+    neuron_morphometrics = compute_morphometric_statistics(neuron)
 
     for m in morphometric_statistic_names:
         old_value = round(precomputed_morphometric_statistics.loc[file_names[k]][m], 3)
@@ -57,7 +57,7 @@ def test_morphometrics_for_file_3():
 def test_morphometrics_for_file_4():
     k = 3
     neuron = load_swc_file('../data/'+file_names[k])
-    neuron_morphometrics = fp.compute_morphometric_statistics(neuron)
+    neuron_morphometrics = compute_morphometric_statistics(neuron)
 
     for m in morphometric_statistic_names:
         old_value = round(precomputed_morphometric_statistics.loc[file_names[k]][m], 3)
