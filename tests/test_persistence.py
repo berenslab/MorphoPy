@@ -24,6 +24,7 @@ def compare_old_and_current_persistence_implementation(filename, old_data, dista
     """
 
     neuron = load_swc_file(dir_path+"/../data/%s" % filename)
+    neuron = neuron.get_topological_minor()
     columns = ['birth', 'death', 'node_type']
     old_persistence = old_data[old_data['filename'] == filename].sort_values(columns)[columns].reset_index()
     del old_persistence['index']
