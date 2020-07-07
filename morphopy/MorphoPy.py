@@ -253,17 +253,17 @@ def morphopy(argv):
                 x_bins = densities['x_proj']['bins'][0]
                 y_bins = densities['y_proj']['bins'][0]
                 z_bins = densities['z_proj']['bins'][0]
-                bins = 'x%iy%iz%i'%(x_bins, y_bins, z_bins)
+                bins = 'x%iy%iz%i' % (x_bins, y_bins, z_bins)
                 # build output path and save plots there
-                outputfile = '%s%s_density_' % (output, file)
-                plot.savefig('%s_%s.png' % (outputfile, bins))
+                outputfile = '%s%s_density_%s.png' % (output, file, bins)
+                # plot.savefig('%s_%s.png' % (outputfile, bins))
+                plot.savefig(outputfile)
                 plt.close()
-                print('Density maps plotted to %s_%s.png' % (outputfile, bins))
+                print('Density maps plotted to %s' % outputfile)
                 # build output path and save density data
-                outputfile = '%s%s_reconstruction_density.mat' % (outputfile, file)
+                outputfile = '%s%s_density.mat' % (output, file)
                 sio.savemat(outputfile, densities)
-                print('Density map data saved to %s'%outputfile)
-
+                print('Density map data saved to %s' % outputfile)
             except:
                 printException("Failure in computing density map!")
     else:
@@ -271,12 +271,12 @@ def morphopy(argv):
         help(1)
 
     if len(output_data) > 0:
-        # output all data in one csv file
+        # output all data in one file named after directory(multiple files) or single file
         if len(files) > 1:
-            dirname = os.path.basename(os.path.normpath(directory))
-            output_filename = '%s%s_%s.csv' % (output, dirname, compute)
+            filename = os.path.basename(os.path.normpath(directory))
         else:
-            output_filename = '%s%s_%s.csv' % (output, files[0], compute)
+            filename = files[0]
+        output_filename = '%s%s_%s.csv' % (output, filename, compute)
         output_data.to_csv(output_filename, index=False)
         print('Data saved to: %s' % output_filename)
 
