@@ -34,5 +34,5 @@ jobs:
         python3 -m pip install setuptools
         python3 -m pip install git+https://github.com/berenslab/MorphoPy
     - name: Run pytest 
-      run: /home/runner/.local/bin/pytest ./tests/
+      run: pytest ./tests/
 
