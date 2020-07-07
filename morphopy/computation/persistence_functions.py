@@ -54,5 +54,5 @@ def branch_order(G, u, v):
         bo = 0
     else:
         path = nx.shortest_path(G, v, u)
-        bo = np.sum(np.array(list(nx.degree(G, path).values())) > 2)
+        bo = np.sum(np.array(list(dict(nx.degree(G, path)).values())) > 2)
     return bo
