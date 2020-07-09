@@ -1006,31 +1006,28 @@ class NeuronTree:
         branchpoints = list(self.get_branchpoints())
         if root in branchpoints:
             branchpoints.remove(root)
+        tips = self.get_tips()
         successors = nx.dfs_successors(self.get_graph(), root)
         path_angle = {}
+        edges = self.edges()
 
-        for u, v in self.edges():
+        if self._nxversion > 1:
+            # changed for version 2.x of networkX
+            nodes_data = self.get_graph().nodes(data=True)
+        else:
+            nodes_data = dict(self.get_graph().nodes(data=True))
 
-            if u not in branchpoints:
-                if self._nxversion == 2:
-                    # changed for version 2.x of networkX
-                    e1 = self.get_graph().nodes[v]['pos'] - self.get_graph().nodes[u]['pos']
-                else:
-                    e1 = self.get_graph().node[v]['pos'] - self.get_graph().node[u]['pos']
+        for u, v in edges:
 
-                try:
+            if v not in branchpoints and v not in tips:
 
-                    for w in successors[v]:
-                        if self._nxversion == 2:
-                            # changed for version 2.x of networkX
-                            e2 = self.get_graph().nodes[w]['pos'] - self.get_graph().nodes[v]['pos']
-                        else:
-                            e2 = self.get_graph().node[w]['pos'] - self.get_graph().node[v]['pos']
+                e1 = nodes_data[v]['pos'] - nodes_data[u]['pos']
 
-                        path_angle[v] = angle_between(e1, e2) * 180 / np.pi
-                except KeyError:
-                    continue
+                #v_successor = np.sort(successors[v])
+                for w in successors[v]:
 
+                    e2 = nodes_data[w]['pos'] - nodes_data[v]['pos']
+                    path_angle[v] = angle_between(e1, e2) * 180. / np.pi
         return path_angle
 
     def get_soma_angles(self):
