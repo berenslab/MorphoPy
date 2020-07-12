@@ -18,11 +18,13 @@ You can use MorphoPy imported in Python or from command line as batch-tool as we
 
 The current working build:
  
- **version 0.7**
+ **version 0.7.1**
  
 All builds are tested on Linux (Debian and CentOS) and Windows 10.
 
-You can find all working builds at [pypi.org](https://pypi.org/project/morphopy/).
+You can find all working builds at [pypi](https://pypi.org/project/morphopy/).
+
+And a full documentation of the source code is available at [readthedocs](https://morphopy.readthedocs.io/en/latest/).
 
 [back to start](#content)
 
