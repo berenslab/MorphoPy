@@ -117,7 +117,7 @@ to operate on single files or entire batches.
 MorphoPy.py -c [density|persistence|stats] 
             -i ['path_to_file'|'path_to_folder']
 ```
-For a full documentation of `MorphoPy`'s functionality please refer to our [documentation](https://morphopy.readthedocs.io/en/latest/) and tutorial on our [gitHub page](https://github.com/berenslab/MorphoPy).
+For a full documentation of `MorphoPy`'s functionality please refer to our [documentation](https://morphopy.readthedocs.io/en/latest/) and tutorial on our [GitHub page](https://github.com/berenslab/MorphoPy).
 
 `MorphoPy` has been developed in the context of a benchmarking study for cortical interneuron cell type classification
 based on their morphology [@laturnus:2019]. It has already been used in a series of scientific publications that relate
