@@ -84,7 +84,7 @@ min/max branch angles, maximal branch order, and maximal path length to the soma
 ![Node and edge related morphometric statistics. \label{fig:morphometrics}](./figures/fig_morphometrics.png)
 
 Additionally, it is possible to query the entire _morphometric distribution_ of each statistic either in form of a histogram or as a
-Gaussian kernel density estimate (kde). Fig. \autoref{fig:morphdist}, for example, shows the kde of radial distances, branch angles and their
+Gaussian kernel density estimate (kde). \autoref{fig:morphdist}, for example, shows the kde of radial distances, branch angles and their
 combination for the dendrites shown in \autoref{fig:plot}.
 
 ![Kernel density estimate of branch angles as a function of the radial distance from the soma. \label{fig:morphdist}](./figures/2D_morph_dist.png)
