@@ -14,7 +14,7 @@
 
 MorphoPy is a Python3 package that uses networkX to compute and show information about neurites.
 The input can be passed with single swc-files or it can handle whole directories with multiple files at once.
-You can use MorphoPy imported in Python or from command line as batch-tool as well.
+You can use MorphoPy imported in Python, as well as from the command line as a batch-tool.
 
 The current working build:
  
