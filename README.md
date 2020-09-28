@@ -184,6 +184,21 @@ the code and add tests and examples of how to use your code.
 
 If you are using MorphoPy for your research or your work project please make sure to cite us and this repository:
 ```
+@article{Laturnus2020,
+  doi = {10.21105/joss.02339},
+  url = {https://doi.org/10.21105/joss.02339},
+  year = {2020},
+  publisher = {The Open Journal},
+  volume = {5},
+  number = {52},
+  pages = {2339},
+  author = {Sophie Laturnus and Adam von Daranyi and Ziwei Huang and Philipp Berens},
+  title = {MorphoPy: A python package for feature extraction of neural morphologies.},
+  journal = {Journal of Open Source Software}
+}
+```
+or
+```
 @misc{morphopy,
   author = {Laturnus, Sophie and von Daranyi, Adam and Huang, Ziwei and Berens, Philipp},
   title = {MorphoPy},
