@@ -1,5 +1,9 @@
-# Morphopy: A python package for feature extraction of neural morphologies
+<img src="https://user-images.githubusercontent.com/520137/94442680-873b3200-01a4-11eb-8ec0-cb7ce5a56cc9.png" alt="MorphoPy logo" width="450"/>
+
+# A python package for feature extraction of neural morphologies
 (c) 2020 by Sophie Laturnus, Adam von Daranyi, Ziwei Huang and Philipp Berens.
+
+
 ********
 
 ## <a name="content">Content</a> 
