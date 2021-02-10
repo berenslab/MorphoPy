@@ -135,7 +135,7 @@ def rotationMatrixToEulerAngles(R):
 
 
 def eulerAnglesToRotationMatrix(theta):
-    """ Calculates the rotation matrix from given euelr angles
+    """ Calculates the rotation matrix from given euler angles
 
     :param theta: 3D vector with eulerangles for x,y and z axis
     :return: rotation matrix R [3x3]
@@ -386,8 +386,10 @@ def get_standardized_swc(swc, scaling=1., soma_radius=None, soma_center=True, pc
 
     # create one point soma when there is more than three soma points
     sp = swc[swc['type'] == 1]
-    root_id = np.min(sp['n'].values)
+        
     if sp.shape[0] > 1:
+        root_id = np.min(sp['n'].values)
+        
         if sp.shape[0] > 3:
             print('There are more than 3 soma points. The location and the radius of the soma is estimated based on its'
                   ' convex hull...')
@@ -424,6 +426,10 @@ def get_standardized_swc(swc, scaling=1., soma_radius=None, soma_center=True, pc
 
         swc = swc.append(pd.DataFrame(soma_dict, index=[0]))
         swc = swc.sort_index()
+    else:
+        # if no soma was assigned use the node that has no parent with the smallest id
+        root_id = np.min(swc[swc['parent'] == -1]['n'].values)
+        print('There was no soma indicated, assigning the node with smallest node id and no parent: ', root_id)
 
     # soma center on first entry
     if soma_center:
