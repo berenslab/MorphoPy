@@ -87,10 +87,10 @@ def compute_morphometric_statistics(neurontree=None, format='wide'):
     z = dict()
     z['branch_points'] = neurontree.get_branchpoints().size
 
-    extend = neurontree.get_extend()
-    z['width'] = extend[0]
-    z['depth'] = extend[1]
-    z['height'] = extend[2]
+    extent = neurontree.get_extent()
+    z['width'] = extent[0]
+    z['depth'] = extent[1]
+    z['height'] = extent[2]
 
     tips = neurontree.get_tips()
     z['tips'] = tips.size
