@@ -1,6 +1,6 @@
 <img src="https://user-images.githubusercontent.com/520137/94442680-873b3200-01a4-11eb-8ec0-cb7ce5a56cc9.png" alt="MorphoPy logo" width="450"/>
 
-# A python package for feature extraction of neural morphologies
+# A Python package for feature extraction of neural morphologies
 (c) 2020 by Sophie Laturnus, Adam von Daranyi, Ziwei Huang and Philipp Berens.
 
 
@@ -241,7 +241,7 @@ However, you can customize all these parameters by passing a config file to the 
 
 `MorphoPy` offers a default selection of 28 single-valued morphometric statistics, namely:
 - number of branch points
-- width (x-extend), depth (y-extend), height (z-extend)
+- width (x-extent), depth (y-extent), height (z-extent)
 - number of tips
 - number of neurites extending from the soma directly (stems)
 - the total path length (in microns)
