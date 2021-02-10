@@ -84,7 +84,7 @@ min/max branch angles, maximal branch order, and maximal path length to the soma
 ![Node and edge related morphometric statistics. \label{fig:morphometrics}](./figures/fig_morphometrics.png)
 
 Additionally, it is possible to query the entire _morphometric distribution_ of each statistic either in form of a histogram or as a
-Gaussian kernel density estimate (kde). Fig. \autoref{fig:morphdist}, for example, shows the kde of radial distances, branch angles and their
+Gaussian kernel density estimate (kde). \autoref{fig:morphdist}, for example, shows the kde of radial distances, branch angles and their
 combination for the dendrites shown in \autoref{fig:plot}.
 
 ![Kernel density estimate of branch angles as a function of the radial distance from the soma. \label{fig:morphdist}](./figures/2D_morph_dist.png)
@@ -117,7 +117,7 @@ to operate on single files or entire batches.
 MorphoPy.py -c [density|persistence|stats] 
             -i ['path_to_file'|'path_to_folder']
 ```
-For a full documentation of `MorphoPy`'s functionality please refer to our [documentation](https://morphopy.readthedocs.io/en/latest/) and tutorial on our [gitHub page](https://github.com/berenslab/MorphoPy).
+For a full documentation of `MorphoPy`'s functionality please refer to our [documentation](https://morphopy.readthedocs.io/en/latest/) and tutorial on our [GitHub page](https://github.com/berenslab/MorphoPy).
 
 `MorphoPy` has been developed in the context of a benchmarking study for cortical interneuron cell type classification
 based on their morphology [@laturnus:2019]. It has already been used in a series of scientific publications that relate

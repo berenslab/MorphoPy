@@ -1,5 +1,9 @@
-# Morphopy
+<img src="https://user-images.githubusercontent.com/520137/94442680-873b3200-01a4-11eb-8ec0-cb7ce5a56cc9.png" alt="MorphoPy logo" width="450"/>
+
+# A python package for feature extraction of neural morphologies
 (c) 2020 by Sophie Laturnus, Adam von Daranyi, Ziwei Huang and Philipp Berens.
+
+
 ********
 
 ## <a name="content">Content</a> 
@@ -14,15 +18,17 @@
 
 MorphoPy is a Python3 package that uses networkX to compute and show information about neurites.
 The input can be passed with single swc-files or it can handle whole directories with multiple files at once.
-You can use MorphoPy imported in Python or from command line as batch-tool as well.
+You can use MorphoPy imported in Python, as well as from the command line as a batch-tool.
 
 The current working build:
  
- **version 0.7**
+ **version 0.7.1**
  
 All builds are tested on Linux (Debian and CentOS) and Windows 10.
 
-You can find all working builds at [pypi.org](https://pypi.org/project/morphopy/).
+You can find all working builds at [pypi](https://pypi.org/project/morphopy/).
+
+And a full documentation of the source code is available at [readthedocs](https://morphopy.readthedocs.io/en/latest/).
 
 [back to start](#content)
 
@@ -181,6 +187,21 @@ the code and add tests and examples of how to use your code.
 ## <a name="citation"> Citing MorphoPy </a>
 
 If you are using MorphoPy for your research or your work project please make sure to cite us and this repository:
+```
+@article{Laturnus2020,
+  doi = {10.21105/joss.02339},
+  url = {https://doi.org/10.21105/joss.02339},
+  year = {2020},
+  publisher = {The Open Journal},
+  volume = {5},
+  number = {52},
+  pages = {2339},
+  author = {Sophie Laturnus and Adam von Daranyi and Ziwei Huang and Philipp Berens},
+  title = {MorphoPy: A python package for feature extraction of neural morphologies.},
+  journal = {Journal of Open Source Software}
+}
+```
+or
 ```
 @misc{morphopy,
   author = {Laturnus, Sophie and von Daranyi, Adam and Huang, Ziwei and Berens, Philipp},
