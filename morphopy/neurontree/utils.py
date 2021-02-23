@@ -427,9 +427,12 @@ def get_standardized_swc(swc, scaling=1., soma_radius=None, soma_center=True, pc
         swc = swc.append(pd.DataFrame(soma_dict, index=[0]))
         swc = swc.sort_index()
     else:
-        # if no soma was assigned use the node that has no parent with the smallest id
-        root_id = np.min(swc[swc['parent'] == -1]['n'].values)
-        print('There was no soma indicated, assigning the node with smallest node id and no parent: ', root_id)
+        if sp.shape > 0:
+            root_id = sp['n']
+        else:
+            # if no soma was assigned use the node that has no parent with the smallest id
+            root_id = np.min(swc[swc['parent'] == -1]['n'].values)
+            print('There was no soma indicated, assigning the node with smallest node id and no parent: ', root_id)
 
     # soma center on first entry
     if soma_center:
