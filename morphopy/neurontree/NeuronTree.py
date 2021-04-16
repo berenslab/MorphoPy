@@ -65,7 +65,7 @@ class NeuronTree:
         :param graph: networkx.DiGraph. It is assumed that the graph contains the required labels.
         """
         # set version of networkX
-        self._nxversion = int(float(nx.__version__))
+        self._nxversion = int(float(nx.__version__[0]))
         # initialize tree DIRECTED
         if graph:
             G = graph
