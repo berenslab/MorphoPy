@@ -1137,7 +1137,7 @@ class NeuronTree:
             d[(e[0], e[1])] = np.pi*(r + R)*np.sqrt((R-r)**2 + h**2)
         return d
 
-    def get_sholl_intersection_profile(self, proj='xy', steps=36, centroid='centroid'):
+    def get_sholl_intersection_profile(self, proj='xy', steps=36, centroid='centroid', radii=None):
         """
         Calculates the Sholl intersection profile of the neurons projection determined by the parameter _proj_. The
         Sholl intersection profile counts the intersection of the neurites with concentric circles with increasing
