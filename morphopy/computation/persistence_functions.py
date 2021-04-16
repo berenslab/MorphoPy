@@ -3,7 +3,7 @@ import numpy as np
 
 # Array for selecting the functions in generating persistence
 functions = ["None",  "radial_distance", "height", "path_length", "branch_order", "custom_distance"]
-nx_version = int(float(nx.__version__))
+nx_version = int(float(nx.__version__[0]))
 
 
 def custom_distance(G,u,v):
