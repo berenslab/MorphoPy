@@ -1148,6 +1148,7 @@ class NeuronTree:
         :param steps: number of concentric circles centered around _centroid_. Their radii are determined as the
          respective fraction of the distance from the centroid to the farthest point of the convex hull.
         :param centroid: Determines the origin of the concentric circles. Options are 'centroid' or 'soma'.
+        :param radii: list or array of radii of the concentric circles. Default=None.
         :return: intersections  list, len(steps), count of intersections with each circle.
          intervals list, len(steps +1), radii of the concentric circles.
         """
@@ -1196,15 +1197,16 @@ class NeuronTree:
         # get the maximal absolute coordinates in x and y
         idx = np.argmax(np.abs(bounds), axis=1)
         r_max = np.linalg.norm(center - bounds[idx, [0, 1]])
-
+        if radii is None:
+            radii = [(r_max / steps) * k for k in range(1, steps + 1)]
+            
         intersections = []
         intervals = [0]
-        for k in range(1, steps + 1):
+        for r in radii:
 
-            r = (r_max / steps) * k
             c = p_circle.buffer(r).boundary
-
             i = c.intersection(lines)
+            
             if type(i) in [Point, LineString]:
                 intersections.append(1)
             else:
