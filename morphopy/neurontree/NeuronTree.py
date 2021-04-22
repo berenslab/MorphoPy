@@ -12,6 +12,7 @@ from scipy.io import savemat
 from scipy.interpolate import interp1d
 from scipy import stats
 from shapely.geometry import MultiLineString, LineString, Point
+import plotly.graph_objs as go
 from itertools import combinations
 from collections import OrderedDict
 from morphopy.neurontree.utils import angle_between, get_rotation_matrix, rotationMatrixToEulerAngles
@@ -1476,62 +1477,111 @@ class NeuronTree:
 #######################################################################################################################
 #######################################################################################################################
 
-    def draw_3D(self, fig=None, ix=111, reverse=False, r_axis='z', axon_color='darkgreen', dendrite_color='darkgrey'):
-        """ Draws a stick figure neuron in 3D.
-
-        :param fig: figure in which to draw. If None a new figure is created.
-        :param ix: index of the subplot within the figure 'fig'. Default: 111
-        :param reverse: Default=False. Determines whether the axis specified in 'r_axis' is inverted.
-        :param r_axis: Default = 'z'. Defines the axis that is inverted if 'reverse' is set to True. Possible values are
-         'x', 'y' and 'z'.
+    def draw_3D(self, axon_color='darkgreen',
+                dendrite_color='darkgrey',
+                apical_dendrite_color='yellow'):
+        """ Draws an interactive stick figure neuron in 3D.
         :param axon_color: Color, default='grey'. Defines the color of the axon.
-        :param dendrite_color: Color, default='darkgrey'. Defines the color of the dendrites.
+        :param dendrite_color: Color, default='darkgrey'. Defines the color of the (basal) dendrites.
+        :param apical_dendrite_color: Color, default='yellow'. Defines the color of the apical dendrites.
         """
 
-        nodes = [k for k in self.get_node_attributes('pos').values()]
-        nodes = np.array(nodes)
+        axon_line_width = 5
+        dendrite_line_width = 10
 
-        t = [axon_color if k == 2 else dendrite_color for k in self.get_node_attributes('type').values()]
+        pos_dict = N.get_node_attributes('pos')
+        axonal_nodes = N.nodes(type_ix=[1, 2])
+        dendritic_nodes = N.nodes(type_ix=[1, 3])
+        apical_nodes = N.nodes(type_ix=[1, 4])
 
-        # plot G
-        if not fig:
-            fig = plt.figure()
-        ax = fig.add_subplot(ix, projection='3d')
-        ax.scatter(nodes[:, 0], nodes[:, 1], nodes[:, 2], c=t, marker='.')
+        X_a = []
+        Y_a = []
+        Z_a = []
+        for n in axonal_nodes:
+            for e in N.edges(n):
+                X_a += [pos_dict[n][0], pos_dict[e[1]][0], None]
+                Y_a += [pos_dict[n][1], pos_dict[e[1]][1], None]
+                Z_a += [pos_dict[n][2], pos_dict[e[1]][2], None]
 
-        if self._nxversion == 2:
-            # changed for version 2.x of networkX
-            root_pos = self._G.nodes[self.get_root()]['pos']
-        else:
-            root_pos = self._G.node[self.get_root()]['pos']
-        ax.scatter(root_pos[0], root_pos[1], root_pos[2], c='k', marker='^')
+        X_d = []
+        Y_d = []
+        Z_d = []
+        for n in dendritic_nodes:
+            for e in N.edges(n):
+                X_d += [pos_dict[n][0], pos_dict[e[1]][0], None]
+                Y_d += [pos_dict[n][1], pos_dict[e[1]][1], None]
+                Z_d += [pos_dict[n][2], pos_dict[e[1]][2], None]
 
-        colors = ['k', axon_color, dendrite_color]
+        X_ad = []
+        Y_ad = []
+        Z_ad = []
+        for n in apical_nodes:
+            for e in N.edges(n):
+                X_d += [pos_dict[n][0], pos_dict[e[1]][0], None]
+                Y_d += [pos_dict[n][1], pos_dict[e[1]][1], None]
+                Z_d += [pos_dict[n][2], pos_dict[e[1]][2], None]
 
-        for k, e in enumerate(self._G.edges()):
-            if self._nxversion == 2:
-                # changed for version 2.x of networkX
-                n1 = self._G.nodes[e[0]]
-                n2 = self._G.nodes[e[1]]
-            else:
-                n1 = self._G.node[e[0]]
-                n2 = self._G.node[e[1]]
-            v = np.array([n1['pos'], n2['pos']])
+        axon_line = dict(color=axon_color, width=axon_line_width)
+        dendrite_line = dict(color=dendrite_color, width=dendrite_line_width)
+        apical_line = dict(color=apical_dendrite_color, width=dendrite_line_width)
 
-            ax.plot3D(v[:, 0], v[:, 1], v[:, 2], c=colors[int(n2['type']) - 1])
+        axon = go.Scatter3d(x=X_a, y=Y_a, z=Z_a,
+                            mode='lines',
+                            line=axon_line, name='Axon')
 
-        ax = plt.gca()
-        if reverse:
-            if 'z' in r_axis:
-                ax.set_zlim(ax.get_zlim()[::-1])
-            if 'x' in r_axis:
-                ax.set_xlim(ax.get_xlim()[::-1])
-            if 'y' in r_axis:
-                ax.set_ylim(ax.get_ylim()[::-1])
+        dendrites = go.Scatter3d(x=X_d, y=Y_d, z=Z_d,
+                                 mode='lines',
+                                 line=dendrite_line, name='Dendrites')
+        apical_dendrites = go.Scatter3d(x=X_ad, y=Y_ad, z=Z_ad,
+                                        mode='lines',
+                                        line=apical_line, name='Apical dendrites')
+        soma = go.Scatter3d(x=np.zeros(1), y=np.zeros(1), z=np.zeros(1),
+                            mode='markers',
+                            marker=dict(symbol='circle',
+                                        size=8,
+                                        color='red'
+                                        ),
+                            name='Soma'
+                            )
 
-        ax.set_xlabel('X [microns]')
-        ax.set_ylabel('Y [microns]')
-        ax.set_zlabel('Z [microns]')
+        axis = dict(showbackground=False,
+                    showgrid=False,
+                    showticklabels=False,
+                    title=''
+                    )
+
+        layout = go.Layout(
+            width=800,
+            height=800,
+            showlegend=True,
+            scene=dict(
+                xaxis=dict(axis),
+                yaxis=dict(axis),
+                zaxis=dict(axis),
+            ),
+            margin=dict(
+                t=100
+            ),
+            hovermode='closest',
+            annotations=[
+                dict(
+                    showarrow=False,
+                    xref='paper',
+                    yref='paper',
+                    x=0,
+                    y=0.1,
+                    xanchor='left',
+                    yanchor='bottom',
+                    font=dict(
+                        size=1
+                    )
+                )
+            ], )
+
+        data = [axon, dendrites, apical_dendrites, soma]
+
+        fig = go.Figure(data=data, layout=layout)
+        fig.show()
 
     def draw_2D(self, fig=None, ax=None, projection='xz', axon_color='darkgreen', dendrite_color='darkgrey',
                 apical_dendrite_color='grey', x_offset=0, y_offset=0, **kwargs):
