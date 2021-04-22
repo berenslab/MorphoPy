@@ -3,6 +3,7 @@ matplotlib_scalebar
 numpy
 scipy
 pandas
+plotly
 networkx
 seaborn
 sklearn
