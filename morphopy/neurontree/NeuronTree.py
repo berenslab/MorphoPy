@@ -1020,7 +1020,7 @@ class NeuronTree:
 
         for u, v in edges:
 
-            if v not in branchpoints and v not in tips:
+            if v not in tips:
 
                 e1 = nodes_data[v]['pos'] - nodes_data[u]['pos']
 
@@ -1489,16 +1489,16 @@ class NeuronTree:
         axon_line_width = 5
         dendrite_line_width = 10
 
-        pos_dict = N.get_node_attributes('pos')
-        axonal_nodes = N.nodes(type_ix=[1, 2])
-        dendritic_nodes = N.nodes(type_ix=[1, 3])
-        apical_nodes = N.nodes(type_ix=[1, 4])
+        pos_dict = self.get_node_attributes('pos')
+        axonal_nodes = self.nodes(type_ix=[1, 2])
+        dendritic_nodes = self.nodes(type_ix=[1, 3])
+        apical_nodes = self.nodes(type_ix=[1, 4])
 
         X_a = []
         Y_a = []
         Z_a = []
         for n in axonal_nodes:
-            for e in N.edges(n):
+            for e in self.edges(n):
                 X_a += [pos_dict[n][0], pos_dict[e[1]][0], None]
                 Y_a += [pos_dict[n][1], pos_dict[e[1]][1], None]
                 Z_a += [pos_dict[n][2], pos_dict[e[1]][2], None]
@@ -1507,7 +1507,7 @@ class NeuronTree:
         Y_d = []
         Z_d = []
         for n in dendritic_nodes:
-            for e in N.edges(n):
+            for e in self.edges(n):
                 X_d += [pos_dict[n][0], pos_dict[e[1]][0], None]
                 Y_d += [pos_dict[n][1], pos_dict[e[1]][1], None]
                 Z_d += [pos_dict[n][2], pos_dict[e[1]][2], None]
@@ -1516,7 +1516,7 @@ class NeuronTree:
         Y_ad = []
         Z_ad = []
         for n in apical_nodes:
-            for e in N.edges(n):
+            for e in self.edges(n):
                 X_d += [pos_dict[n][0], pos_dict[e[1]][0], None]
                 Y_d += [pos_dict[n][1], pos_dict[e[1]][1], None]
                 Z_d += [pos_dict[n][2], pos_dict[e[1]][2], None]
