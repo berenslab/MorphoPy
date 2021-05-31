@@ -1020,7 +1020,7 @@ class NeuronTree:
 
         for u, v in edges:
 
-            if v not in tips:
+            if v not in branchpoints and v not in tips:
 
                 e1 = nodes_data[v]['pos'] - nodes_data[u]['pos']
 

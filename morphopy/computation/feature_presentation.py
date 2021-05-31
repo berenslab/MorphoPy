@@ -113,11 +113,15 @@ def compute_morphometric_statistics(neurontree=None, format='wide'):
     z['max_branch_order'] = np.max(list(neurontree.get_branch_order().values()))
 
     path_angles = list(neurontree.get_path_angles().values())
-
-    z['max_path_angle'] = np.percentile(path_angles, 99.5)
-    z['min_path_angle'] = np.min(path_angles)
-    z['median_path_angle'] = np.median(path_angles)
-
+    
+    if len(path_angles) > 0:
+        z['max_path_angle'] = np.percentile(path_angles, 99.5)
+        z['min_path_angle'] = np.min(path_angles)
+        z['median_path_angle'] = np.median(path_angles)
+    else:
+        z['max_path_angle'] = np.nan
+        z['min_path_angle'] = np.nan
+        z['median_path_angle'] = np.nan
     z['mean_soma_exit_angle'] = np.mean(neurontree.get_soma_angles())
 
     R = neurontree.get_topological_minor()
