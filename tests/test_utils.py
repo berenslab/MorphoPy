@@ -48,7 +48,7 @@ def test_get_angle_returns_float():
     v1 = np.array([0, 1, 1])
 
     r  = angle_between(v0, v1)
-    assert (isinstance(r, np.float)), "get_angle() should return float"
+    assert (isinstance(r, float)), "get_angle() should return float"
 
 
 
