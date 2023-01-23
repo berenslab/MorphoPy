@@ -6,5 +6,5 @@ pandas
 plotly
 networkx
 seaborn
-sklearn
+scikit-learn
 shapely
