@@ -1,20 +1,18 @@
+import math
+from sys import getsizeof
+
 import numpy as np
 import pandas as pd
 import scipy
-import math
-
+from scipy.ndimage import gaussian_filter
+from scipy.signal import convolve2d, gaussian
 from scipy.sparse import coo_matrix
-from sys import getsizeof
-
-from scipy.signal import gaussian, convolve2d
-from scipy.ndimage.filters import gaussian_filter
-
-from sklearn.decomposition import PCA
 from scipy.spatial import ConvexHull
+from sklearn.decomposition import PCA
 
 
 def unit_vector(vector):
-    """ Returns the unit vector of the vector.
+    """Returns the unit vector of the vector.
 
     :param vector: numpy.array d-dimensional vector
     :return: u numpy.array d-dimensional unit vector of 'vector'
@@ -26,7 +24,7 @@ def unit_vector(vector):
 
 
 def angle_between(v1, v2):
-    """ Returns the angle in radians between vectors 'v1' and 'v2'::
+    """Returns the angle in radians between vectors 'v1' and 'v2'::
 
             >>> angle_between((1, 0, 0), (0, 1, 0))
             1.5707963267948966
@@ -46,7 +44,7 @@ def angle_between(v1, v2):
 
 
 def get_axis(v1, v2):
-    """ Returns the axis between two vectors v1 and v2
+    """Returns the axis between two vectors v1 and v2
 
     :param v1: numpy.array d-dimensional
     :param v2: numpy.array d-dimensional
@@ -66,9 +64,7 @@ def get_A(x):
     if np.isnan(x).any():
         A = np.zeros((3, 3))
     else:
-        A = np.array([[0, -x[2], x[1]],
-                  [x[2], 0, -x[0]],
-                  [-x[1], x[0], 0]])
+        A = np.array([[0, -x[2], x[1]], [x[2], 0, -x[0]], [-x[1], x[0], 0]])
 
     return A
 
@@ -88,7 +84,7 @@ def get_rotation_matrix(a, b):
     b_ = unit_vector(b)
     if not np.allclose(np.abs(a_), np.abs(b_)):
         x = get_axis(a_, b_)
-        theta = angle_between(a_,b_)
+        theta = angle_between(a_, b_)
         if n == 3:
             A = get_A(x)
             R += np.sin(theta) * A + (1 - np.cos(theta)) * np.linalg.matrix_power(A, 2)
@@ -98,7 +94,7 @@ def get_rotation_matrix(a, b):
 
 
 def isRotationMatrix(R):
-    """ Checks if R is a valid rotation matrix.
+    """Checks if R is a valid rotation matrix.
 
     :param R: [3x3] rotation matrix
     :return: boolean. Returns True when R is a valid rotation matrix, otherwise False.
@@ -111,12 +107,12 @@ def isRotationMatrix(R):
 
 
 def rotationMatrixToEulerAngles(R):
-    """ Calculates rotation matrix to euler angles
+    """Calculates rotation matrix to euler angles
 
     :param R: rotation matrix [3x3]
     :return: vector of euler angles (rotations around x,y and z axis)
     """
-    assert (isRotationMatrix(R))
+    assert isRotationMatrix(R)
 
     sy = math.sqrt(R[0, 0] * R[0, 0] + R[1, 0] * R[1, 0])
 
@@ -135,25 +131,34 @@ def rotationMatrixToEulerAngles(R):
 
 
 def eulerAnglesToRotationMatrix(theta):
-    """ Calculates the rotation matrix from given euler angles
+    """Calculates the rotation matrix from given euler angles
 
     :param theta: 3D vector with eulerangles for x,y and z axis
     :return: rotation matrix R [3x3]
     """
-    R_x = np.array([[1, 0, 0],
-                    [0, math.cos(theta[0]), -math.sin(theta[0])],
-                    [0, math.sin(theta[0]), math.cos(theta[0])]
-                    ])
+    R_x = np.array(
+        [
+            [1, 0, 0],
+            [0, math.cos(theta[0]), -math.sin(theta[0])],
+            [0, math.sin(theta[0]), math.cos(theta[0])],
+        ]
+    )
 
-    R_y = np.array([[math.cos(theta[1]), 0, math.sin(theta[1])],
-                    [0, 1, 0],
-                    [-math.sin(theta[1]), 0, math.cos(theta[1])]
-                    ])
+    R_y = np.array(
+        [
+            [math.cos(theta[1]), 0, math.sin(theta[1])],
+            [0, 1, 0],
+            [-math.sin(theta[1]), 0, math.cos(theta[1])],
+        ]
+    )
 
-    R_z = np.array([[math.cos(theta[2]), -math.sin(theta[2]), 0],
-                    [math.sin(theta[2]), math.cos(theta[2]), 0],
-                    [0, 0, 1]
-                    ])
+    R_z = np.array(
+        [
+            [math.cos(theta[2]), -math.sin(theta[2]), 0],
+            [math.sin(theta[2]), math.cos(theta[2]), 0],
+            [0, 0, 1],
+        ]
+    )
 
     R = np.dot(R_z, np.dot(R_y, R_x))
 
@@ -174,19 +179,19 @@ def sphereFit(spX, spY, spZ):
     spX = np.array(spX)
     spY = np.array(spY)
     spZ = np.array(spZ)
-    A = np.zeros((len(spX),4))
-    A[:,0] = spX*2
-    A[:,1] = spY*2
-    A[:,2] = spZ*2
-    A[:,3] = 1
+    A = np.zeros((len(spX), 4))
+    A[:, 0] = spX * 2
+    A[:, 1] = spY * 2
+    A[:, 2] = spZ * 2
+    A[:, 3] = 1
 
     #   Assemble the f matrix
-    f = np.zeros((len(spX),1))
-    f[:,0] = (spX*spX) + (spY*spY) + (spZ*spZ)
-    C, residules, rank, singval = np.linalg.lstsq(A,f)
+    f = np.zeros((len(spX), 1))
+    f[:, 0] = (spX * spX) + (spY * spY) + (spZ * spZ)
+    C, residules, rank, singval = np.linalg.lstsq(A, f)
 
     #   solve for the radius
-    t = (C[0]*C[0])+(C[1]*C[1])+(C[2]*C[2])+C[3]
+    t = (C[0] * C[0]) + (C[1] * C[1]) + (C[2] * C[2]) + C[3]
     radius = math.sqrt(t)
 
     return radius, C[0], C[1], C[2]
@@ -203,7 +208,7 @@ def shortpathFW(A):
     :param gpu: default True. If True, calculation is performed on GPU.
     :return: B (NxN) matrix of shortest paths
     """
-    print('Calculating shortest path from every node to every other...')
+    print("Calculating shortest path from every node to every other...")
     n = A.shape[0]
     sparse_ones = coo_matrix(np.ones((n, n)), dtype=np.float32)
     I = np.inf * (sparse_ones - np.matlib.eye(n))
@@ -218,7 +223,7 @@ def shortpathFW(A):
         C = C1 + C2
         B = np.matlib.minimum(B, C)
 
-    print('done.')
+    print("done.")
     return B
 
 
@@ -230,20 +235,20 @@ def commuteDist(A):
     :return: B (NxN) containing the commute distances from each node to each other
     """
     n = A.shape[0]
-    if n==1:
+    if n == 1:
         return 0
     m = np.mean(A)
-    A = scipy.linalg.expm(A/m)
-    L = np.diag(np.sum(A, axis=0)) - A # unnormalised Laplacian
+    A = scipy.linalg.expm(A / m)
+    L = np.diag(np.sum(A, axis=0)) - A  # unnormalised Laplacian
     L = np.linalg.pinv(L)
     d = L.diagonal()
     print(d.shape)
-    B = np.matlib.repmat(d,1,n) + np.matlib.repmat(d.T, n,1) - 2*L
+    B = np.matlib.repmat(d, 1, n) + np.matlib.repmat(d.T, n, 1) - 2 * L
     return B
 
 
 def computeStat(statType, W, d, maxDist):
-    """ computes a graph key on (sub)graph given by W
+    """computes a graph key on (sub)graph given by W
 
     :param statType: string
         'maxDist' : maximal distance
@@ -264,26 +269,26 @@ def computeStat(statType, W, d, maxDist):
 
     numNode = d.size
 
-    if statType == 'maxDist':
+    if statType == "maxDist":
         stat = np.max(d)
 
-    elif statType == 'maxDist_norm':
+    elif statType == "maxDist_norm":
         stat = np.max(d) / maxDist
 
-    elif statType == 'meanEdgeLength':
+    elif statType == "meanEdgeLength":
         stat = np.mean(W)
 
-    elif statType == 'meanEdgeLength_norm':
+    elif statType == "meanEdgeLength_norm":
         stat = np.mean(W) / numNode
 
-    elif statType == '4starMotif':
+    elif statType == "4starMotif":
         if W.size > 1:
             deg = np.array(np.sum(W != 0, axis=1)).flatten()
         else:
             deg = np.sum(W != 0)
         stat = np.sum((deg - 1) * (deg - 2) / 2)
 
-    elif statType == 'branchPoints':
+    elif statType == "branchPoints":
 
         stat = np.sum(np.sum(W != 0, axis=1) > 2)
 
@@ -295,18 +300,18 @@ def computeStat(statType, W, d, maxDist):
 
 def smooth_gaussian(data, dim, sigma=2):
     """
-        Smooths the given data using a gaussian. This method only works for stacked one or two dimensional data so
-        far! Smoothing in 3D is not implemented.
+    Smooths the given data using a gaussian. This method only works for stacked one or two dimensional data so
+    far! Smoothing in 3D is not implemented.
 
-        :param data: (X,Y,N) numpy.array 1,2 or 3 dimensional.
-        :param dim: int
-            Dimension of the passed data. Used to determine if data is a single image or stacked.
-        :param sigma: int
-            The standard deviation of the smoothing gaussian used.
-        :return: Xb: same dimension as the input array.
-            Smoothed data.
+    :param data: (X,Y,N) numpy.array 1,2 or 3 dimensional.
+    :param dim: int
+        Dimension of the passed data. Used to determine if data is a single image or stacked.
+    :param sigma: int
+        The standard deviation of the smoothing gaussian used.
+    :return: Xb: same dimension as the input array.
+        Smoothed data.
     """
-    N=1
+    N = 1
     if dim == 2:
         try:
             pX, pY, N = data.shape
@@ -322,7 +327,7 @@ def smooth_gaussian(data, dim, sigma=2):
         Xb = np.zeros((pX, pY, N))
 
         for k in range(N):
-            Xb[:, :, k] = convolve2d(data[:, :, k], np.rot90(win), mode='same')
+            Xb[:, :, k] = convolve2d(data[:, :, k], np.rot90(win), mode="same")
 
     elif dim == 1:
 
@@ -338,7 +343,9 @@ def smooth_gaussian(data, dim, sigma=2):
         for k in range(N):
             Xb[:, k] = gaussian_filter(data[:, k], sigma=sigma)
     else:
-        raise NotImplementedError("There is no gaussian smoothing implemented for {0} dimensions".format(dim))
+        raise NotImplementedError(
+            "There is no gaussian smoothing implemented for {0} dimensions".format(dim)
+        )
 
     if N == 1:
         Xb = np.squeeze(Xb)
@@ -346,7 +353,9 @@ def smooth_gaussian(data, dim, sigma=2):
     return Xb
 
 
-def get_standardized_swc(swc, scaling=1., soma_radius=None, soma_center=True, pca_rot=False):
+def get_standardized_swc(
+    swc, scaling=1.0, soma_radius=None, soma_center=True, pca_rot=False
+):
     """
     This function collapses all soma points to a single node located at the centroid of the convex hull of the original
     soma nodes. It can also scale the coordinates, merge nodes into the soma that have a bigger radius than soma_radius
@@ -363,77 +372,97 @@ def get_standardized_swc(swc, scaling=1., soma_radius=None, soma_center=True, pc
     :return: pandas.DataFrame
     """
 
-    swc.update(swc['x'] / scaling)
-    swc.update(swc['y'] / scaling)
-    swc.update(swc['z'] / scaling)
-    swc.update(swc['radius'] / scaling)
+    swc.update(swc["x"] / scaling)
+    swc.update(swc["y"] / scaling)
+    swc.update(swc["z"] / scaling)
+    swc.update(swc["radius"] / scaling)
 
     if pca_rot:
-        print('Rotating x and y into their frame of maximal extent...')
+        print("Rotating x and y into their frame of maximal extent...")
         pca = PCA(copy=True)
-        pc = np.vstack((swc['x'], swc['y'])).T
+        pc = np.vstack((swc["x"], swc["y"])).T
         pca.fit(pc)
         result = np.matmul(pc, pca.components_.T)
 
-        swc.update(pd.DataFrame(result, columns=['x', 'y']))
+        swc.update(pd.DataFrame(result, columns=["x", "y"]))
 
     if soma_radius:
-        print('Setting all nodes to type soma that have a larger radius than %s microns...' % soma_radius)
+        print(
+            "Setting all nodes to type soma that have a larger radius than %s microns..."
+            % soma_radius
+        )
 
-        d = np.vstack((swc['radius'], swc['type'])).T
+        d = np.vstack((swc["radius"], swc["type"])).T
         d[d[:, 0] >= soma_radius, 1] = 1
-        swc.update(pd.DataFrame(d[:, 1].astype(int), columns=['type']))
+        swc.update(pd.DataFrame(d[:, 1].astype(int), columns=["type"]))
 
     # create one point soma when there is more than three soma points
-    sp = swc[swc['type'] == 1]
-        
+    sp = swc[swc["type"] == 1]
+
     if sp.shape[0] > 1:
-        root_id = np.min(sp['n'].values)
-        
+        root_id = np.min(sp["n"].values)
+
         if sp.shape[0] > 3:
-            print('There are more than 3 soma points. The location and the radius of the soma is estimated based on its'
-                  ' convex hull...')
+            print(
+                "There are more than 3 soma points. The location and the radius of the soma is estimated based on its"
+                " convex hull..."
+            )
 
             # calculate the convex hull of soma points
-            convex_hull = ConvexHull(sp[['x', 'y', 'z']].values, qhull_options='QJ')
+            convex_hull = ConvexHull(sp[["x", "y", "z"]].values, qhull_options="QJ")
 
             hull_points = convex_hull.points
 
             centroid = np.mean(hull_points, axis=0)
 
-            distances_to_centroid = np.linalg.norm(hull_points-centroid, axis=1)
+            distances_to_centroid = np.linalg.norm(hull_points - centroid, axis=1)
             rad = np.max(distances_to_centroid)
         else:
-            print("There are 2-3 soma points. The location and the radius of the soma is estimated based on their mean.")
+            print(
+                "There are 2-3 soma points. The location and the radius of the soma is estimated based on their mean."
+            )
 
-            centroid = np.mean(sp[['x', 'y', 'z']].values, axis=0)
-            rad = np.mean(sp[['radius']].values)
+            centroid = np.mean(sp[["x", "y", "z"]].values, axis=0)
+            rad = np.mean(sp[["radius"]].values)
 
         # fix the parent connections
-        connection_locations = [row.n for k, row in swc.iterrows() if
-                                row['parent'] in sp['n'].values and row['n'] not in sp['n'].values]
-        connected_points = pd.concat([swc[swc['n'] == n] for n in connection_locations])
-        connected_points['parent'] = root_id
+        connection_locations = [
+            row.n
+            for k, row in swc.iterrows()
+            if row["parent"] in sp["n"].values and row["n"] not in sp["n"].values
+        ]
+        connected_points = pd.concat([swc[swc["n"] == n] for n in connection_locations])
+        connected_points["parent"] = root_id
         swc.update(connected_points)
 
         # delete old soma points
-        to_delete = [swc[swc['n'] == n].index[0] for n in sp['n'].values]
+        to_delete = [swc[swc["n"] == n].index[0] for n in sp["n"].values]
         swc = swc.drop(swc.index[to_delete])
 
         # add new soma point
-        soma_dict = dict(zip(['n', 'type', 'x', 'y', 'z', 'radius', 'parent'],
-                             [int(root_id), int(1), centroid[0], centroid[1], centroid[2], rad, int(-1)]))
+        soma_dict = dict(
+            zip(
+                ["n", "type", "x", "y", "z", "radius", "parent"],
+                [
+                    int(root_id),
+                    int(1),
+                    centroid[0],
+                    centroid[1],
+                    centroid[2],
+                    rad,
+                    int(-1),
+                ],
+            )
+        )
 
-        swc = swc.append(pd.DataFrame(soma_dict, index=[0]))
+        swc = pd.concat([swc, pd.DataFrame(soma_dict, index=[0])])
         swc = swc.sort_index()
     else:
         # if no soma was assigned use the node that has no parent with the smallest id
-        root_id = np.min(swc[swc['parent'] == -1]['n'].values)
-        
+        root_id = np.min(swc[swc["parent"] == -1]["n"].values)
+
     # soma center on first entry
     if soma_center:
-        centroid = swc[swc['n'] == root_id][['x', 'y', 'z']].values.reshape(-1)
-        swc.update(swc[['x', 'y', 'z']] - centroid)
+        centroid = swc[swc["n"] == root_id][["x", "y", "z"]].values.reshape(-1)
+        swc.update(swc[["x", "y", "z"]] - centroid)
     return swc
-
-
