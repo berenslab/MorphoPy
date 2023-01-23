@@ -686,7 +686,7 @@ class NeuronTree:
          matrix is weighted accordingly.
         :return: sparse array
         """
-        return nx.adjancency_matrix(self._G, weight=weight)
+        return nx.adjacency_matrix(self._G, weight=weight)
 
     def get_extent(self, robust=False):
         """ Returns the maximal extent in x, y and z direction.
