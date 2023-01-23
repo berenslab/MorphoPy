@@ -1,12 +1,14 @@
+import collections
 import copy
 import random
-import collections
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import seaborn as sns
-from morphopy.neurontree.utils import smooth_gaussian
+
 from morphopy.computation.persistence_functions import radial_distance
+from morphopy.neurontree.utils import smooth_gaussian
 
 
 def get_persistence(neurontree=None, f=None):
@@ -56,22 +58,22 @@ def get_persistence(neurontree=None, f=None):
                 for c_i in C:
                     A.remove(c_i)
                     if c_i != c_m:
-                        D['node_id'].append(c_i)
-                        if neurontree._nxversion == 2:
-                            D['node_type'].append(G.nodes[c_i]['type'])
+                        D["node_id"].append(c_i)
+                        if neurontree._nxversion >= 2:
+                            D["node_type"].append(G.nodes[c_i]["type"])
                         else:
-                            D['node_type'].append(G.node[c_i]['type'])
-                        D['birth'].append(v[c_i])
-                        D['death'].append(f(G, p, R))
+                            D["node_type"].append(G.node[c_i]["type"])
+                        D["birth"].append(v[c_i])
+                        D["death"].append(f(G, p, R))
                 v[p] = v[c_m]
-    D['node_id'].append(R)
-    D['node_type'].append(1)
-    D['birth'].append(v[R])
-    D['death'].append(f(G, R, R))
+    D["node_id"].append(R)
+    D["node_type"].append(1)
+    D["birth"].append(v[R])
+    D["death"].append(f(G, R, R))
     return pd.DataFrame(D)
 
 
-def compute_morphometric_statistics(neurontree=None, format='wide'):
+def compute_morphometric_statistics(neurontree=None, format="wide"):
     """
     Compute various morphometric statistics of a NeuronTree which is passed as an object
 
@@ -85,83 +87,100 @@ def compute_morphometric_statistics(neurontree=None, format='wide'):
         return None
 
     z = dict()
-    z['branch_points'] = neurontree.get_branchpoints().size
+    z["branch_points"] = neurontree.get_branchpoints().size
 
     extent = neurontree.get_extent()
-    z['width'] = extent[0]
-    z['depth'] = extent[1]
-    z['height'] = extent[2]
+    z["width"] = extent[0]
+    z["depth"] = extent[1]
+    z["height"] = extent[2]
 
     tips = neurontree.get_tips()
-    z['tips'] = tips.size
+    z["tips"] = tips.size
 
     root = neurontree.get_root()
-    z['stems'] = len(neurontree.edges(root))
+    z["stems"] = len(neurontree.edges(root))
 
-    z['total_length'] = np.sum(list(neurontree.get_edge_attributes('path_length').values()))
+    z["total_length"] = np.sum(
+        list(neurontree.get_edge_attributes("path_length").values())
+    )
     # get all radii
-    radii = neurontree.get_node_attributes('radius')
+    radii = neurontree.get_node_attributes("radius")
     # delete the soma
     radii.pop(root)
-    z['avg_thickness'] = np.mean(list(radii.values()))
-    z['max_thickness'] = np.max(list(radii.values()))
+    z["avg_thickness"] = np.mean(list(radii.values()))
+    z["max_thickness"] = np.max(list(radii.values()))
 
-    z['total_surface'] = np.sum(list(neurontree.get_surface().values()))
-    z['total_volume'] = np.sum(list(neurontree.get_volume().values()))
+    z["total_surface"] = np.sum(list(neurontree.get_surface().values()))
+    z["total_volume"] = np.sum(list(neurontree.get_volume().values()))
 
-    z['max_path_dist_to_soma'] = np.max(list(neurontree.get_path_length().values()))
-    z['max_branch_order'] = np.max(list(neurontree.get_branch_order().values()))
+    z["max_path_dist_to_soma"] = np.max(list(neurontree.get_path_length().values()))
+    z["max_branch_order"] = np.max(list(neurontree.get_branch_order().values()))
 
     path_angles = list(neurontree.get_path_angles().values())
-    
+
     if len(path_angles) > 0:
-        z['max_path_angle'] = np.percentile(path_angles, 99.5)
-        z['min_path_angle'] = np.min(path_angles)
-        z['median_path_angle'] = np.median(path_angles)
+        z["max_path_angle"] = np.percentile(path_angles, 99.5)
+        z["min_path_angle"] = np.min(path_angles)
+        z["median_path_angle"] = np.median(path_angles)
     else:
-        z['max_path_angle'] = np.nan
-        z['min_path_angle'] = np.nan
-        z['median_path_angle'] = np.nan
-    z['mean_soma_exit_angle'] = np.mean(neurontree.get_soma_angles())
+        z["max_path_angle"] = np.nan
+        z["min_path_angle"] = np.nan
+        z["median_path_angle"] = np.nan
+    z["mean_soma_exit_angle"] = np.mean(neurontree.get_soma_angles())
 
     R = neurontree.get_topological_minor()
     segment_length = R.get_segment_length()
-    terminal_segment_pl = [item[1] for item in segment_length.items() if item[0][1] in tips]
-    intermediate_segment_pl = [item[1] for item in segment_length.items() if item[0][1] not in tips]
+    terminal_segment_pl = [
+        item[1] for item in segment_length.items() if item[0][1] in tips
+    ]
+    intermediate_segment_pl = [
+        item[1] for item in segment_length.items() if item[0][1] not in tips
+    ]
 
-    z['max_segment_path_length'] = np.max(list(segment_length.values()))
-    z['median_intermediate_segment_pl'] = np.median([0] + intermediate_segment_pl)
-    z['median_terminal_segment_pl'] = np.median(terminal_segment_pl)
+    z["max_segment_path_length"] = np.max(list(segment_length.values()))
+    z["median_intermediate_segment_pl"] = np.median([0] + intermediate_segment_pl)
+    z["median_terminal_segment_pl"] = np.median(terminal_segment_pl)
 
-    tortuosity = [e[2]['path_length'] / e[2]['euclidean_dist'] for e in R.edges(data=True)]
+    tortuosity = [
+        e[2]["path_length"] / e[2]["euclidean_dist"] for e in R.edges(data=True)
+    ]
 
-    z['log_max_tortuosity'] = np.log(np.percentile(tortuosity, 99.5))
-    z['log_min_tortuosity'] = np.log(np.min(tortuosity))
-    z['log_median_tortuosity'] = np.log(np.median(tortuosity))
+    z["log_max_tortuosity"] = np.log(np.percentile(tortuosity, 99.5))
+    z["log_min_tortuosity"] = np.log(np.min(tortuosity))
+    z["log_median_tortuosity"] = np.log(np.median(tortuosity))
 
     branch_angles = list(R.get_branch_angles().values())
-    z['max_branch_angle'] = np.max(branch_angles)
-    z['min_branch_angle'] = np.min(branch_angles)
-    z['mean_branch_angle'] = np.mean(branch_angles)
+    z["max_branch_angle"] = np.max(branch_angles)
+    z["min_branch_angle"] = np.min(branch_angles)
+    z["mean_branch_angle"] = np.mean(branch_angles)
 
     # get maximal degree within data
-    if neurontree._nxversion == 2:
+    if neurontree._nxversion >= 2:
         # changed for version 2.x of networkX
-        z['max_degree'] = np.max([item[1] for item in R.get_graph().out_degree() if item[0] != R.get_root()])
+        z["max_degree"] = np.max(
+            [item[1] for item in R.get_graph().out_degree() if item[0] != R.get_root()]
+        )
     else:
-        z['max_degree'] = np.max([item[1] for item in R.get_graph().out_degree().items() if item[0] != R.get_root()])
-    
+        z["max_degree"] = np.max(
+            [
+                item[1]
+                for item in R.get_graph().out_degree().items()
+                if item[0] != R.get_root()
+            ]
+        )
+
     # get tree asymmetry
     weights, psad = R.get_psad()
     if np.sum(list(weights.values())) != 0:
-        z['tree_asymmetry'] = np.sum([weights[k] * psad[k] for k in psad.keys()]) / np.sum(list(weights.values()))
+        z["tree_asymmetry"] = np.sum(
+            [weights[k] * psad[k] for k in psad.keys()]
+        ) / np.sum(list(weights.values()))
     else:
-        z['tree_asymmetry'] = 0
+        z["tree_asymmetry"] = 0
 
-
-    morph = pd.DataFrame.from_dict(z, orient='index').T
-    if format == 'long':
-        morph = morph.T.reset_index().rename(columns={0: 'value', 'index': 'statistic'})
+    morph = pd.DataFrame.from_dict(z, orient="index").T
+    if format == "long":
+        morph = morph.T.reset_index().rename(columns={0: "value", "index": "statistic"})
     return morph
 
 
@@ -179,7 +198,7 @@ def compute_density_maps(neurontree=None, config_params=None):
     if config_params is None:
         distance = 1
     else:
-        distance = config_params.get('distance', 1)
+        distance = config_params.get("distance", 1)
 
     # get the resampled point could along each neurite
     # at specific distance default: 1 micron.
@@ -197,52 +216,63 @@ def compute_density_maps(neurontree=None, config_params=None):
         max = np.max(pc, axis=0)
 
         bin_size = 20
-        n_bins_x, n_bins_y, n_bins_z = np.ceil((max-min)/bin_size).astype(int)
+        n_bins_x, n_bins_y, n_bins_z = np.ceil((max - min) / bin_size).astype(int)
 
     else:
 
         min_ = np.min(pc, axis=0)
         max_ = np.max(pc, axis=0)
         # if config available use params else default values
-        density = config_params.get('density', True)
-        smooth = config_params.get('smooth', True)
-        sigma = config_params.get('sigma', 1)
+        density = config_params.get("density", True)
+        smooth = config_params.get("smooth", True)
+        sigma = config_params.get("sigma", 1)
 
         # normalization ranges
-        r_min_x = config_params.get('r_min_x', min_[0])
-        r_min_y = config_params.get('r_min_y', min_[1])
-        r_min_z = config_params.get('r_min_z', min_[2])
+        r_min_x = config_params.get("r_min_x", min_[0])
+        r_min_y = config_params.get("r_min_y", min_[1])
+        r_min_z = config_params.get("r_min_z", min_[2])
 
-        r_max_x = config_params.get('r_max_x', max_[0])
-        r_max_y = config_params.get('r_max_y', max_[1])
-        r_max_z = config_params.get('r_max_z', max_[2])
+        r_max_x = config_params.get("r_max_x", max_[0])
+        r_max_y = config_params.get("r_max_y", max_[1])
+        r_max_z = config_params.get("r_max_z", max_[2])
 
         min = np.array([r_min_x, r_min_y, r_min_z])
         max = np.array([r_max_x, r_max_y, r_max_z])
 
-
-        bin_size = config_params.get('bin_size', 20)
+        bin_size = config_params.get("bin_size", 20)
         n_bins_x, n_bins_y, n_bins_z = np.ceil((max - min) / bin_size).astype(int)
-        if 'n_bins_x' in config_params.keys():
-            n_bins_x = config_params.get('n_bins_x')
-        if 'n_bins_y' in config_params.keys():
-            n_bins_y = config_params.get('n_bins_y')
-        if 'n_bins_z' in config_params.keys():
-            n_bins_z = config_params.get('n_bins_z')
+        if "n_bins_x" in config_params.keys():
+            n_bins_x = config_params.get("n_bins_x")
+        if "n_bins_y" in config_params.keys():
+            n_bins_y = config_params.get("n_bins_y")
+        if "n_bins_z" in config_params.keys():
+            n_bins_z = config_params.get("n_bins_z")
 
     # dictionary for axes and all labels of projection in right order
-    axes = collections.OrderedDict([('0', 'x'), ('1', 'y'), ('2', 'z'), ('01', 'xy'), ('02', 'xz'), ('12', 'yz')])
+    axes = collections.OrderedDict(
+        [("0", "x"), ("1", "y"), ("2", "z"), ("01", "xy"), ("02", "xz"), ("12", "yz")]
+    )
 
     # holds binning per projection
-    bins = {'x': (n_bins_x,), 'y': (n_bins_y,), 'z': (n_bins_z,),
-            'xy': (n_bins_x, n_bins_y), 'xz': (n_bins_x, n_bins_z), 'yz': (n_bins_y, n_bins_z)}
+    bins = {
+        "x": (n_bins_x,),
+        "y": (n_bins_y,),
+        "z": (n_bins_z,),
+        "xy": (n_bins_x, n_bins_y),
+        "xz": (n_bins_x, n_bins_z),
+        "yz": (n_bins_y, n_bins_z),
+    }
 
     ######## COMPUTATION ############
     # create ranges
-    ranges = {'x': [[min[0], max[0]]], 'y': [[min[1], max[1]]], 'z': [[min[2], max[2]]],
-              'xy': [[min[0], max[0]], [min[1], max[1]]],
-              'xz': [[min[0], max[0]], [min[2], max[2]]],
-              'yz': [[min[1], max[1]], [min[2], max[2]]]}
+    ranges = {
+        "x": [[min[0], max[0]]],
+        "y": [[min[1], max[1]]],
+        "z": [[min[2], max[2]]],
+        "xy": [[min[0], max[0]], [min[1], max[1]]],
+        "xz": [[min[0], max[0]], [min[2], max[2]]],
+        "yz": [[min[1], max[1]], [min[2], max[2]]],
+    }
 
     # all computed density maps will be stored in a dictionary
     densities = collections.OrderedDict()
@@ -262,22 +292,22 @@ def compute_density_maps(neurontree=None, config_params=None):
         # perform smoothing
         if smooth:
             h = smooth_gaussian(h, dim=dim, sigma=sigma)
-        densities['%s_proj' %ax] = {'data': h, 'edges': edges, 'bins':n_bins}
+        densities["%s_proj" % ax] = {"data": h, "edges": edges, "bins": n_bins}
 
     return densities
 
 
 def plot_density_maps(densities=None, figure=None):
     """
-        functions to plot density maps from densities dictionary with data from x,y,z,xy,xz,yz projections
+    functions to plot density maps from densities dictionary with data from x,y,z,xy,xz,yz projections
 
-        :return:            figure will be returned with all plotted maps from densities
-        :param densities:   dictionary which holds all projections for the plots
-        :param figure:      you can pass a figure if you want to use a custom plot format
+    :return:            figure will be returned with all plotted maps from densities
+    :param densities:   dictionary which holds all projections for the plots
+    :param figure:      you can pass a figure if you want to use a custom plot format
     """
     # if figure is not passed create a new one
     if figure is None:
-        figure = plt.figure(figsize=(8,8))
+        figure = plt.figure(figsize=(8, 8))
 
     if densities is None:
         return figure
@@ -287,70 +317,73 @@ def plot_density_maps(densities=None, figure=None):
     ax_y = plt.subplot2grid((4, 4), (1, 3), rowspan=2, colspan=1)
     ax_z = plt.subplot2grid((4, 4), (3, 3), rowspan=1, colspan=1)
 
-    ax_xy = plt.subplot2grid((4, 4), (1, 1), rowspan=2, colspan=2, sharex=ax_x, sharey=ax_y)
-    ax_xz = plt.subplot2grid((4, 4), (3, 1), rowspan=1, colspan=2, sharex=ax_xy, sharey=ax_z)
+    ax_xy = plt.subplot2grid(
+        (4, 4), (1, 1), rowspan=2, colspan=2, sharex=ax_x, sharey=ax_y
+    )
+    ax_xz = plt.subplot2grid(
+        (4, 4), (3, 1), rowspan=1, colspan=2, sharex=ax_xy, sharey=ax_z
+    )
     ax_yz = plt.subplot2grid((4, 4), (1, 0), rowspan=2, colspan=1, sharey=ax_xy)
-    axes = {'x': ax_x, 'y': ax_y, 'z': ax_z, 'xy': ax_xy, 'xz': ax_xz, 'yz': ax_yz}
-
+    axes = {"x": ax_x, "y": ax_y, "z": ax_z, "xy": ax_xy, "xz": ax_xz, "yz": ax_yz}
 
     # loop over all densities, keys contain type of data
     for name, density in densities.items():
         # get name and split projection axes from it
-        p_axes = name.split('_')[0]
+        p_axes = name.split("_")[0]
         dim = len(p_axes)
 
         if dim > 1:
             ax = axes[p_axes]
-            x_edges = density['edges'][0]
-            y_edges = density['edges'][1]
+            x_edges = density["edges"][0]
+            y_edges = density["edges"][1]
 
             x_min = np.floor(np.min(x_edges))
             x_max = np.ceil(np.max(x_edges))
             y_min = np.floor(np.min(y_edges))
             y_max = np.ceil(np.max(y_edges))
 
-            if p_axes == 'yz':
-                ax.imshow(density['data'], extent=(y_min, y_max, x_max, x_min))
-                ax.set_xlabel(p_axes[1].capitalize() + r' ($\mu$m)')
-                ax.set_ylabel(p_axes[0].capitalize() + r' ($\mu$m)')
+            if p_axes == "yz":
+                ax.imshow(density["data"], extent=(y_min, y_max, x_max, x_min))
+                ax.set_xlabel(p_axes[1].capitalize() + r" ($\mu$m)")
+                ax.set_ylabel(p_axes[0].capitalize() + r" ($\mu$m)")
             else:
-                ax.imshow(density['data'].T, extent=(x_min, x_max, y_max, y_min))
-                ax.set_xlabel(p_axes[0].capitalize() + r' ($\mu$m)')
-                ax.set_ylabel(p_axes[1].capitalize() + r' ($\mu$m)')
+                ax.imshow(density["data"].T, extent=(x_min, x_max, y_max, y_min))
+                ax.set_xlabel(p_axes[0].capitalize() + r" ($\mu$m)")
+                ax.set_ylabel(p_axes[1].capitalize() + r" ($\mu$m)")
             ax.invert_yaxis()
 
         else:
             ax = axes[p_axes]
-            if p_axes == 'x':
-                ax.plot(density['edges'][0][:-1], density['data'])
-                ax.set_xlabel(p_axes.capitalize() + r' ($\mu$m)')
-                ax.ticklabel_format(axis='y', style='scientific', scilimits=(0, 0))
+            if p_axes == "x":
+                ax.plot(density["edges"][0][:-1], density["data"])
+                ax.set_xlabel(p_axes.capitalize() + r" ($\mu$m)")
+                ax.ticklabel_format(axis="y", style="scientific", scilimits=(0, 0))
             else:
-                ax.plot(density['data'], density['edges'][0][:-1])
-                ax.set_ylabel(p_axes.capitalize() + r' ($\mu$m)')
-                ax.ticklabel_format(axis='x', style='scientific', scilimits=(0, 0))
+                ax.plot(density["data"], density["edges"][0][:-1])
+                ax.set_ylabel(p_axes.capitalize() + r" ($\mu$m)")
+                ax.ticklabel_format(axis="x", style="scientific", scilimits=(0, 0))
 
             sns.despine()
-        ax.set_aspect('auto')
+        ax.set_aspect("auto")
     figure.tight_layout(rect=[0, 0.03, 1, 0.9])
     return figure
 
 
 def _project_data(proj_axes, data):
     """
-        Helper function to project data onto the the axes defined in proj_axes.
+    Helper function to project data onto the the axes defined in proj_axes.
 
-        :param proj_axes:   str that holds the axes that are projected to as number, e.g. '01' for projection onto xy
-                            or '02' for projection onto xz.
-        :param data:
+    :param proj_axes:   str that holds the axes that are projected to as number, e.g. '01' for projection onto xy
+                        or '02' for projection onto xz.
+    :param data:
     """
     p_a = proj_axes
     dim = len(proj_axes)
 
     if dim == 2:
-        indices = '012'
+        indices = "012"
         for ix in range(len(p_a)):
-            indices = indices.replace(p_a[ix], '')
+            indices = indices.replace(p_a[ix], "")
         deleted_axis = int(indices)
         ax = [0, 1, 2]
         ax.remove(deleted_axis)

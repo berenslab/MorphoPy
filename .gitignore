@@ -25,3 +25,5 @@ dist/*
 
 # Sphinx documentation
 docs/_build/
+
+dev/
