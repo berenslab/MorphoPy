@@ -22,7 +22,7 @@ You can use MorphoPy imported in Python, as well as from the command line as a b
 
 The current working build:
  
- **version 0.7.1**
+ **version 0.7.2**
  
 All builds are tested on Linux (Debian and CentOS) and Windows 10.
 
@@ -53,8 +53,10 @@ In the following, all commands written in boxes need to be entered into your ter
 
 **3)** Now you should have python3 and pip3 installed. You can check the version like this:
 
+  ```bash
 	python3 --version
 	pip3 -V
+  ```
 
 If both are enough you can continue with installing MorphoPy, see below.
 
@@ -91,19 +93,33 @@ All requirements are met now, see below for continue with MorphoPy installation.
 
 ## <a name="installation">Installation:</a>
 
-###  Install the MorphoPy package (all platforms):
+###  Install the MorphoPy package (all platforms) from PyPI:
 
-Install the python package with pip3 and get the latest build:
-
+  ```bash
 	pip3 install morphopy
+  ```
+
+###  Install the MorphoPy package from GitHub:
+
+  ```bash
+  git clone https://github.com/berenslab/MorphoPy
+  pip install -e MorphoPy
+  ```
+
+## <a name="upgrade">Upgrade:</a>
+
+###  Upgrade the MorphoPy package (all platforms):
+
+  ```bash
+	pip3 install --upgrade morphopy
+  ```
 
 ## <a name="uninstallation">Uninstallation:</a>
 
-You can simply uninstall the package with pip3:
-
+  ```bash
 	pip3 uninstall morphopy
-
-	
+  ```
+  
 [back to start](#content)
 
 ## <a name="usage">Usage</a> 
