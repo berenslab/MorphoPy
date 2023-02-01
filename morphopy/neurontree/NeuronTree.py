@@ -1905,7 +1905,7 @@ class NeuronTree:
     def write_to_swc(
         self,
         file_name,
-        path="/gpfs01/berens/data/data/anatomy/BC_morphologies/swc_tree/",
+        path,
     ):
         """Write NeuronTree to swc file.
 
@@ -1927,7 +1927,7 @@ class NeuronTree:
     def write_to_mat(
         self,
         file_name,
-        path="/gpfs01/berens/data/data/anatomy/BC_morphologies/csv_luxburg/",
+        path,
     ):
         """Write NeuronTree to mat file.
 
