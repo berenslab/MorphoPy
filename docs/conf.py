@@ -83,4 +83,4 @@ html_static_path = ['_static']
 
 htmlhelp_basename = 'MorphoPydoc'
 
-intersphinx_mapping = {'http://docs.python.org/': None}
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
