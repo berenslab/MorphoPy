@@ -5,7 +5,8 @@ import numpy as np
 import pandas as pd
 import scipy
 from scipy.ndimage import gaussian_filter
-from scipy.signal import convolve2d, gaussian
+from scipy.signal import convolve2d
+from scipy.signal.windows import gaussian
 from scipy.sparse import coo_matrix
 from scipy.spatial import ConvexHull
 from sklearn.decomposition import PCA
