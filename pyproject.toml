@@ -1,0 +1,27 @@
+# TODO: Add details from README.md
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "morphopy"
+version = "0.7.2"
+description = "Add your description here"
+requires-python = ">=3.8"
+dependencies = [
+    "matplotlib",
+    "matplotlib_scalebar",
+    "numpy",
+    "scipy",
+    "pandas",
+    "plotly",
+    "networkx",
+    "seaborn",
+    "scikit-learn",
+    "shapely",
+]
+
+[tool.setuptools.packages.find]
+include = ["morphopy*"]
+exclude = ["data*", "paper*", "notebooks*"]
+
