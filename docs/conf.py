@@ -12,8 +12,7 @@
 #
 import os
 import sys
-
-import mock
+from unittest import mock
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 MOCK_MODULES = ['numpy', 'scipy', 'scipy.io', 'scipy.ndimage', 'scipy.ndimage.filters', 'scipy.sparse', 'scipy.spatial', 'scipy.interpolate', 'scipy.signal', 'matplotlib', 'matplotlib.colors', 'matplotlib.pyplot', 'matplotlib.artist', 'matplotlib.font_manager', 'matplotlib.rcsetup', 'matplotlib.patches', 'matplotlib_scalebar.scalebar', 'matplotlib.offsetbox', 'pandas', 'seaborn', 'sklearn', 'sklearn.decomposition']
@@ -85,4 +84,4 @@ html_static_path = ['_static']
 
 htmlhelp_basename = 'MorphoPydoc'
 
-intersphinx_mapping = {'http://docs.python.org/': None}
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
