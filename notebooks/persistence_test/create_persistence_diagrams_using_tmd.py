@@ -1,7 +1,8 @@
 #!bin python2
 
-import tmd
 import os
+
+import tmd
 
 #files = ['eNGC-j140908b_cell1.swc', 'C4.swc', 'ds_1_cell_390.swc']
 #files = ['C010398B-P2.CNG.swc']

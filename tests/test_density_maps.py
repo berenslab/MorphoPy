@@ -1,8 +1,10 @@
-from morphopy.computation.file_manager import load_swc_file
-from morphopy.computation.feature_presentation import compute_density_maps
+import os
+
 from numpy import allclose, hstack
 from scipy.io import loadmat
-import os
+
+from morphopy.computation.feature_presentation import compute_density_maps
+from morphopy.computation.file_manager import load_swc_file
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 

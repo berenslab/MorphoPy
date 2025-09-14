@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-import sys
+import fnmatch
 import getopt
 import os
-import fnmatch
+import sys
 import traceback
+
+import matplotlib as mpl
 import pandas as pd
 import scipy.io as sio
-import matplotlib as mpl
+
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 from morphopy import about

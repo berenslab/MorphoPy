@@ -10,7 +10,7 @@ description = "Add your description here"
 requires-python = ">=3.8"
 dependencies = [
     "matplotlib",
-    "matplotlib_scalebar",
+    "matplotlib-scalebar",
     "numpy",
     "scipy",
     "pandas",
@@ -19,6 +19,7 @@ dependencies = [
     "seaborn",
     "scikit-learn",
     "shapely",
+    "pytest>=8.3.5",
 ]
 
 [tool.setuptools.packages.find]

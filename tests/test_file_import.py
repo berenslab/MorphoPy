@@ -1,8 +1,11 @@
 ### TEST READING METHODS ####
 
-import networkx as nx
-from morphopy.computation.file_manager import load_swc_file
 import os
+
+import networkx as nx
+
+from morphopy.computation.file_manager import load_swc_file
+
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 def test_read_swc_returned_fileformat():

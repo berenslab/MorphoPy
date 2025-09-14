@@ -1,9 +1,10 @@
-from morphopy.computation.file_manager import load_swc_file
-from morphopy.computation.feature_presentation import compute_morphometric_statistics
+import os
 
 import pandas as pd
 from numpy import round
-import os
+
+from morphopy.computation.feature_presentation import compute_morphometric_statistics
+from morphopy.computation.file_manager import load_swc_file
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 precomputed_morphometric_statistics = pd.read_csv(dir_path + "/test_data/precomputed_data_stats.csv", index_col='filename')
