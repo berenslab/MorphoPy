@@ -21,8 +21,9 @@ The input can be passed with single swc-files or it can handle whole directories
 You can use MorphoPy imported in Python, as well as from the command line as a batch-tool.
 
 The current working build:
- 
- **version 0.7.4**
+
+[![PyPI version](https://badge.fury.io/py/MorphoPy.svg)](https://badge.fury.io/py/MorphoPy)
+
  
 All builds are tested on Linux (Debian and CentOS) and Windows 10.
 
