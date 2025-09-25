@@ -2,6 +2,8 @@
 
 .cache
 .cache/*
+.vscode
+
 
 *__pycache__*
 
