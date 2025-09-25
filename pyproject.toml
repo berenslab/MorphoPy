@@ -1,11 +1,11 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "morphopy"
 version = "0.7.4"
-description = "Add your description here"
+description = "A Python package for feature extraction of neural morphologies"
 requires-python = ">=3.10"
 dependencies = [
     "matplotlib",
@@ -20,6 +20,8 @@ dependencies = [
     "shapely",
     "pytest>=8.3.5",
 ]
+license = "MIT"
+readme = {file = "README.md", content-type = "text/markdown"}
 
 [tool.setuptools.packages.find]
 include = ["morphopy*"]
