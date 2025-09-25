@@ -34,7 +34,7 @@ class NeuronTree:
         :return: array of positions
         """
         P = []
-        for (u, v, edata) in self._G.edges(data=True):
+        for u, v, edata in self._G.edges(data=True):
             if self._nxversion >= 2:
                 # changed for version 2.x of networkX
                 n1 = self._G.nodes[u]
@@ -82,7 +82,6 @@ class NeuronTree:
                 node_keys = ["pos", "type", "radius"]
 
                 if type(swc) == pd.DataFrame:
-
                     if swc.size == 0:
                         raise ValueError("No points found in swc file!")
 
@@ -155,7 +154,6 @@ class NeuronTree:
         self._G = G
 
         if G.nodes():
-
             self._remove_redundant_nodes()
             self._make_tree()  # needed to access the functions predecessor and successor
 
@@ -892,7 +890,6 @@ class NeuronTree:
         :return: Dictionary or numpy.array of the defined distance measure from each node to the soma.
         """
         if dist == "path_length":
-
             if as_dict:
                 dist_ = self.get_path_length(weight="path_length")
             else:
@@ -1123,14 +1120,11 @@ class NeuronTree:
             nodes_data = dict(self.get_graph().nodes(data=True))
 
         for u, v in edges:
-
             if v not in branchpoints and v not in tips:
-
                 e1 = nodes_data[v]["pos"] - nodes_data[u]["pos"]
 
                 # v_successor = np.sort(successors[v])
                 for w in successors[v]:
-
                     e2 = nodes_data[w]["pos"] - nodes_data[v]["pos"]
                     path_angle[v] = angle_between(e1, e2) * 180.0 / np.pi
         return path_angle
@@ -1220,7 +1214,6 @@ class NeuronTree:
 
         d = {}
         for e in self.edges(data=True):
-
             h = e[2]["euclidean_dist"]
             if self._nxversion >= 2:
                 # changed for version 2.x of networkX
@@ -1321,7 +1314,6 @@ class NeuronTree:
         intersections = []
         intervals = [0]
         for r in radii:
-
             c = p_circle.buffer(r).boundary
             i = c.intersection(lines)
 
@@ -1458,7 +1450,6 @@ class NeuronTree:
         n_id = 1
 
         while active_nodes:
-
             bp = active_nodes.pop(0)
 
             # add branch point
@@ -1483,13 +1474,11 @@ class NeuronTree:
             n_id += 1
 
             for p, s, data in out_edges:
-
                 dist = data["path_length"]
                 pred = p
                 parent = parent_stack.pop(0)
                 while s not in branchpoints and s not in tips:
                     if dist < d:
-
                         pred, s, data = self.edges(s, data=True)[0]
                         dist += data["path_length"]
                     else:
@@ -1760,7 +1749,7 @@ class NeuronTree:
         apical_dendrite_color="grey",
         x_offset=0,
         y_offset=0,
-        **kwargs
+        **kwargs,
     ):
         """Plots a 2D projection of the stick figure neuron.
 
@@ -1826,7 +1815,7 @@ class NeuronTree:
                 V[plt_idx, :, x].T + x_offset,
                 V[plt_idx, :, y].T + y_offset,
                 c=axon_color,
-                **kwargs
+                **kwargs,
             )
 
         plt_idx = np.array([cs_i == dendrite_color for cs_i in cs])
@@ -1838,7 +1827,7 @@ class NeuronTree:
                 V[plt_idx, :, x].T + x_offset,
                 V[plt_idx, :, y].T + y_offset,
                 c=dendrite_color,
-                **kwargs
+                **kwargs,
             )
 
         plt_idx = np.array([cs_i == apical_dendrite_color for cs_i in cs])
@@ -1850,7 +1839,7 @@ class NeuronTree:
                 V[plt_idx, :, x].T + x_offset,
                 V[plt_idx, :, y].T + y_offset,
                 c=apical_dendrite_color,
-                **kwargs
+                **kwargs,
             )
 
         ax.set_xlabel(projection[0].capitalize() + r" ($\mu$m)")
@@ -1940,7 +1929,7 @@ class NeuronTree:
         data = {}
         P = list(self.get_node_attributes("pos").values())
         T = list(self.get_node_attributes("type").values())
-        A = nx.adjacency_matrix(G, weight="path_length").todense()
+        A = nx.adjacency_matrix(self._G, weight="path_length").todense()
 
         data["pos"] = P
         data["type"] = T
