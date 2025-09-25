@@ -22,7 +22,7 @@ You can use MorphoPy imported in Python, as well as from the command line as a b
 
 The current working build:
  
- **version 0.7.3**
+ **version 0.7.4**
  
 All builds are tested on Linux (Debian and CentOS) and Windows 10.
 
