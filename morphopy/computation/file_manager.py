@@ -1,5 +1,7 @@
-import pandas as pd
 import configparser as cp
+
+import pandas as pd
+
 import morphopy.neurontree.NeuronTree as nt
 import morphopy.neurontree.utils as utils
 
@@ -14,8 +16,16 @@ def load_swc_file(filename=None, **kwargs):
     :return: NeuronTree object
     """
     f = lambda x: float(x.replace(",", "."))
-    swc = pd.read_csv(filename, delim_whitespace=True, comment='#', converters={'x': f, 'y': f, 'z': f, 'radius': f},
-                      names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'], index_col=False)
+    # Use regex separator for whitespace to be compatible with newer pandas; engine='python' supports regex separators
+    swc = pd.read_csv(
+        filename,
+        sep=r"\s+",
+        engine="python",
+        comment='#',
+        converters={'x': f, 'y': f, 'z': f, 'radius': f},
+        names=['n', 'type', 'x', 'y', 'z', 'radius', 'parent'],
+        index_col=False
+    )
 
     # check returned object if import was successful
     if swc is None or type(swc) != pd.DataFrame or swc.size == 0:

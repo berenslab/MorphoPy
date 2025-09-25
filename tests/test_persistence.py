@@ -1,8 +1,10 @@
-from morphopy.computation.file_manager import load_swc_file
-from morphopy.computation.feature_presentation import get_persistence
-from morphopy.computation.persistence_functions import radial_distance, height, path_length, branch_order
 import os
+
 import pandas as pd
+
+from morphopy.computation.feature_presentation import get_persistence
+from morphopy.computation.file_manager import load_swc_file
+from morphopy.computation.persistence_functions import radial_distance, height, path_length, branch_order
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
