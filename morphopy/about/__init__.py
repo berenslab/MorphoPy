@@ -15,5 +15,5 @@ __url__ = "https://github.com/berenslab/MorphoPy"
 __version__ = "0.7.2"
 __author__ = "Sophie Laturnus, Adam von Daranyi, Ziwei Huang and Philipp Berens"
 __email__ = "adam.von-daranyi@uni-tuebingen.de"
-__license__ = "GNU GENERAL PUBLIC LICENSE, Version 3.0"
+__license__ = "MIT License"
 __copyright__ = "2020 %s" % __author__

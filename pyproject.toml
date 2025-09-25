@@ -1,13 +1,12 @@
-# TODO: Add details from README.md
 [build-system]
 requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "morphopy"
-version = "0.7.2"
+version = "0.7.3"
 description = "Add your description here"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = [
     "matplotlib",
     "matplotlib-scalebar",

@@ -22,7 +22,7 @@ You can use MorphoPy imported in Python, as well as from the command line as a b
 
 The current working build:
  
- **version 0.7.2**
+ **version 0.7.3**
  
 All builds are tested on Linux (Debian and CentOS) and Windows 10.
 
@@ -39,7 +39,7 @@ In the following, all commands written in boxes need to be entered into your ter
 ### Mac:
 
  - homebrew (to install latest version of python3)
- - python >3.4: without homebrew you can find python [here](https://www.python.org/downloads/mac-osx/)
+ - python >=3.10: without homebrew you can find python [here](https://www.python.org/downloads/mac-osx/)
  - pip
  
 **1)** If you want the latest python3 version you need to install homebrew,
@@ -62,7 +62,7 @@ If both are enough you can continue with installing MorphoPy, see below.
 
 ### Linux:
 
- - python >3.4
+ - python >3.10
  - pip 3 
 
 Install Python3 on **Debian/Ubuntu** systems:
@@ -77,7 +77,7 @@ That's it. All requirements are met and you can continue with the MorphoPy insta
 
 ### Windows:
 
- - python >3.5 (x64): download from [here](https://www.python.org/downloads/windows/)
+ - python >3.10 (x64): download from [here](https://www.python.org/downloads/windows/)
  - pip : be sure you selected it during installation with the base python package
  - Microsoft Build Tools >14.0 you can download them [here](https://visualstudio.microsoft.com/visual-cpp-build-tools/) 
 
