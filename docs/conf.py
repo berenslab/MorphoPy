@@ -11,8 +11,8 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
-import mock
 import sys
+from unittest import mock
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 MOCK_MODULES = ['numpy', 'scipy', 'scipy.io', 'scipy.ndimage', 'scipy.ndimage.filters', 'scipy.sparse', 'scipy.spatial', 'scipy.interpolate', 'scipy.signal', 'matplotlib', 'matplotlib.colors', 'matplotlib.pyplot', 'matplotlib.artist', 'matplotlib.font_manager', 'matplotlib.rcsetup', 'matplotlib.patches', 'matplotlib_scalebar.scalebar', 'matplotlib.offsetbox', 'pandas', 'seaborn', 'sklearn', 'sklearn.decomposition']
 for mod_name in MOCK_MODULES:
