@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "morphopy"
-version = "0.7.4"
+version = "0.7.5"
 description = "A Python package for feature extraction of neural morphologies"
 requires-python = ">=3.10"
 dependencies = [
