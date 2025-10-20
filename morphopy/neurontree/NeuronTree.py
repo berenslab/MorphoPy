@@ -1317,7 +1317,9 @@ class NeuronTree:
             c = p_circle.buffer(r).boundary
             i = c.intersection(lines)
 
-            if type(i) in [Point, LineString]:
+            if i.is_empty:
+                intersections.append(0)
+            elif type(i) in [Point, LineString]:
                 intersections.append(1)
             else:
                 intersections.append(len(i.geoms))
