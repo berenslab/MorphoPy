@@ -1290,39 +1290,88 @@ class NeuronTree:
         # remove illegal points
         coords = [c for c in coordinates if (c[0][0] != c[1][0] or c[0][1] != c[1][1])]
 
-        lines = MultiLineString(coords).buffer(0.0001)
-        bounds = np.array(lines.bounds).reshape(2, 2).T
+        if len(coords) == 0:
+            if radii is None:
+                radii = [(0.0 / steps) * k for k in range(1, steps + 1)]
+            return [0] * len(radii), [0] + list(radii)
+
+        # Work with numpy arrays for fast segment-circle intersection checks.
+        p1 = np.array([c[0] for c in coords], dtype=float)
+        p2 = np.array([c[1] for c in coords], dtype=float)
+        d = p2 - p1
+        a = np.sum(d * d, axis=1)
+
         if centroid == "centroid":
-            center = np.array(lines.convex_hull.centroid.coords[0])
-            p_circle = Point(center)
+            lines = MultiLineString(coords)
+            center = np.array(lines.convex_hull.centroid.coords[0], dtype=float)
         elif centroid == "soma":
             if self._nxversion >= 2:
                 # changed for version 2.x of networkX
-                center = G.nodes[self.get_root()]["pos"][indx]
+                center = np.array(G.nodes[self.get_root()]["pos"][indx], dtype=float)
             else:
-                center = G.node[self.get_root()]["pos"][indx]
-            p_circle = Point(center)
+                center = np.array(G.node[self.get_root()]["pos"][indx], dtype=float)
         else:
             raise ValueError("Centroid %s is not defined" % centroid)
 
-        # get the maximal absolute coordinates in x and y
-        idx = np.argmax(np.abs(bounds), axis=1)
-        r_max = np.linalg.norm(center - bounds[idx, [0, 1]])
         if radii is None:
+            endpoint_dists = np.sqrt(
+                np.maximum(
+                    np.sum((p1 - center) ** 2, axis=1),
+                    np.sum((p2 - center) ** 2, axis=1),
+                )
+            )
+            r_max = np.max(endpoint_dists) if endpoint_dists.size > 0 else 0.0
             radii = [(r_max / steps) * k for k in range(1, steps + 1)]
 
         intersections = []
         intervals = [0]
-        for r in radii:
-            c = p_circle.buffer(r).boundary
-            i = c.intersection(lines)
 
-            if i.is_empty:
+        p1c = p1 - center
+        b = 2.0 * np.sum(p1c * d, axis=1)
+
+        for r in radii:
+            c0 = np.sum(p1c * p1c, axis=1) - (r * r)
+            disc = b * b - 4.0 * a * c0
+
+            # Ignore clearly non-intersecting segments.
+            mask = disc >= -1e-10
+            if not np.any(mask):
                 intersections.append(0)
-            elif type(i) in [Point, LineString]:
-                intersections.append(1)
+                intervals.append(r)
+                continue
+
+            am = a[mask]
+            bm = b[mask]
+            dm = d[mask]
+            p1m = p1[mask]
+            discm = np.maximum(disc[mask], 0.0)
+
+            sqrt_disc = np.sqrt(discm)
+            t1 = (-bm - sqrt_disc) / (2.0 * am)
+            t2 = (-bm + sqrt_disc) / (2.0 * am)
+
+            valid1 = (t1 >= -1e-10) & (t1 <= 1.0 + 1e-10)
+            valid2 = (t2 >= -1e-10) & (t2 <= 1.0 + 1e-10)
+
+            pts = []
+            if np.any(valid1):
+                pts.append(p1m[valid1] + dm[valid1] * t1[valid1][:, None])
+
+            # Keep second root only when it's meaningfully different (non-tangent).
+            if np.any(valid2):
+                tangent = np.abs(t1 - t2) <= 1e-10
+                second = valid2 & (~tangent)
+                if np.any(second):
+                    pts.append(p1m[second] + dm[second] * t2[second][:, None])
+
+            if len(pts) == 0:
+                intersections.append(0)
             else:
-                intersections.append(len(i.geoms))
+                points = np.vstack(pts)
+                # Deduplicate shared-vertex hits from adjacent segments.
+                unique_points = np.unique(np.round(points, 8), axis=0)
+                intersections.append(int(unique_points.shape[0]))
+
             intervals.append(r)
 
         return intersections, intervals
